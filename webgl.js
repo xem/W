@@ -26,19 +26,3 @@ buffer = (gl, data, program, attribute, size, type) => {
   gl.enableVertexAttribArray(a);
 }
 
-// Draw a box
-drawBox = (gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) => {
-
-  // Compute mvp matrix
-  g_mvpMatrix.set(viewProjMatrix);
-  g_mvpMatrix.multiply(g_modelMatrix);
-  gl.uniformMatrix4fv(u_MvpMatrix, false, g_mvpMatrix.elements);
-
-  // Compute inverse transform
-  g_normalMatrix.setInverseOf(g_modelMatrix);
-  g_normalMatrix.transpose();
-  gl.uniformMatrix4fv(u_NormalMatrix, false, g_normalMatrix.elements);
-  
-  // Draw
-  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
-}
