@@ -9,11 +9,13 @@
 
 <script>
 
-W.camera({rx:-45,rz:-45});
-W.light({x:.2,y:-.2,z:1});
+W.camera({rx:0,rz:0});
+W.light({x:1,y:.5,z:.5});
 W.plane({n:"ground",x:0,y:0,z:0,w:45,h:45,b:'#8d8'});
-W.cube({n:"block1",x:30,y:0,z:5,w:5,h:5,d:5,b:'#d55'});
-W.cube({n:"block2",x:0,y:0,z:20,w:10,h:10,d:20,rx:45,ry:-25,b:'#68a'});
+W.cube({n:"cube",x:30,y:20,z:5,w:5,h:5,d:5,b:'#d55'});
+W.cube({n:"block",x:0,y:0,z:20,w:10,h:10,d:20,rx:45,ry:-25,b:'#68a'});
 W.plane({n:"plane",x:0,y:-30,z:10,w:10,h:15,rz:85,ry:50,b:'#dda'});
+W.transition = 100; // frames
+setTimeout(()=>{W.camera({rx:-55,rz:-45,y:-10,z:10})}, 1000);
 
 </script>

@@ -1,6 +1,13 @@
 // WebGL context
 gl = a.getContext('webgl');
 
+// Transition duration (number of frames)
+transition = 100;
+
+// Initial state
+init = 1;
+
+
 // Convert #rgb string to vec3
 rgb = s => [+("0x"+s[1])/16,+("0x"+s[2])/16,+("0x"+s[3])/16];
 
@@ -62,6 +69,20 @@ W = {
   camRX: 0,
   camRY: 0,
   camRZ: 0,
+  oldCamX: 0,
+  oldCamY: 0,
+  oldCamZ: 0,
+  oldCamRX: 0,
+  oldCamRY: 0,
+  oldCamRZ: 0,
+  nextCamX: 0,
+  nextCamY: 0,
+  nextCamZ: 0,
+  nextCamRX: 0,
+  nextCamRY: 0,
+  nextCamRZ: 0,
+  
+  cam_frame: 0,
   sprite_count: 0,
   sprites: [],
   plane_count: 0,
@@ -90,7 +111,8 @@ W = {
     t.n||(t.n=`plane${W.plane_count++}`);
     t.type = "plane";
     W.init(t);
-    W.draw();
+    //W.draw();
+    init = 0;
   },
   
   sprite: () => {},
@@ -100,7 +122,8 @@ W = {
     t.n||(t.n=`plane${W.plane_count++}`);
     t.type = "cube";
     W.init(t);
-    W.draw();
+    //W.draw();
+    init = 0;
   },
   
   pyramid: t => {
@@ -108,7 +131,8 @@ W = {
     t.n||(t.n=`plane${W.plane_count++}`);
     t.type = "pyramid";
     W.init(t);
-    W.draw();
+    //W.draw();
+    init = 0;
     
   },
   
@@ -117,19 +141,34 @@ W = {
   camera: t => {
     
     // Handle params
-    t&&(t.x||0===t.x)&&(W.camX=t.x),
-    t&&(t.y||0===t.y)&&(W.camY=t.y),
-    t&&(t.z||0===t.z)&&(W.camZ=t.z),
-    t&&(t.rx||0===t.rx)&&(W.camRX=t.rx),
-    t&&(t.ry||0===t.ry)&&(W.camRY=t.ry),
-    t&&(t.rz||0===t.rz)&&(W.camRZ=t.rz),
-    
-    // Set the camera
-    cameraMatrix = perspective({fov: 30, aspect: a.width/a.height, near: 1, far: 1000});
-    cameraMatrix.translateSelf(W.camX, W.camY, W.camZ-100).rotateSelf(W.camRX,0,0).rotateSelf(0,0,W.camRZ);
+    console.log(init, JSON.stringify(W));
+    W.oldCamX = W.camX;
+    W.oldCamY = W.camY;
+    W.oldCamZ = W.camZ;
+    W.oldCamRX = W.camRX;
+    W.oldCamRY = W.camRY;
+    W.oldCamRZ = W.camRZ;
+    t&&(t.x||0===t.x)&&(W.nextCamX=t.x),
+    t&&(t.y||0===t.y)&&(W.nextCamY=t.y),
+    t&&(t.z||0===t.z)&&(W.nextCamZ=t.z),
+    t&&(t.rx||0===t.rx)&&(W.nextCamRX=t.rx),
+    t&&(t.ry||0===t.ry)&&(W.nextCamRY=t.ry),
+    t&&(t.rz||0===t.rz)&&(W.nextCamRZ=t.rz);
+    if(init){
+      W.camX = W.nextCamX;
+      W.camY = W.nextCamY;
+      W.camZ = W.nextCamZ;
+      W.camRX = W.nextCamRX;
+      W.camRY = W.nextCamRY;
+      W.camRZ = W.nextCamRZ;
+    }
     
     // Draw the scene
-    W.draw();
+    //W.draw();
+    
+    // Remove init status
+    init = 0;
+    W.cam_frame = 0;
     
   },
   
@@ -144,6 +183,10 @@ W = {
     // Clear canvas
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
+    // Set the camera
+    cameraMatrix = perspective({fov: 30, aspect: a.width/a.height, near: 1, far: 1000});
+    cameraMatrix.translateSelf(W.camX, W.camY, W.camZ-100).rotateSelf(W.camRX,0,0).rotateSelf(0,0,W.camRZ);
+    
     // Draw all the shapes
     for(var i in W.shapes){
       var shape = W.shapes[i];
@@ -151,8 +194,6 @@ W = {
       // Initialize a shape
       var vertices, normals, indices;
       [vertices, normals, indices] = top[shape.type]();
-      
-      console.log(vertices, normals, indices);
 
       // Count vertices
       var n = indices.length;
@@ -197,3 +238,29 @@ W = {
     }
   }
 }
+
+setInterval(()=>{
+  
+  // Camera movement
+  if(W.cam_frame < transition){
+    
+    var progress = W.cam_frame/transition;
+  
+    // Transition camera
+    //W.camRX = W.oldCamRX * progress + W.nextCamRX * 1/progress;
+    W.camX = W.oldCamX + (W.nextCamX - W.oldCamX) * progress**2;
+    W.camY = W.oldCamY + (W.nextCamY - W.oldCamY) * progress**2;
+    W.camZ = W.oldCamZ + (W.nextCamZ - W.oldCamZ) * progress**2;
+    W.camRX = W.oldCamRX + (W.nextCamRX - W.oldCamRX) * progress**2;
+    W.camRY = W.oldCamRY + (W.nextCamRY - W.oldCamRY) * progress**2;
+    W.camRZ = W.oldCamRZ + (W.nextCamRZ - W.oldCamRZ) * progress**2;
+    
+    W.cam_frame++;
+  
+
+  }
+  
+  // Render the scene
+  W.draw()
+  
+}, 16);
