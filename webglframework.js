@@ -24,14 +24,14 @@ W = {
     uniform mat4 mvp;
     uniform float mvpfactor;
     uniform mat4 model;
-    uniform mat4 inverseTranspose;
+    uniform mat4 modelInverse;
     varying vec4 v_color;
     varying vec3 v_normal;
     varying vec3 v_position;
     void main() {
       gl_Position = mvp * position;
       v_position = vec3(model * position);
-      v_normal = normalize(vec3(inverseTranspose * normal));
+      v_normal = normalize(vec3(normal * modelInverse));
       v_color = color;
     }`;
 
@@ -340,7 +340,7 @@ W = {
         // Get uniforms used in the loop
         var model = gl.getUniformLocation(W.program, 'model');
         var mvp = gl.getUniformLocation(W.program, 'mvp');
-        var inverseTranspose = gl.getUniformLocation(W.program, 'inverseTranspose');
+        var modelInverse = gl.getUniformLocation(W.program, 'modelInverse');
         var lightDirection = gl.getUniformLocation(W.program, 'lightDirection');
           
         // Set the model matrix
@@ -354,10 +354,8 @@ W = {
         mvpMatrix.preMultiplySelf(cameraMatrix);
         gl.uniformMatrix4fv(mvp, false, mvpMatrix.toFloat32Array());
         
-        // Set the inverse transpose of the model matrix
-        var inverseTransposeMatrix = new DOMMatrix(modelMatrix);
-        inverseTransposeMatrix = W.transpose(inverseTransposeMatrix.invertSelf());
-        gl.uniformMatrix4fv(inverseTranspose, false, inverseTransposeMatrix.toFloat32Array());
+        // Set the inverse of the model matrix
+        gl.uniformMatrix4fv(modelInverse, false, modelMatrix.inverse().toFloat32Array());
         
         W.name = "light";
         gl.uniform3f(lightDirection, W.lerp("x"), W.lerp("y"), W.lerp("z"));
