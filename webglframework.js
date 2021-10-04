@@ -31,7 +31,7 @@ W = {
     void main() {
       gl_Position = mvp * position;
       v_position = vec3(model * position);
-      v_normal = normalize(vec3(normal * modelInverse));
+      v_normal = vec3(normal * modelInverse);
       v_color = color;
     }`;
 
@@ -43,7 +43,7 @@ W = {
     varying vec3 v_position;
     varying vec4 v_color;
     void main() {
-      float nDotL = max(dot(lightDirection, v_normal), 0.0);
+      float nDotL = max(dot(lightDirection, normalize(v_normal)), 0.0);
       vec3 diffuse = v_color.rgb * nDotL;
       vec3 ambient = 0.2 * v_color.rgb;
       gl_FragColor = vec4(diffuse + ambient, 1.0);
