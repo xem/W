@@ -1,7 +1,7 @@
 ﻿<link rel=icon href="data:image/svg+xml,W">
 <canvas id=a width=780 height=500 style="border:1px solid"></canvas>
 
-<script src="webglframework.js"></script>
+<script src="webglframework.min.js"></script>
 
 <br>
 <br>
@@ -9,16 +9,16 @@
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
 W.camera({z:-100,rx:0,rz:0});
 W.light({x:1,y:.5,z:.5});
-W.plane({n:"ground",x:0,y:0,z:0,w:45,h:45,b:'#8d8'});
-W.pyramid({n:"pyramid",x:30,y:20,z:5,w:5,h:5,d:5,rx:90,b:'#d55'});
-W.cube({n:"block",x:0,y:0,z:23,w:10,h:10,d:20,rx:45,ry:-25,b:'#68a'});
-W.plane({n:"plane",x:0,y:-30,z:10,w:10,h:15,rz:85,ry:50,b:'#dda'});
+W.plane({n:"ground",x:0,y:0,z:0,w:45,h:45,b:'8d8'});
+W.pyramid({n:"pyramid",x:30,y:20,z:5,w:5,h:5,d:5,rx:90,b:'d55'});
+W.cube({n:"block",x:0,y:0,z:23,w:10,h:10,d:20,rx:45,ry:-25,b:'68a'});
+W.plane({n:"plane",x:0,y:-30,z:10,w:10,h:15,rz:85,ry:50,b:'dda'});
 setTimeout(()=>{W.camera({rx:-85,rz:-180,x:20,y:-10,z:-60,t:180})}, 1000);
-setTimeout(()=>{W.move({n:"pyramid",w:1,h:1,d:1,x:30,y:20,z:60,rz:440,t:200})}, 4000);
+setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,x:30,y:20,z:40,rz:440,t:200})}, 4000);
 setTimeout(()=>{W.move({n:"block",x:32,z:10,d:10,rx:0,ry:0,rz:85,t:100})}, 6000);
 setTimeout(()=>{W.light({x:0,y:0,z:1,t:100})}, 7000);
 setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
-setTimeout(()=>{W.move({n:"plane",y:20,z:5,rx:0,ry:0,rz:0,t:100})}, 10000);
-setTimeout(()=>{W.camera({z:100,t:100})}, 12000);
+setTimeout(()=>{W.move({n:"plane",y:20,z:5,rx:0,ry:0,rz:0,t:100})}, 11000);
+setTimeout(()=>{W.camera({z:100,t:100})}, 13000);
 
 </script>
