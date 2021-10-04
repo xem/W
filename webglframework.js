@@ -27,18 +27,15 @@ W = {
       `
         attribute vec4 position; 
         attribute vec4 color;
-        attribute vec4 normal;
         uniform mat4 mvp;
         uniform float mvpfactor;
         uniform mat4 model;
         uniform mat4 modelInverse;
         varying vec4 v_color;
-        varying vec3 v_normal;
         varying vec3 v_position;
         void main() {
           gl_Position = mvp * position;
           v_position = vec3(model * position);
-          v_normal = vec3(normal * modelInverse);
           v_color = color;
         }
       `
@@ -54,11 +51,11 @@ W = {
       `
         precision mediump float;
         uniform vec3 light;
-        varying vec3 v_normal;
         varying vec3 v_position;
         varying vec4 v_color;
         void main() {
-          float nDotL = max(dot(light, normalize(v_normal)), 0.0);
+          vec3 normal = normalize(cross(dFdx(v_position), dFdy(v_position)));
+          float nDotL = max(dot(light, normal), 0.0);
           vec3 diffuse = v_color.rgb * nDotL;
           vec3 ambient = 0.2 * v_color.rgb;
           gl_FragColor = vec4(diffuse + ambient, 1.0);
@@ -176,7 +173,7 @@ W = {
     W.t(cameraMatrix);
     
     // Draw all the shapes
-    var vertices = [], normals = [], indices = [];
+    var vertices = [], indices = [];
     for(var i in W.n){
       var shape = W.n[i];
       if(shape.f < shape.t) shape.f++;
@@ -197,13 +194,6 @@ W = {
          -1, 1, 0,
          -1,-1, 0,
           1,-1, 0
-        ];
-
-        normals = [
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1
         ];
 
         indices = [
@@ -231,15 +221,6 @@ W = {
          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1, // left
          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1, // down
           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1  // back
-        ];
-
-        normals = [
-          0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,  // front
-          1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,  // right
-          0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,  // up
-         -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  // left
-          0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,  // down
-          0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1   // back
         ];
 
         indices = [
@@ -272,15 +253,6 @@ W = {
           -1, 0,-1,    1, 0,-1,  1, 0, 1
         ];
 
-        normals = [
-          0,-1, h,   0,-1, h,  0,-1, h,  // Back
-          h,-1, 0,   h,-1, 0,  h,-1, 0,  // Left
-          0,-1,-h,   0,-1,-h,  0,-1,-h,  // Front
-         -h,-1, 0,  -h,-1, 0, -h,-1, 0,  // Right
-          0, 1, 0,   0, 1, 0,  0, 1, 0,  // Base
-          0, 1, 0,   0, 1, 0,  0, 1, 0
-        ];
-
         indices = [
           0, 1, 2,    // Front
           3, 4, 5,    // Right
@@ -291,13 +263,10 @@ W = {
         ];
       }          
 
-      // Set position, normal buffers
+      // Set the position buffer
       
       // W.b(vertices, 'position');
       W.b(new Float32Array(vertices), 'position');
-      
-      // W.b(normals, 'normal');
-      W.b(new Float32Array(normals), 'normal');
       
       // gl.bindBuffer(gl.ELEMENT_ARRAY_b, indexb);
       gl.bindBuffer(34963, gl.createBuffer());
