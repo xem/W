@@ -88,10 +88,10 @@ W = {
   // Bind a data buffer to an attribute, fill it with data and enable it
   b: (data, attribute) => {
     
-    // gl.bindBuffer(gl.ARRAY_b, gl.createBuffer());
+    // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bindBuffer(34962, gl.createBuffer());
     
-    //gl.bufferData(gl.ARRAY_b, data, gl.STATIC_DRAW);
+    //gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     gl.bufferData(34962, data, 35044);
     
     var a = gl.getAttribLocation(W.P, attribute);
@@ -293,16 +293,16 @@ W = {
 
       // Set position, normal buffers
       
-      // W.b(vertices, 'position');
+      // W.b(new Float32Array(vertices), 'position');
       W.b(new Float32Array(vertices), 'position');
       
-      // W.b(normals, 'normal');
+      // W.b(new Float32Array(normals), 'normal');
       W.b(new Float32Array(normals), 'normal');
       
-      // gl.bindBuffer(gl.ELEMENT_ARRAY_b, indexb);
+      // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
       gl.bindBuffer(34963, gl.createBuffer());
       
-      // gl.bufferData(gl.ELEMENT_ARRAY_b, indices, gl.STATIC_DRAW);
+      // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
       gl.bufferData(34963, new Uint16Array(indices), 35044);
 
       // Set shape color
