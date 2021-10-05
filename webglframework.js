@@ -38,8 +38,7 @@ W = {
         gl_Position = mvp * position;
         v_position = vec3(model * position);
         v_color = color;
-      }
-      `
+      }`
     );
     gl.compileShader(vs);
     
@@ -62,8 +61,7 @@ W = {
             + 0.2 // diffuse light
           ), 1.0
         );
-      }
-      `
+      }`
     );
     gl.compileShader(fs);
     W.P = gl.createProgram();
