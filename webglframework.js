@@ -14,7 +14,8 @@ W = {
   s: t => {
     
     // WebGL context
-    gl = a.getContext`webgl`;
+    gl = a.getContext("webgl2");
+    gl.getExtension("OES_standard_derivatives");
 
     // Compile program
     
@@ -24,23 +25,20 @@ W = {
     // Vertex shader
     gl.shaderSource(
       vs,
-      `
-        attribute vec4 position; 
-        attribute vec4 color;
-        attribute vec4 normal;
-        uniform mat4 mvp;
-        uniform float mvpfactor;
-        uniform mat4 model;
-        uniform mat4 modelInverse;
-        varying vec4 v_color;
-        varying vec3 v_normal;
-        varying vec3 v_position;
-        void main() {
-          gl_Position = mvp * position;
-          v_position = vec3(model * position);
-          v_normal = vec3(normal * modelInverse);
-          v_color = color;
-        }
+      `#version 300 es
+      in vec4 position; 
+      in vec4 color;
+      uniform mat4 mvp;
+      uniform float mvpfactor;
+      uniform mat4 model;
+      uniform mat4 modelInverse;
+      out vec4 v_color;
+      out vec3 v_position;
+      void main() {
+        gl_Position = mvp * position;
+        v_position = vec3(model * position);
+        v_color = color;
+      }
       `
     );
     gl.compileShader(vs);
@@ -51,18 +49,20 @@ W = {
     // Fragment shader
     gl.shaderSource(
       fs,
-      `
-        precision mediump float;
-        uniform vec3 light;
-        varying vec3 v_normal;
-        varying vec3 v_position;
-        varying vec4 v_color;
-        void main() {
-          float nDotL = max(dot(light, normalize(v_normal)), 0.0);
-          vec3 diffuse = v_color.rgb * nDotL;
-          vec3 ambient = 0.2 * v_color.rgb;
-          gl_FragColor = vec4(diffuse + ambient, 1.0);
-        }
+      `#version 300 es
+      precision mediump float;
+      uniform vec3 light;
+      in vec3 v_position;
+      in vec4 v_color;
+      out vec4 c;
+      void main() {
+        c = vec4(
+          v_color.rgb * (
+            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+            + 0.2 // diffuse light
+          ), 1.0
+        );
+      }
       `
     );
     gl.compileShader(fs);
@@ -176,7 +176,7 @@ W = {
     W.t(cameraMatrix);
     
     // Draw all the shapes
-    var vertices = [], normals = [], indices = [];
+    var vertices = [], indices = [];
     for(var i in W.n){
       var shape = W.n[i];
       if(shape.f < shape.t) shape.f++;
@@ -197,13 +197,6 @@ W = {
          -1, 1, 0,
          -1,-1, 0,
           1,-1, 0
-        ];
-
-        normals = [
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1
         ];
 
         indices = [
@@ -231,15 +224,6 @@ W = {
          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1, // left
          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1, // down
           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1  // back
-        ];
-
-        normals = [
-          0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,  // front
-          1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,  // right
-          0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,  // up
-         -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  // left
-          0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,  // down
-          0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1   // back
         ];
 
         indices = [
@@ -272,15 +256,6 @@ W = {
           -1, 0,-1,    1, 0,-1,  1, 0, 1
         ];
 
-        normals = [
-          0,-1, h,   0,-1, h,  0,-1, h,  // Back
-          h,-1, 0,   h,-1, 0,  h,-1, 0,  // Left
-          0,-1,-h,   0,-1,-h,  0,-1,-h,  // Front
-         -h,-1, 0,  -h,-1, 0, -h,-1, 0,  // Right
-          0, 1, 0,   0, 1, 0,  0, 1, 0,  // Base
-          0, 1, 0,   0, 1, 0,  0, 1, 0
-        ];
-
         indices = [
           0, 1, 2,    // Front
           3, 4, 5,    // Right
@@ -291,13 +266,10 @@ W = {
         ];
       }          
 
-      // Set position, normal buffers
+      // Set the position buffer
       
       // W.b(new Float32Array(vertices), 'position');
       W.b(new Float32Array(vertices), 'position');
-      
-      // W.b(new Float32Array(normals), 'normal');
-      W.b(new Float32Array(normals), 'normal');
       
       // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
       gl.bindBuffer(34963, gl.createBuffer());
