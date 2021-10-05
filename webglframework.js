@@ -15,7 +15,6 @@ W = {
     
     // WebGL context
     gl = a.getContext("webgl2");
-    gl.getExtension("OES_standard_derivatives");
 
     // Compile program
     
@@ -29,7 +28,6 @@ W = {
       in vec4 position; 
       in vec4 color;
       uniform mat4 mvp;
-      uniform float mvpfactor;
       uniform mat4 model;
       uniform mat4 modelInverse;
       out vec4 v_color;
@@ -48,8 +46,7 @@ W = {
     // Fragment shader
     gl.shaderSource(
       fs,
-      `#version 300 es
-      precision mediump float;
+      `#version 300 es\nprecision mediump float;
       uniform vec3 light;
       in vec3 v_position;
       in vec4 v_color;
@@ -57,9 +54,9 @@ W = {
       void main() {
         c = vec4(
           v_color.rgb * (
-            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
-            + 0.2 // diffuse light
-          ), 1.0
+            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.) // ambient light
+            + .2 // diffuse light
+          ), 1.
         );
       }`
     );
