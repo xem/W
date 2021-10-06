@@ -17,13 +17,14 @@ W = {
     gl = a.getContext("webgl2");
 
     // Compile program
-    
-    // var vs = gl.createShader(gl.VERTEX_SHADER);
-    var vs = gl.createShader(35633);
+    W.P = gl.createProgram();
     
     // Vertex shader
     gl.shaderSource(
-      vs,
+      
+      // t = gl.createShader(gl.VERTEX_SHADER);
+      t = gl.createShader(35633),
+      
       `#version 300 es
       in vec4 position; 
       in vec4 color;
@@ -38,14 +39,16 @@ W = {
         v_color = color;
       }`
     );
-    gl.compileShader(vs);
-    
-    // var fs = gl.createShader(gl.FRAGMENT_SHADER);
-    var fs = gl.createShader(35632);
+    gl.compileShader(t);
+    gl.attachShader(W.P, t);
+    console.log('vertex shader:', gl.getShaderInfoLog(t) || 'OK');
     
     // Fragment shader
     gl.shaderSource(
-      fs,
+
+      // t = gl.createShader(gl.FRAGMENT_SHADER);
+      t = gl.createShader(35632),
+      
       `#version 300 es\nprecision mediump float;
       uniform vec3 light;
       in vec3 v_position;
@@ -54,22 +57,18 @@ W = {
       void main() {
         c = vec4(
           v_color.rgb * (
-            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.) // ambient light
+            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
             + .2 // diffuse light
-          ), 1.
+          ), 1
         );
       }`
     );
-    gl.compileShader(fs);
-    W.P = gl.createProgram();
-    gl.attachShader(W.P, vs);
-    gl.attachShader(W.P, fs);
+    gl.compileShader(t);
+    gl.attachShader(W.P, t);
+    console.log('fragment shader:', gl.getShaderInfoLog(t) || 'OK');
+    
     gl.linkProgram(W.P);
     gl.useProgram(W.P);
-    
-    // Log errors
-    console.log('vertex shader:', gl.getShaderInfoLog(vs) || 'OK');
-    console.log('fragment shader:', gl.getShaderInfoLog(fs) || 'OK');
     console.log('program:', gl.getProgramInfoLog(W.P) || 'OK');
     
     // Set background color (rgba)
@@ -78,23 +77,6 @@ W = {
     // Enable depth-sorting
     // gl.enable(gl.DEPTH_TEST);
     gl.enable(2929);
-  },
-
-  // Bind a data buffer to an attribute, fill it with data and enable it
-  b: (data, attribute) => {
-    
-    // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bindBuffer(34962, gl.createBuffer());
-    
-    //gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-    gl.bufferData(34962, data, 35044);
-    
-    var a = gl.getAttribLocation(W.P, attribute);
-    
-    // gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 0, 0);
-    gl.vertexAttribPointer(a, 3, 5126, false, 0, 0);
-    
-    gl.enableVertexAttribArray(a);
   },
 
   // Transition helpers
@@ -120,11 +102,8 @@ W = {
     // Default name
     t.n ||= "o" + W.o++;
     
-    // Consider previous state, or the default state
-    var prev = W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"};
-    
-    // Merge it with the new state passed in parameter
-    t = {...prev, ...t};
+    // Merge previous state or default state with the new state passed in parameter
+    t = {...(W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"}), ...t};
     
     // Save the t duration (in frames), or 0 by default
     t.t ||= 1;
@@ -153,7 +132,8 @@ W = {
     
   light: t => { t.n = "_l"; W.i(t) },
   
-  d: t => {
+  // Draw
+  d: (c, v, i, s, m) => {
     
     // Clear canvas
     
@@ -161,20 +141,20 @@ W = {
     gl.clear(16640);
 
     // Set the camera matrix (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    var cameraMatrix = new DOMMatrix([
+    c = new DOMMatrix([
       1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
       0, 1 / Math.tan(.5), 0, 0, 
-      0, 0, (1000 + 1) * 1 / (1 - 1000), -1,
-      0, 0, (2 * 1 * 1000) * 1 / (1 - 1000), 0
+      0, 0, (900 + 1) * 1 / (1 - 900), -1,
+      0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
     W.N = "_c";
-    W.t(cameraMatrix);
+    W.t(c);
     
     // Draw all the shapes
-    var vertices = [], indices = [];
-    for(var i in W.n){
-      var shape = W.n[i];
-      if(shape.f < shape.t) shape.f++;
+    v = [];
+    for(i in W.n){
+      s = W.n[i];
+      if(s.f < s.t) s.f++;
 
       // Initialize a shape
       
@@ -186,17 +166,10 @@ W = {
       //  |       |
       //  v2------v3
       
-      if(shape.T == "q"){
-        vertices = [
-          1, 1, 0,
-         -1, 1, 0,
-         -1,-1, 0,
-          1,-1, 0
-        ];
-
-        indices = [
-          0, 1, 2,
-          0, 2, 3
+      if(s.T == "q"){
+        v = [
+          1, 1, 0,    -1, 1, 0,   -1,-1, 0,
+          1, 1, 0,    -1,-1, 0,    1,-1, 0
         ];
       }
       
@@ -210,28 +183,26 @@ W = {
       //  |/      |/
       //  v2------v3
       
-      else if(shape.T == "c"){
+      else if(s.T == "c"){
         
-        vertices = [
-          1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1, // front
-          1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1, // right
-          1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1, // up
-         -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1, // left
-         -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1, // down
-          1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1  // back
-        ];
-
-        indices = [
-          0, 1, 2,   0, 2, 3,  // front
-          4, 5, 6,   4, 6, 7,  // right
-          8, 9, 10,  8, 10,11, // up
-          12,13,14,  12,14,15, // left
-          16,17,18,  16,18,19, // down
-          20,21,22,  20,22,23  // back
+        v = [
+          1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
+          1, 1, 1,  -1,-1, 1,   1,-1, 1,
+          1, 1, 1,   1,-1, 1,   1,-1,-1, // right
+          1, 1, 1,   1,-1,-1,   1, 1,-1,
+          1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
+          1, 1, 1,  -1, 1,-1,  -1, 1, 1,
+         -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
+         -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
+         -1,-1,-1,   1,-1,-1,   1,-1, 1, // down
+         -1,-1,-1,   1,-1, 1,  -1,-1, 1,
+          1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
+          1,-1,-1,  -1, 1,-1,   1, 1,-1
         ];
       }
       
       // Pyramid (2 x 2 x sqrt(3))
+      // height = sqrt(3) / 2 * bottom == 3**.5
       //
       //      ^
       //     /\\
@@ -239,68 +210,58 @@ W = {
       //   /+---\-+
       //  //  x  \/
       //  +------+
-      else if(shape.T == "p"){
-        var h = 3**.5; // height = sqrt(3) / 2 * bottom
+      else if(s.T == "p"){
         
-        vertices = [
-          -1, 0, 1,    1, 0, 1,  0, h, 0,  // Front
-           1, 0, 1,    1, 0,-1,  0, h, 0,  // Right
-           1, 0,-1,   -1, 0,-1,  0, h, 0,  // Back
-          -1, 0,-1,   -1, 0, 1,  0, h, 0,  // Left
+        v = [
+          -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
+           1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
+           1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
+          -1, 0,-1,   -1, 0, 1,  0, 3**.5, 0,  // Left
           -1, 0, 1,   -1, 0,-1,  1, 0, 1,  // Base
           -1, 0,-1,    1, 0,-1,  1, 0, 1
-        ];
-
-        indices = [
-          0, 1, 2,    // Front
-          3, 4, 5,    // Right
-          6, 7, 8,    // Back
-          9, 10, 11,  // Left
-          12, 13, 14, // Base
-          15, 16, 17
         ];
       }          
 
       // Set the position buffer
       
-      // W.b(new Float32Array(vertices), 'position');
-      W.b(new Float32Array(vertices), 'position');
+      // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bindBuffer(34962, gl.createBuffer());
       
-      // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-      gl.bindBuffer(34963, gl.createBuffer());
+      // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+      gl.bufferData(34962, new Float32Array(v), 35044);
       
-      // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-      gl.bufferData(34963, new Uint16Array(indices), 35044);
+      ;
+      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
 
       // Set shape color
       gl.vertexAttrib3fv(
         gl.getAttribLocation(W.P, 'color'),
-        [...shape.b].map(a => ("0x" + a) / 16) // convert rgb hex string into 3 values between 0 and 1 
+        [...s.b].map(a => ("0x" + a) / 16) // convert rgb hex string into 3 values between 0 and 1 
       );
         
       // Set the model matrix
-      W.N = shape.n;
-      var modelMatrix = new DOMMatrix();
-      W.t(modelMatrix);
+      W.N = s.n;
+      var m = new DOMMatrix();
+      W.t(m);
       gl.uniformMatrix4fv(
         gl.getUniformLocation(W.P, 'model'),
         false,
-        modelMatrix.toFloat32Array()
+        m.toFloat32Array()
       );
       
       // Set the inverse of the model matrix
       gl.uniformMatrix4fv(
         gl.getUniformLocation(W.P, 'modelInverse'),
         false,
-        modelMatrix.inverse().toFloat32Array()
+        m.inverse().toFloat32Array()
       );
       
       // Set the model's mvp matrix (cam x model)
-      modelMatrix.preMultiplySelf(cameraMatrix);
+      m.preMultiplySelf(c);
       gl.uniformMatrix4fv(
         gl.getUniformLocation(W.P, 'mvp'),
         false,
-        modelMatrix.toFloat32Array()
+        m.toFloat32Array()
       );
       
       W.N = "_l";
@@ -311,8 +272,8 @@ W = {
 
       // Render
       
-      // gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
-      gl.drawElements(4, indices.length, 5123, 0);
+      // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
+      gl.drawArrays(4, 0, v.length/3);
     }
   }
 }
