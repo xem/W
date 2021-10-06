@@ -30,7 +30,6 @@ W = {
       in vec4 color;
       uniform mat4 mvp;
       uniform mat4 model;
-      uniform mat4 modelInverse;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
@@ -247,13 +246,6 @@ W = {
         gl.getUniformLocation(W.P, 'model'),
         false,
         m.toFloat32Array()
-      );
-      
-      // Set the inverse of the model matrix
-      gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'modelInverse'),
-        false,
-        m.inverse().toFloat32Array()
       );
       
       // Set the model's mvp matrix (cam x model)
