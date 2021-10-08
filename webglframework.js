@@ -31,12 +31,16 @@ W = {
       uniform mat4 p;
       uniform mat4 v;
       uniform mat4 m;
-      uniform float billboard;
+      uniform vec2 billboard;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
-        if(billboard > 0.){
-          gl_Position = p * v * m * position;
+        if(billboard.x > 0.){
+          if(billboard.x > 0.){
+          mat4 camera2world = inverse(v);
+          vec4 mesh_center = m[3];
+          gl_Position = p * v * (mesh_center + camera2world * position);
+        }
         }
         else {
           gl_Position = p * v * m * position;
@@ -275,12 +279,12 @@ W = {
         W.l("x"), W.l("y"), W.l("z")
       );
       
-      gl.uniform1f(
+      // Billboard ([width, height] if it's a billboard, [0,0] otherwise)
+      gl.uniform2f(
         gl.getUniformLocation(W.P, 'billboard'),
-        s.T == "s"
+        s.T == "s" ? s.w : 0,
+        s.T == "s" ? s.h : 0,
       );
-
-      // Render
       
       // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
       gl.drawArrays(4, 0, vertices.length/3);
