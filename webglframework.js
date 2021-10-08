@@ -28,13 +28,20 @@ W = {
       `#version 300 es
       in vec4 position; 
       in vec4 color;
-      uniform mat4 mvp;
-      uniform mat4 model;
+      uniform mat4 p;
+      uniform mat4 v;
+      uniform mat4 m;
+      uniform float billboard;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
-        gl_Position = mvp * position;
-        v_position = vec3(model * position);
+        if(billboard > 0.){
+          gl_Position = p * v * m * position;
+        }
+        else {
+          gl_Position = p * v * m * position;
+        }
+        v_position = vec3(v * m * position);
         v_color = color;
       }`
     );
@@ -132,25 +139,40 @@ W = {
   light: t => { t.n = "_l"; W.i(t) },
   
   // Draw
-  d: (c, v, i, s, m) => {
+  d: (p, v, m, i, s, vertices) => {
     
     // Clear canvas
     
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
 
-    // Set the camera matrix (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    c = new DOMMatrix([
+    // Projection matrix
+    // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
+    p = new DOMMatrix([
       1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
       0, 1 / Math.tan(.5), 0, 0, 
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
+
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'p'),
+      false,
+      p.toFloat32Array()
+    );
+    
+    // View matrix
+    v = new DOMMatrix();
     W.N = "_c";
-    W.t(c);
+    W.t(v);
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'v'),
+      false,
+      v.toFloat32Array()
+    );
     
     // Draw all the shapes
-    v = [];
+    vertices = [];
     for(i in W.n){
       s = W.n[i];
       if(s.f < s.t) s.f++;
@@ -166,7 +188,7 @@ W = {
       //  v2------v3
       
       if(s.T == "q"){
-        v = [
+        vertices = [
           1, 1, 0,    -1, 1, 0,   -1,-1, 0,
           1, 1, 0,    -1,-1, 0,    1,-1, 0
         ];
@@ -184,7 +206,7 @@ W = {
       
       else if(s.T == "c"){
         
-        v = [
+        vertices = [
           1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
           1, 1, 1,  -1,-1, 1,   1,-1, 1,
           1, 1, 1,   1,-1, 1,   1,-1,-1, // right
@@ -211,7 +233,7 @@ W = {
       //  +------+
       else if(s.T == "p"){
         
-        v = [
+        vertices = [
           -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
            1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
            1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
@@ -227,9 +249,8 @@ W = {
       gl.bindBuffer(34962, gl.createBuffer());
       
       // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-      gl.bufferData(34962, new Float32Array(v), 35044);
+      gl.bufferData(34962, new Float32Array(vertices), 35044);
       
-      ;
       gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
 
       // Set shape color
@@ -243,15 +264,7 @@ W = {
       var m = new DOMMatrix();
       W.t(m);
       gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'model'),
-        false,
-        m.toFloat32Array()
-      );
-      
-      // Set the model's mvp matrix (cam x model)
-      m.preMultiplySelf(c);
-      gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'mvp'),
+        gl.getUniformLocation(W.P, 'm'),
         false,
         m.toFloat32Array()
       );
@@ -261,11 +274,16 @@ W = {
         gl.getUniformLocation(W.P, 'light'),
         W.l("x"), W.l("y"), W.l("z")
       );
+      
+      gl.uniform1f(
+        gl.getUniformLocation(W.P, 'billboard'),
+        s.T == "s"
+      );
 
       // Render
       
       // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
-      gl.drawArrays(4, 0, v.length/3);
+      gl.drawArrays(4, 0, vertices.length/3);
     }
   }
 }
