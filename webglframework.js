@@ -30,22 +30,21 @@ W = {
       in vec4 color;
       uniform mat4 p;
       uniform mat4 v;
+      uniform mat4 pv;
       uniform mat4 m;
       uniform vec2 billboard;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
         if(billboard.x > 0.){
-          if(billboard.x > 0.){
           mat4 camera2world = inverse(v);
           vec4 mesh_center = m[3];
-          gl_Position = p * v * (mesh_center + camera2world * position);
-        }
+          gl_Position = p * v * (mesh_center + camera2world * (position * vec4(billboard, 1., 1.)));
         }
         else {
           gl_Position = p * v * m * position;
         }
-        v_position = vec3(v * m * position);
+        v_position = vec3(m * position);
         v_color = color;
       }`
     );
@@ -143,7 +142,7 @@ W = {
   light: t => { t.n = "_l"; W.i(t) },
   
   // Draw
-  d: (p, v, m, i, s, vertices) => {
+  d: (pv, p, v, m, i, s, vertices) => {
     
     // Clear canvas
     
