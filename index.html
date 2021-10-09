@@ -10,17 +10,17 @@
 W.camera({z:-100,rx:-1,rz:0});
 W.light({x:1,y:.5,z:.5});
 W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
-W.pyramid({n:"pyramid",x:-10,y:40,z:1,w:5,h:5,d:5,rx:90,b:'d55'});
+W.pyramid({n:"pyramid",x:-10,y:35,z:1,w:5,h:5,d:5,rx:90,b:'d55'});
 W.cube({n:"block",x:0,y:0,z:18,w:8,h:8,d:16,rx:45,ry:-25,b:'68a'});
 W.plane({n:"plane",x:0,y:-30,z:1,w:10,h:15,rz:85,ry:50,b:'dda'});
-W.sprite({n:"sprite",x:-12,y:12,z:0,w:6,h:12,rx:0,b:'fab'});
-W.sprite({n:"sprite2",x:-16,y:16,z:0,w:6,h:12,rx:0,b:'abf'});
+W.billboard({n:"sprite",x:-12,y:12,z:0,w:6,h:12,rx:0,b:'fab'});
+W.billboard({n:"sprite2",x:-18,y:18,z:0,w:6,h:12,rx:0,b:'abf'});
 setTimeout(()=>{W.camera({rx:-85,rz:-180,x:0,y:-5,z:-60,t:180})}, 1000);
-setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,x:15,y:10,z:20,rz:440,t:200})}, 4000);
+setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,z:20,rz:440,t:200})}, 4000);
 setTimeout(()=>{W.move({n:"block",x:25,z:10,d:10,rx:0,ry:0,rz:85,t:100})}, 6000);
 setTimeout(()=>{W.light({x:0,y:0,z:1,t:100})}, 7000);
 setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
-setTimeout(()=>{W.move({n:"plane",y:10,z:1,rx:0,ry:0,rz:0,t:100})}, 11000);
+setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,t:100})}, 11000);
 setTimeout(()=>{W.camera({z:50,t:100})}, 13000);
 
 </script>

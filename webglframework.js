@@ -28,21 +28,20 @@ W = {
       `#version 300 es
       in vec4 position; 
       in vec4 color;
-      uniform mat4 p;
-      uniform mat4 v;
       uniform mat4 pv;
+      uniform mat4 eye;
       uniform mat4 m;
-      uniform vec2 billboard;
+      uniform vec3 billboard;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
-        if(billboard.x > 0.){
-          mat4 camera2world = inverse(v);
+        if(billboard.z > 0.){
+          mat4 camera2world = eye;
           vec4 mesh_center = m[3];
-          gl_Position = p * v * (mesh_center + camera2world * vec4(position.xyz * vec3(billboard, 1.), 0.));
+          gl_Position = pv * (mesh_center + camera2world * (position * vec4(billboard, 0)));
         }
         else {
-          gl_Position = p * v * m * position;
+          gl_Position = pv * m * position;
         }
         v_position = vec3(m * position);
         v_color = color;
@@ -129,7 +128,7 @@ W = {
   
   plane: t => { t.T = "q"; W.i(t) },
   
-  sprite: t => { t.T = "s"; W.i(t) },
+  billboard: t => { t.T = "b"; W.i(t) },
   
   cube: t => { t.T = "c"; W.i(t) },
   
@@ -137,41 +136,45 @@ W = {
   
   move: t => W.i(t),
   
-  camera: t => { t.n = "_c", W.i(t) },
+  camera: t => { t.n = "C", W.i(t) },
     
-  light: t => { t.n = "_l"; W.i(t) },
+  light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (pv, p, v, m, i, s, vertices) => {
+  d: (pv, eye, m, i, s, vertices) => {
     
     // Clear canvas
     
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
 
-    // Projection matrix
+
+    // Projection View matrix
     // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    p = new DOMMatrix([
+    pv = new DOMMatrix([
       1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
       0, 1 / Math.tan(.5), 0, 0, 
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
+    
+    // Eye Matrix (inverted View matrix)
+    eye = new DOMMatrix();
+    
+    W.N = "C";
+    W.t(pv);
+    W.t(eye);
 
     gl.uniformMatrix4fv(
-      gl.getUniformLocation(W.P, 'p'),
+      gl.getUniformLocation(W.P, 'pv'),
       false,
-      p.toFloat32Array()
+      pv.toFloat32Array()
     );
     
-    // View matrix
-    v = new DOMMatrix();
-    W.N = "_c";
-    W.t(v);
     gl.uniformMatrix4fv(
-      gl.getUniformLocation(W.P, 'v'),
+      gl.getUniformLocation(W.P, 'eye'),
       false,
-      v.toFloat32Array()
+      eye.invertSelf().toFloat32Array()
     );
     
     // Draw all the shapes
@@ -272,17 +275,18 @@ W = {
         m.toFloat32Array()
       );
       
-      W.N = "_l";
+      W.N = "L";
       gl.uniform3f(
         gl.getUniformLocation(W.P, 'light'),
         W.l("x"), W.l("y"), W.l("z")
       );
       
-      // Billboard ([width, height] if it's a billboard, [0,0] otherwise)
-      gl.uniform2f(
+      // Billboard info: [width, height, isBillboard]
+      gl.uniform3f(
         gl.getUniformLocation(W.P, 'billboard'),
-        s.T == "s" ? s.w : 0,
-        s.T == "s" ? s.h : 0,
+        s.w,
+        s.h,
+        s.T == "b"
       );
       
       // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
