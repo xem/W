@@ -28,13 +28,20 @@ W = {
       `#version 300 es
       in vec4 position; 
       in vec4 color;
-      uniform mat4 mvp;
-      uniform mat4 model;
+      uniform mat4 pv;
+      uniform mat4 eye;
+      uniform mat4 m;
+      uniform vec3 billboard;
       out vec4 v_color;
       out vec3 v_position;
       void main() {
-        gl_Position = mvp * position;
-        v_position = vec3(model * position);
+        if(billboard.z > 0.){
+          gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
+        }
+        else {
+          gl_Position = pv * m * position;
+        }
+        v_position = vec3(m * position);
         v_color = color;
       }`
     );
@@ -119,7 +126,7 @@ W = {
   
   plane: t => { t.T = "q"; W.i(t) },
   
-  sprite: t => { t.T = "s"; W.i(t) },
+  billboard: t => { t.T = "b"; W.i(t) },
   
   cube: t => { t.T = "c"; W.i(t) },
   
@@ -127,30 +134,49 @@ W = {
   
   move: t => W.i(t),
   
-  camera: t => { t.n = "_c", W.i(t) },
+  camera: t => { t.n = "C", W.i(t) },
     
-  light: t => { t.n = "_l"; W.i(t) },
+  light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (c, v, i, s, m) => {
+  d: (pv, eye, m, i, s, vertices) => {
     
     // Clear canvas
     
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
 
-    // Set the camera matrix (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    c = new DOMMatrix([
+
+    // Projection View matrix
+    // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
+    pv = new DOMMatrix([
       1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
       0, 1 / Math.tan(.5), 0, 0, 
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
-    W.N = "_c";
-    W.t(c);
+    
+    // Eye Matrix (inverted View matrix)
+    eye = new DOMMatrix();
+    
+    W.N = "C";
+    W.t(pv);
+    W.t(eye);
+
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'pv'),
+      false,
+      pv.toFloat32Array()
+    );
+    
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'eye'),
+      false,
+      eye.invertSelf().toFloat32Array()
+    );
     
     // Draw all the shapes
-    v = [];
+    vertices = [];
     for(i in W.n){
       s = W.n[i];
       if(s.f < s.t) s.f++;
@@ -166,7 +192,7 @@ W = {
       //  v2------v3
       
       if(s.T == "q"){
-        v = [
+        vertices = [
           1, 1, 0,    -1, 1, 0,   -1,-1, 0,
           1, 1, 0,    -1,-1, 0,    1,-1, 0
         ];
@@ -184,7 +210,7 @@ W = {
       
       else if(s.T == "c"){
         
-        v = [
+        vertices = [
           1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
           1, 1, 1,  -1,-1, 1,   1,-1, 1,
           1, 1, 1,   1,-1, 1,   1,-1,-1, // right
@@ -211,7 +237,7 @@ W = {
       //  +------+
       else if(s.T == "p"){
         
-        v = [
+        vertices = [
           -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
            1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
            1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
@@ -227,9 +253,8 @@ W = {
       gl.bindBuffer(34962, gl.createBuffer());
       
       // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-      gl.bufferData(34962, new Float32Array(v), 35044);
+      gl.bufferData(34962, new Float32Array(vertices), 35044);
       
-      ;
       gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
 
       // Set shape color
@@ -243,29 +268,27 @@ W = {
       var m = new DOMMatrix();
       W.t(m);
       gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'model'),
+        gl.getUniformLocation(W.P, 'm'),
         false,
         m.toFloat32Array()
       );
       
-      // Set the model's mvp matrix (cam x model)
-      m.preMultiplySelf(c);
-      gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'mvp'),
-        false,
-        m.toFloat32Array()
-      );
-      
-      W.N = "_l";
+      W.N = "L";
       gl.uniform3f(
         gl.getUniformLocation(W.P, 'light'),
         W.l("x"), W.l("y"), W.l("z")
       );
-
-      // Render
+      
+      // Billboard info: [width, height, isBillboard]
+      gl.uniform3f(
+        gl.getUniformLocation(W.P, 'billboard'),
+        s.w,
+        s.h,
+        s.T == "b"
+      );
       
       // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
-      gl.drawArrays(4, 0, v.length/3);
+      gl.drawArrays(4, 0, vertices.length/3);
     }
   }
 }
