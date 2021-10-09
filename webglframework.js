@@ -39,7 +39,7 @@ W = {
         if(billboard.x > 0.){
           mat4 camera2world = inverse(v);
           vec4 mesh_center = m[3];
-          gl_Position = p * v * (mesh_center + camera2world * (position * vec4(billboard, 1., 1.)));
+          gl_Position = p * v * (mesh_center + camera2world * vec4(position.xyz * vec3(billboard, 1.), 0.));
         }
         else {
           gl_Position = p * v * m * position;
