@@ -36,9 +36,7 @@ W = {
       out vec3 v_position;
       void main() {
         if(billboard.z > 0.){
-          mat4 camera2world = eye;
-          vec4 mesh_center = m[3];
-          gl_Position = pv * (mesh_center + camera2world * (position * vec4(billboard, 0)));
+          gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
         }
         else {
           gl_Position = pv * m * position;
