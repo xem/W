@@ -69,18 +69,21 @@ W = {
       out vec4 c;
       void main() {
         if(v_color.a > 0.){
-          c = (v_color);
+          c = vec4(v_color.rgb * (
+              max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+              + .2 // diffuse light
+            ),1.);
         }
         else {
-          if(texture(sampler, v_texCoord).a == 0.) discard;
-          else {
+          if(texture(sampler, v_texCoord).a < 1.) discard;
+          //else {
           c = (texture(sampler, v_texCoord)) * vec4(
             v_color.rgb * (
               max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
             ), 1
           );
-          }
+          //}
         }
       }
       `
