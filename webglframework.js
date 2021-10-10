@@ -331,7 +331,7 @@ W = {
         gl.bindBuffer(34962, gl.createBuffer());
         
         // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        gl.bufferData(34962, new Float32Array(tex), 35044);
+        gl.bufferData(34962, new Float32Array(texCoords), 35044);
         
         // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
         gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
