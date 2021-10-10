@@ -28,12 +28,14 @@ W = {
       `#version 300 es
       in vec4 position; 
       in vec4 color;
+      in vec2 texCoord;
       uniform mat4 pv;
       uniform mat4 eye;
       uniform mat4 m;
       uniform vec3 billboard;
       out vec4 v_color;
       out vec3 v_position;
+      out vec2 v_texCoord;
       void main() {
         if(billboard.z > 0.){
           gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
@@ -55,12 +57,17 @@ W = {
       // t = gl.createShader(gl.FRAGMENT_SHADER);
       t = gl.createShader(35632),
       
-      `#version 300 es\nprecision mediump float;
-      uniform vec3 light;
+      `#version 300 es
+      precision mediump float;
       in vec3 v_position;
       in vec4 v_color;
+      in vec2 v_texCoord;
+      uniform vec3 light;
+      uniform sampler2D sampler;
       out vec4 c;
       void main() {
+        //c = texture2D(sampler, v_texCoord);
+        
         c = vec4(
           v_color.rgb * (
             max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
@@ -89,7 +96,7 @@ W = {
   // ------------------
 
   // Interpolate a property between two values
-  l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].t),
+  l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition),
   
   // Transition an item
   t: t => t.translateSelf(W.l("x"), W.l("y"), W.l("z"))
@@ -111,8 +118,8 @@ W = {
     // Merge previous state or default state with the new state passed in parameter
     t = {...(W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"}), ...t};
     
-    // Save the t duration (in frames), or 0 by default
-    t.t ||= 1;
+    // Save the transition duration (in frames), or 0 by default
+    t.transition ||= 1;
     
     // Reset t frame counter
     t.f = 1;                        
@@ -137,6 +144,38 @@ W = {
   camera: t => { t.n = "C", W.i(t) },
     
   light: t => { t.n = "L"; W.i(t) },
+  
+  texture: t => {
+    
+    // Set a 2D texture
+    var texture = gl.createTexture();
+    var sampler = gl.getUniformLocation(W.P, 'sampler');
+    var image = new Image();
+    image.src = t; // URL or path relative to the HTML file 
+    //image.onload = function(){
+
+      // Flip the image's y axis
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+
+      // Enable texture 0
+      gl.activeTexture(gl.TEXTURE0);
+
+      // Set the texture's target (2D or cubemap)
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      // Stretch/wrap options
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      
+      // Bind image to texture
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+      
+      // Pass texture 0 to the sampler
+      gl.uniform1i(sampler, 0);
+      
+      //gl.clear(gl.COLOR_BUFFER_BIT);   // Clear canvas
+      //gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the quad
+    //};
+  },
   
   // Draw
   d: (pv, eye, m, i, s, vertices) => {
@@ -177,9 +216,10 @@ W = {
     
     // Draw all the shapes
     vertices = [];
+    color = [];
     for(i in W.n){
       s = W.n[i];
-      if(s.f < s.t) s.f++;
+      if(s.f < s.transition) s.f++;
 
       // Initialize a shape
       
@@ -190,12 +230,17 @@ W = {
       //  |   x   |
       //  |       |
       //  v2------v3
+      if(s.T == "q" || s.T == "b"){
       
-      if(s.T == "q"){
         vertices = [
           1, 1, 0,    -1, 1, 0,   -1,-1, 0,
           1, 1, 0,    -1,-1, 0,    1,-1, 0
         ];
+        
+        color = [
+          1, 0, 0,     1, 0, 0,    1, 0, 0,
+          1, 0, 0,     1, 0, 0,    1, 0, 0
+        ]
       }
       
       // Cube (2x2x2)
@@ -209,7 +254,6 @@ W = {
       //  v2------v3
       
       else if(s.T == "c"){
-        
         vertices = [
           1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
           1, 1, 1,  -1,-1, 1,   1,-1, 1,
@@ -236,7 +280,6 @@ W = {
       //  //  x  \/
       //  +------+
       else if(s.T == "p"){
-        
         vertices = [
           -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
            1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
@@ -245,28 +288,46 @@ W = {
           -1, 0, 1,   -1, 0,-1,  1, 0, 1,  // Base
           -1, 0,-1,    1, 0,-1,  1, 0, 1
         ];
-      }          
+      }  
+
+      // Anything else
+      else {
+        vertices = [];
+      }
 
       // Set the position buffer
+      
+      //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bindBuffer(34962, gl.createBuffer());
+      
+      //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+      gl.bufferData(34962, new Float32Array(vertices), 35044);      
+      
+      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
+      
+      
+      // Color buffer
       
       // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bindBuffer(34962, gl.createBuffer());
       
       // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-      gl.bufferData(34962, new Float32Array(vertices), 35044);
+      gl.bufferData(34962, new Float32Array(color), 35044);
       
-      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
+      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'color'), 3, 5126, false, 0, 0));
+      
 
       // Set shape color
-      gl.vertexAttrib3fv(
+      /*gl.vertexAttrib3fv(
         gl.getAttribLocation(W.P, 'color'),
         [...s.b].map(a => ("0x" + a) / 16) // convert rgb hex string into 3 values between 0 and 1 
-      );
+      );*/
         
       // Set the model matrix
       W.N = s.n;
-      var m = new DOMMatrix();
+      var m = new DOMMatrix(W?.n[s.g]?.m);
       W.t(m);
+      W.n[s.n].m=m;
       gl.uniformMatrix4fv(
         gl.getUniformLocation(W.P, 'm'),
         false,
