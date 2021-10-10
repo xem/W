@@ -385,5 +385,3 @@ async function main() {
   setInterval(W.d, 16);
   W.d();
 }
-
-main();

@@ -9,6 +9,7 @@
 <br>
 
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
+main().then(()=>{
   W.camera({z:-100,rx:-1,rz:0});
   W.light({x:1,y:.5,z:.5});
   W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
@@ -26,5 +27,5 @@
   //setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
   //setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,transition:100})}, 11000);
   //setTimeout(()=>{W.camera({z:50,transition:100})}, 13000);
-
+});
 </script>
