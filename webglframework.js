@@ -28,14 +28,14 @@ W = {
       `#version 300 es
       in vec4 position; 
       in vec4 color;
-      in vec2 texCoord;
+      in vec2 tex;
       uniform mat4 pv;
       uniform mat4 eye;
       uniform mat4 m;
       uniform vec3 billboard;
       out vec4 v_color;
       out vec3 v_position;
-      out vec2 v_texCoord;
+      out vec2 v_tex;
       void main() {
         if(billboard.z > 0.){
           gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
@@ -45,6 +45,7 @@ W = {
         }
         v_position = vec3(m * position);
         v_color = color;
+        v_tex = tex;
       }`
     );
     gl.compileShader(t);
@@ -61,19 +62,19 @@ W = {
       precision mediump float;
       in vec3 v_position;
       in vec4 v_color;
-      in vec2 v_texCoord;
+      in vec2 v_tex;
       uniform vec3 light;
       uniform sampler2D sampler;
       out vec4 c;
       void main() {
-        //c = texture2D(sampler, v_texCoord);
+        c = texture(sampler, v_tex);
         
-        c = vec4(
+        /*c = vec4(
           v_color.rgb * (
             max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
             + .2 // diffuse light
           ), 1
-        );
+        );*/
       }`
     );
     gl.compileShader(t);
@@ -147,38 +148,11 @@ W = {
   
   texture: t => {
     
-    // Set a 2D texture
-    var texture = gl.createTexture();
-    var sampler = gl.getUniformLocation(W.P, 'sampler');
-    var image = new Image();
-    image.src = t; // URL or path relative to the HTML file 
-    //image.onload = function(){
-
-      // Flip the image's y axis
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-
-      // Enable texture 0
-      gl.activeTexture(gl.TEXTURE0);
-
-      // Set the texture's target (2D or cubemap)
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-
-      // Stretch/wrap options
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      
-      // Bind image to texture
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-      
-      // Pass texture 0 to the sampler
-      gl.uniform1i(sampler, 0);
-      
-      //gl.clear(gl.COLOR_BUFFER_BIT);   // Clear canvas
-      //gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the quad
-    //};
+    
   },
   
   // Draw
-  d: (pv, eye, m, i, s, vertices) => {
+  d: (pv, eye, m, i, s, vertices, tex, buffer) => {
     
     // Clear canvas
     
@@ -216,7 +190,7 @@ W = {
     
     // Draw all the shapes
     vertices = [];
-    color = [];
+    tex = [];
     for(i in W.n){
       s = W.n[i];
       if(s.f < s.transition) s.f++;
@@ -237,9 +211,9 @@ W = {
           1, 1, 0,    -1,-1, 0,    1,-1, 0
         ];
         
-        color = [
-          1, 0, 0,     1, 0, 0,    1, 0, 0,
-          1, 0, 0,     1, 0, 0,    1, 0, 0
+        texCoords = [
+          1, 1,     0, 1,    0, 0,
+          1, 1,     0, 0,    1, 0
         ]
       }
       
@@ -303,25 +277,55 @@ W = {
       //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
       gl.bufferData(34962, new Float32Array(vertices), 35044);      
       
-      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0));
+      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
+      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
+      
+      gl.enableVertexAttribArray(buffer);
       
       
-      // Color buffer
+      // Texture coords buffer
       
       // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bindBuffer(34962, gl.createBuffer());
       
       // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-      gl.bufferData(34962, new Float32Array(color), 35044);
+      gl.bufferData(34962, new Float32Array(tex), 35044);
       
-      gl.enableVertexAttribArray(gl.vertexAttribPointer(gl.getAttribLocation(W.P, 'color'), 3, 5126, false, 0, 0));
+      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
+      
+      gl.enableVertexAttribArray(buffer);
       
 
       // Set shape color
-      /*gl.vertexAttrib3fv(
+      gl.vertexAttrib3fv(
         gl.getAttribLocation(W.P, 'color'),
         [...s.b].map(a => ("0x" + a) / 16) // convert rgb hex string into 3 values between 0 and 1 
-      );*/
+      );
+      
+      
+      // Texture (tree)
+      var texture = gl.createTexture();
+      var sampler = gl.getUniformLocation(W.P, 'sampler');
+
+      // Flip the image's y axis
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+
+      // Enable texture 0
+      gl.activeTexture(gl.TEXTURE0);
+
+      // Set the texture's target (2D or cubemap)
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      // Stretch/wrap options
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      
+      // Bind image to texture
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, tree);
+      
+      // Pass texture 0 to the sampler
+      gl.uniform1i(sampler, 0);
+      
         
       // Set the model matrix
       W.N = s.n;

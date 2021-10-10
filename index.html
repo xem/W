@@ -1,29 +1,34 @@
 ﻿<link rel=icon href="data:image/svg+xml,W">
 <canvas id=a width=780 height=500 style="border:1px solid"></canvas>
 
+
+<img src="tree.png" id=tree>
+
 <script src="webglframework.js"></script>
 
 <br>
 <br>
 
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
-W.texture("tree.png")
-W.camera({z:-100,rx:-1,rz:0});
-W.light({x:1,y:.5,z:.5});
-W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
-W.group({n:"group"});
-W.pyramid({n:"pyramid",g:"group",x:-10,y:35,z:1,w:5,h:5,d:5,rx:90,b:'d55'});
-W.cube({n:"block",g:"group",x:0,y:0,z:18,w:8,h:8,d:16,rx:45,ry:-25,b:'68a'});
-W.plane({n:"plane",g:"group",x:0,y:-30,z:1,w:10,h:15,rz:85,ry:50,b:'dda'});
-W.billboard({n:"billboard",x:25,y:26,z:6,w:6,h:6,rx:0,b:'fab'});
-W.billboard({n:"billboard2",x:27,y:40,z:6,w:6,h:6,rx:0,b:'abf'});
-setTimeout(()=>{W.camera({rx:-85,rz:-180,x:0,y:-5,z:-80,transition:180})}, 1000);
-//setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,z:20,rz:440,transition:200})}, 4000);
-//setTimeout(()=>{W.move({n:"block",x:25,z:10,d:10,rx:0,ry:0,rz:85,transition:100})}, 6000);
-//setTimeout(()=>{W.light({x:0,y:0,z:1,transition:100})}, 7000);
-setTimeout(()=>{W.move({n:"group",z:10,w:.5,h:.5,d:.5,rz:-270,transition:190})}, 4200);
-//setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
-//setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,transition:100})}, 11000);
-//setTimeout(()=>{W.camera({z:50,transition:100})}, 13000);
+onload = () => {
+  //W.texture(tree)
+  W.camera({z:-100,rx:-1,rz:0});
+  W.light({x:1,y:.5,z:.5});
+  W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
+  W.group({n:"group"});
+  W.pyramid({n:"pyramid",g:"group",x:-10,y:35,z:1,w:5,h:5,d:5,rx:90,b:'d55'});
+  W.cube({n:"block",g:"group",x:0,y:0,z:18,w:8,h:8,d:16,rx:45,ry:-25,b:'68a'});
+  W.plane({n:"plane",g:"group",x:0,y:-30,z:1,w:10,h:15,rz:85,ry:50,b:'dda'});
+  W.billboard({n:"billboard",x:25,y:26,z:6,w:6,h:6,rx:0,b:'fab'});
+  W.billboard({n:"billboard2",x:27,y:40,z:6,w:6,h:6,rx:0,b:'abf'});
+  setTimeout(()=>{W.camera({rx:-85,rz:-180,x:0,y:-5,z:-80,transition:180})}, 1000);
+  //setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,z:20,rz:440,transition:200})}, 4000);
+  //setTimeout(()=>{W.move({n:"block",x:25,z:10,d:10,rx:0,ry:0,rz:85,transition:100})}, 6000);
+  //setTimeout(()=>{W.light({x:0,y:0,z:1,transition:100})}, 7000);
+  setTimeout(()=>{W.move({n:"group",z:10,w:.5,h:.5,d:.5,rz:-270,transition:190})}, 4200);
+  //setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
+  //setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,transition:100})}, 11000);
+  //setTimeout(()=>{W.camera({z:50,transition:100})}, 13000);
+}
 
 </script>
