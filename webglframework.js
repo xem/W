@@ -60,7 +60,7 @@ W = {
       t = gl.createShader(35632),
       
       `#version 300 es
-      precision mediump float;
+      precision highp float;
       in vec3 v_position;
       in vec4 v_color;
       in vec2 v_texCoord;
@@ -68,12 +68,20 @@ W = {
       uniform sampler2D sampler;
       out vec4 c;
       void main() {
-        c = texture(sampler, v_texCoord) * vec4(
-          v_color.rgb * (
-            max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
-            + .2 // diffuse light
-          ), 1
-        );
+        if(v_color.a > 0.){
+          c = (v_color);
+        }
+        else {
+          if(texture(sampler, v_texCoord).a == 0.) discard;
+          else {
+          c = (texture(sampler, v_texCoord)) * vec4(
+            v_color.rgb * (
+              max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+              + .2 // diffuse light
+            ), 1
+          );
+          }
+        }
       }
       `
     );
@@ -95,6 +103,7 @@ W = {
     function makeTexture(image) {
       let texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
       gl.generateMipmap(gl.TEXTURE_2D);
@@ -337,9 +346,11 @@ W = {
         
 
         // Set shape color
-        gl.vertexAttrib3fv(
+        
+        console.log()
+        gl.vertexAttrib4fv(
           gl.getAttribLocation(W.P, 'color'),
-          [...s.b].map(a => ("0x" + a) / 16) // convert rgb hex string into 3 values between 0 and 1 
+          [...[...s.b].map(a => ("0x" + a) / 16), s.diffuseMap ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
         );
         
         
