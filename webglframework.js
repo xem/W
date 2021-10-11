@@ -75,15 +75,12 @@ W = {
             ),1.);
         }
         else {
-          if(texture(sampler, v_texCoord).a < 1.) discard;
-          //else {
           c = (texture(sampler, v_texCoord)) * vec4(
-            v_color.rgb * (
+              vec3(1,1,1) * (
               max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
             ), 1
           );
-          //}
         }
       }
       `
@@ -105,8 +102,8 @@ W = {
 
     function makeTexture(image) {
       let texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
       gl.generateMipmap(gl.TEXTURE_2D);
@@ -195,196 +192,216 @@ W = {
     
 
 
-      // Projection View matrix
-      // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-      pv = new DOMMatrix([
-        1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
-        0, 1 / Math.tan(.5), 0, 0, 
-        0, 0, (900 + 1) * 1 / (1 - 900), -1,
-        0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
-      ]);
-      
-      // Eye Matrix (inverted View matrix)
-      eye = new DOMMatrix();
-      
-      W.N = "C";
-      W.t(pv);
-      W.t(eye);
+    // Projection View matrix
+    // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
+    pv = new DOMMatrix([
+      1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
+      0, 1 / Math.tan(.5), 0, 0, 
+      0, 0, (900 + 1) * 1 / (1 - 900), -1,
+      0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
+    ]);
+    
+    // Eye Matrix (inverted View matrix)
+    eye = new DOMMatrix();
+    
+    W.N = "C";
+    W.t(pv);
+    W.t(eye);
 
-      gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'pv'),
-        false,
-        pv.toFloat32Array()
-      );
-      
-      gl.uniformMatrix4fv(
-        gl.getUniformLocation(W.P, 'eye'),
-        false,
-        eye.invertSelf().toFloat32Array()
-      );
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'pv'),
+      false,
+      pv.toFloat32Array()
+    );
+    
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'eye'),
+      false,
+      eye.invertSelf().toFloat32Array()
+    );
 
-      // Draw all the shapes
-      vertices = [];
-
-      texCoords = [];
-
-      for(i in W.n){
-
-        s = W.n[i];
-
-        if (s.diffuseMap) {
-          // Enable texture 0
-          gl.activeTexture(gl.TEXTURE0);
-
-          // Set the texture's target (2D or cubemap)
-          gl.bindTexture(gl.TEXTURE_2D, W.textures[s.diffuseMap]);
-
-          // Pass texture 0 to the sampler
-          gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
-        }
-
-        if(s.f < s.transition) s.f++;
-
-        // Initialize a shape
-        
-        // Plane (2 x 2)
-        //
-        //  v1------v0
-        //  |       |
-        //  |   x   |
-        //  |       |
-        //  v2------v3
-        if(s.T == "q" || s.T == "b"){
-        
-          vertices = [
-            1, 1, 0,    -1, 1, 0,   -1,-1, 0,
-            1, 1, 0,    -1,-1, 0,    1,-1, 0
-          ];
-          
-          texCoords = [
-            1, 1,     0, 1,    0, 0,
-            1, 1,     0, 0,    1, 0
-          ]
-        }
-        
-        // Cube (2x2x2)
-        //
-        //    v6----- v5
-        //   /|      /|
-        //  v1------v0|
-        //  | |   x | |
-        //  | |v7---|-|v4
-        //  |/      |/
-        //  v2------v3
-        
-        else if(s.T == "c"){
-          vertices = [
-            1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
-            1, 1, 1,  -1,-1, 1,   1,-1, 1,
-            1, 1, 1,   1,-1, 1,   1,-1,-1, // right
-            1, 1, 1,   1,-1,-1,   1, 1,-1,
-            1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
-            1, 1, 1,  -1, 1,-1,  -1, 1, 1,
-           -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
-           -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
-           -1,-1,-1,   1,-1,-1,   1,-1, 1, // down
-           -1,-1,-1,   1,-1, 1,  -1,-1, 1,
-            1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
-            1,-1,-1,  -1, 1,-1,   1, 1,-1
-          ];
-        }
-        
-        // Pyramid (2 x 2 x sqrt(3))
-        // height = sqrt(3) / 2 * bottom == 3**.5
-        //
-        //      ^
-        //     /\\
-        //    // \ \
-        //   /+---\-+
-        //  //  x  \/
-        //  +------+
-        else if(s.T == "p"){
-          vertices = [
-            -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
-             1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
-             1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
-            -1, 0,-1,   -1, 0, 1,  0, 3**.5, 0,  // Left
-            -1, 0, 1,   -1, 0,-1,  1, 0, 1,  // Base
-            -1, 0,-1,    1, 0,-1,  1, 0, 1
-          ];
-        }  
-
-        // Anything else
-        else {
-          vertices = [];
-          texCoords = [];
-        }
-
-        // Set the position buffer
-        
-        //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bindBuffer(34962, gl.createBuffer());
-        
-        //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        gl.bufferData(34962, new Float32Array(vertices), 35044);      
-        
-        // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
-        gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
-        
-        gl.enableVertexAttribArray(buffer);
-        
-        
-        // Texture coords buffer
-        
-        // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bindBuffer(34962, gl.createBuffer());
-        
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        gl.bufferData(34962, new Float32Array(texCoords), 35044);
-        
-        // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
-        gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
-        
-        gl.enableVertexAttribArray(buffer);
-        
-
-        // Set shape color
-        
-        console.log()
-        gl.vertexAttrib4fv(
-          gl.getAttribLocation(W.P, 'color'),
-          [...[...s.b].map(a => ("0x" + a) / 16), s.diffuseMap ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
-        );
-        
-        
-        // Set the model matrix
-        W.N = s.n;
-        var m = new DOMMatrix(W?.n[s.g]?.m);
-        W.t(m);
-        W.n[s.n].m=m;
-        gl.uniformMatrix4fv(
-          gl.getUniformLocation(W.P, 'm'),
-          false,
-          m.toFloat32Array()
-        );
-        
-        W.N = "L";
-        gl.uniform3f(
-          gl.getUniformLocation(W.P, 'light'),
-          W.l("x"), W.l("y"), W.l("z")
-        );
-        
-        // Billboard info: [width, height, isBillboard]
-        gl.uniform3f(
-          gl.getUniformLocation(W.P, 'billboard'),
-          s.w,
-          s.h,
-          s.T == "b"
-        );
-        
-        // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
-        gl.drawArrays(4, 0, vertices.length/3);
+    // Draw all the shapes
+    vertices = [];
+    texCoords = [];
+    
+    // First, render shapes with an opaque color
+    for(i in W.n){
+      if(!W.n[i].diffuseMap && !W.n[i].b[3]){
+        W.r(W.n[i]);
+      }
     }
+    
+    // Then, sort the sshapes with transparency or with a texture from near to far, and render them
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    
+    for(i in W.n){
+      if(W.n[i].diffuseMap || W.n[i].b[3]){
+        W.r(W.n[i]);
+      }
+    }
+    
+    gl.disable(gl.BLEND);
+    gl.enable(gl.DEPTH_TEST);
+  },
+  
+  // Render an object
+  r: (t, s) => {
+    
+    s = t;
+
+    if (s.diffuseMap) {
+      // Enable texture 0
+      gl.activeTexture(gl.TEXTURE0);
+
+      // Set the texture's target (2D or cubemap)
+      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.diffuseMap]);
+
+      // Pass texture 0 to the sampler
+      gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
+    }
+
+    if(s.f < s.transition) s.f++;
+
+    // Initialize a shape
+    
+    // Plane (2 x 2)
+    //
+    //  v1------v0
+    //  |       |
+    //  |   x   |
+    //  |       |
+    //  v2------v3
+    if(s.T == "q" || s.T == "b"){
+    
+      vertices = [
+        1, 1, 0,    -1, 1, 0,   -1,-1, 0,
+        1, 1, 0,    -1,-1, 0,    1,-1, 0
+      ];
+      
+      texCoords = [
+        1, 1,     0, 1,    0, 0,
+        1, 1,     0, 0,    1, 0
+      ]
+    }
+    
+    // Cube (2x2x2)
+    //
+    //    v6----- v5
+    //   /|      /|
+    //  v1------v0|
+    //  | |   x | |
+    //  | |v7---|-|v4
+    //  |/      |/
+    //  v2------v3
+    
+    else if(s.T == "c"){
+      vertices = [
+        1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
+        1, 1, 1,  -1,-1, 1,   1,-1, 1,
+        1, 1, 1,   1,-1, 1,   1,-1,-1, // right
+        1, 1, 1,   1,-1,-1,   1, 1,-1,
+        1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
+        1, 1, 1,  -1, 1,-1,  -1, 1, 1,
+       -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
+       -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
+       -1,-1,-1,   1,-1,-1,   1,-1, 1, // down
+       -1,-1,-1,   1,-1, 1,  -1,-1, 1,
+        1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
+        1,-1,-1,  -1, 1,-1,   1, 1,-1
+      ];
+    }
+    
+    // Pyramid (2 x 2 x sqrt(3))
+    // height = sqrt(3) / 2 * bottom == 3**.5
+    //
+    //      ^
+    //     /\\
+    //    // \ \
+    //   /+---\-+
+    //  //  x  \/
+    //  +------+
+    else if(s.T == "p"){
+      vertices = [
+        -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
+         1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
+         1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
+        -1, 0,-1,   -1, 0, 1,  0, 3**.5, 0,  // Left
+        -1, 0, 1,   -1, 0,-1,  1, 0, 1,  // Base
+        -1, 0,-1,    1, 0,-1,  1, 0, 1
+      ];
+    }  
+
+    // Anything else
+    else {
+      vertices = [];
+      texCoords = [];
+    }
+
+    // Set the position buffer
+    
+    //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bindBuffer(34962, gl.createBuffer());
+    
+    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array(vertices), 35044);      
+    
+    // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
+    
+    gl.enableVertexAttribArray(buffer);
+    
+    
+    // Texture coords buffer
+    
+    // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bindBuffer(34962, gl.createBuffer());
+    
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array(texCoords), 35044);
+    
+    // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
+    
+    gl.enableVertexAttribArray(buffer);
+    
+
+    // Set shape color
+    gl.vertexAttrib4fv(
+      gl.getAttribLocation(W.P, 'color'),
+      [...[...s.b].map(a => ("0x" + a) / 16), s.diffuseMap ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+    );
+    
+    
+    // Set the model matrix
+    W.N = s.n;
+    var m = new DOMMatrix(W?.n[s.g]?.m);
+    W.t(m);
+    W.n[s.n].m=m;
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'm'),
+      false,
+      m.toFloat32Array()
+    );
+    
+    W.N = "L";
+    gl.uniform3f(
+      gl.getUniformLocation(W.P, 'light'),
+      W.l("x"), W.l("y"), W.l("z")
+    );
+    
+    // Billboard info: [width, height, isBillboard]
+    gl.uniform3f(
+      gl.getUniformLocation(W.P, 'billboard'),
+      s.w,
+      s.h,
+      s.T == "b"
+    );
+    
+    // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
+    gl.drawArrays(4, 0, vertices.length/3);
+    
   }
 }
 
