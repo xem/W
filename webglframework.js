@@ -4,7 +4,7 @@ W = {
   // -------
   
   o: 0,
-  p: {},    // previous states
+  p: {},    // previous states (list 1: opaque items, list 2: items with transparency)
   n: {},    // next states
   textures: {},
   
@@ -16,6 +16,9 @@ W = {
     
     // WebGL context
     gl = a.getContext("webgl2");
+    
+    // Don't compute triangles back faces
+    gl.enable(gl.CULL_FACE);
 
     // Compile program
     W.P = gl.createProgram();
@@ -72,7 +75,7 @@ W = {
           c = vec4(v_color.rgb * (
               max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
-            ),1.);
+            ), v_color.a);
         }
         else {
           c = (texture(sampler, v_texCoord)) * vec4(
@@ -183,15 +186,13 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (pv, eye, m, i, s, vertices, tex, buffer) => {
+  d: (pv, eye, m, i, s, vertices, tex, buffer, transparent = []) => {
     
     // Clear canvas
     
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
     
-
-
     // Projection View matrix
     // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
     pv = new DOMMatrix([
@@ -220,26 +221,35 @@ W = {
       eye.invertSelf().toFloat32Array()
     );
 
-    // Draw all the shapes
     vertices = [];
     texCoords = [];
     
-    // First, render shapes with an opaque color
+    // First, render shapes with an opaque color using native depth-sorting and with no alpha blending
     for(i in W.n){
       if(!W.n[i].diffuseMap && !W.n[i].b[3]){
         W.r(W.n[i]);
       }
     }
     
-    // Then, sort the sshapes with transparency or with a texture from near to far, and render them
+    // Then, sort the shapes with transparency from front to back and render then without depth-sorting and with alpha blending
     gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     
     for(i in W.n){
       if(W.n[i].diffuseMap || W.n[i].b[3]){
-        W.r(W.n[i]);
+        transparent.push(W.n[i]);
       }
+    }
+    //console.log(transparent);
+    transparent.sort((a,b)=>{
+      // Return a value > 0 if b is closer to the camera than a
+      // Return a value < 0 if a is closer to the camera than b
+      return a.m && b.m && (W.dist(a.m, W.n.C.m) - W.dist(b.m, W.n.C.m));
+    });
+    console.log(transparent.map(a=>a.n));
+    for(i in transparent){
+      W.r(transparent[i]);
     }
     
     gl.disable(gl.BLEND);
@@ -247,9 +257,7 @@ W = {
   },
   
   // Render an object
-  r: (t, s) => {
-    
-    s = t;
+  r: (s, center = [0,0,0]) => {
 
     if (s.diffuseMap) {
       // Enable texture 0
@@ -283,7 +291,7 @@ W = {
       texCoords = [
         1, 1,     0, 1,    0, 0,
         1, 1,     0, 0,    1, 0
-      ]
+      ];
     }
     
     // Cube (2x2x2)
@@ -338,6 +346,10 @@ W = {
       vertices = [];
       texCoords = [];
     }
+    
+    s.vertices = vertices;
+    s.texCoords = texCoords;
+    s.center = center;
 
     // Set the position buffer
     
@@ -402,6 +414,10 @@ W = {
     // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
     gl.drawArrays(4, 0, vertices.length/3);
     
+  },
+  
+  dist: (a, b) => {
+    return (b.m41 - a.m41)**2 + (b.m42 - a.m42)**2 + (b.m43 - a.m43)**2;
   }
 }
 
