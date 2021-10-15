@@ -2,6 +2,11 @@
 <style>img{display:none}</style>
 <canvas id=a width=780 height=500 style="border:1px solid"></canvas>
 
+<p>tree1 <input id=t1>
+<p>tree2 <input id=t2>
+<p>tree3 <input id=t3>
+<p>cam <input id=cam>
+
 <img src="tree.png" id=tree>
 <script src="webglframework.js"></script>
 
@@ -15,7 +20,7 @@ main().then(()=>{
   W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
   W.group({n:"group"});
   W.pyramid({n:"pyramid",g:"group",x:-10,y:35,z:1,w:5,h:5,d:5,rx:90,b:'d55'});
-  W.cube({n:"block",g:"group",x:0,y:0,z:18,w:8,h:8,d:16,rx:45,ry:-25,b:'68ab'});
+  //W.cube({n:"block",g:"group",x:0,y:0,z:18,w:8,h:8,d:16,rx:45,ry:-25,b:'68ab'});
   W.plane({n:"plane",g:"group",x:0,y:-30,z:5,w:10,h:10,rz:85,ry:50,b:'dda'});
   W.billboard({n:"billboard1",x:27,y:40,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
   W.billboard({n:"billboard2",x:25,y:30,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
@@ -27,6 +32,6 @@ main().then(()=>{
   setTimeout(()=>{W.move({n:"group",z:10,w:.5,h:.5,d:.5,rz:-270,transition:190})}, 4200);
   setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
   setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,transition:100})}, 11000);
-  //setTimeout(()=>{W.camera({z:50,transition:100})}, 13000);
+  setTimeout(()=>{W.camera({z:50,transition:100})}, 5000);
 });
 </script>

@@ -188,6 +188,12 @@ W = {
   // Draw
   d: (pv, eye, m, i, s, vertices, tex, buffer, transparent = []) => {
     
+    t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
+    t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
+    t3.value = [W.n.billboard3?.m?.m41, W.n.billboard3?.m?.m42, W.n.billboard3?.m?.m43];
+    cam.value = [W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43];
+    console.log(W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43) 
+    
     // Clear canvas
     
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -247,7 +253,7 @@ W = {
       // Return a value < 0 if a is closer to the camera than b
       return a.m && b.m && (W.dist(a.m, W.n.C.m) - W.dist(b.m, W.n.C.m));
     });
-    console.log(transparent.map(a=>a.n));
+    //console.log(transparent.map(a=>a.n));
     for(i in transparent){
       W.r(transparent[i]);
     }
