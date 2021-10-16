@@ -258,7 +258,7 @@ W = {
     transparent.sort((a,b)=>{
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
-      return a.m && b.m && (W.dist(a.m, W.n.C.m) - W.dist(b.m, W.n.C.m));
+      return a.m && b.m && (W.dist(b.m, W.n.C.m) - W.dist(a.m, W.n.C.m));
     });
     //console.log(transparent.map(a=>a.n));
     for(i in transparent){
