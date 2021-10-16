@@ -20,7 +20,7 @@ main().then(()=>{
   W.plane({n:"ground",w:45,h:45,z:0,b:'8d8'});
   //W.group({n:"group"});
   //W.pyramid({n:"pyramid",x:-10,y:35,z:-50,w:5,h:5,d:5,rx:90,b:'d55'});
-  W.cube({n:"block",x:0,y:0,z:10,w:8,h:8,d:16,rx:0,ry:0,b:'68ab'});
+  W.cube({n:"block",x:0,y:0,z:16,w:8,h:8,d:16,rx:0,ry:0,b:'68ab'});
   //W.plane({n:"plane",x:0,y:-30,z:5,w:10,h:10,rz:85,ry:50,b:'dda'});
   //W.billboard({n:"billboard1",x:27,y:40,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
   //W.billboard({n:"billboard2",x:25,y:30,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
@@ -35,7 +35,10 @@ main().then(()=>{
   //setTimeout(()=>{W.camera({z:50,transition:100})}, 5000);
   
   setTimeout(()=>{
-    W.camera({rx:75,y:-100,z:10, transition:50})
+    W.camera({rx:55,y:-100,z:40, transition:50})
   },1000);
+  setTimeout(()=>{
+    W.move({n:"block", z:0, transition:50})
+  },2500);
 });
 </script>
