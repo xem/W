@@ -18,7 +18,7 @@ W = {
     gl = a.getContext("webgl2");
     
     // Don't compute triangles back faces
-    //gl.enable(gl.CULL_FACE);
+    gl.enable(gl.CULL_FACE);
 
     // Compile program
     W.P = gl.createProgram();
