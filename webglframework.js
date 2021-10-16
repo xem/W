@@ -141,12 +141,13 @@ W = {
   // Transition an item
   t: t => 
   
-  t.translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
+  //t.translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
   
-  //t.preMultiplySelf((new DOMMatrix()).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")))
+  //t.preMultiplySelf((new DOMMatrix()).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
+  //)
   
   
-  //(new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")).multiplySelf(t)
+  (new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")).multiplySelf(t)
   ,
   
   
@@ -190,7 +191,7 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (pv, eye, m, i, s, vertices, tex, buffer, transparent = []) => {
+  d: (p, v, m, pv, i, s, vertices, tex, buffer, transparent = []) => {
     
     t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
     t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
@@ -203,32 +204,34 @@ W = {
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
     
-    // Projection View matrix
+    // Projection matrix (TODO: only compute it onload and on canvas resize)
     // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    pv = new DOMMatrix([
+    p = new DOMMatrix([
       1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
       0, 1 / Math.tan(.5), 0, 0, 
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
     
-    // Eye Matrix (inverted View matrix)
-    eye = new DOMMatrix();
+    // View Matrix
+    v = new DOMMatrix();
     
     W.N = "C";
-    pv = W.t(pv);
-    eye = W.t(eye);
-
-    gl.uniformMatrix4fv(
-      gl.getUniformLocation(W.P, 'pv'),
-      false,
-      pv.toFloat32Array()
-    );
+    v = W.t(v);
+    v.invertSelf();
     
     gl.uniformMatrix4fv(
       gl.getUniformLocation(W.P, 'eye'),
       false,
-      eye.invertSelf().toFloat32Array()
+      v.toFloat32Array()
+    );
+    
+    pv = v.preMultiplySelf(p);
+    
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(W.P, 'pv'),
+      false,
+      pv.toFloat32Array()
     );
 
     vertices = [];
