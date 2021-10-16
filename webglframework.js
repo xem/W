@@ -245,7 +245,7 @@ W = {
     }
     
     // Then, sort the shapes with transparency from front to back and render then without depth-sorting and with alpha blending
-    gl.disable(gl.DEPTH_TEST);
+    //gl.disable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     
@@ -266,7 +266,7 @@ W = {
     }
     
     gl.disable(gl.BLEND);
-    gl.enable(gl.DEPTH_TEST);
+    //gl.enable(gl.DEPTH_TEST);
   },
   
   // Render an object
