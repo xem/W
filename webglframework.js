@@ -18,7 +18,7 @@ W = {
     gl = a.getContext("webgl2");
     
     // Don't compute triangles back faces
-    gl.enable(gl.CULL_FACE);
+    //gl.enable(gl.CULL_FACE);
 
     // Compile program
     W.P = gl.createProgram();
@@ -139,10 +139,14 @@ W = {
   l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition),
   
   // Transition an item
-  t: t => t
-          .scaleSelf(W.l("w"),W.l("h"),W.l("d"))
-          .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
-          .translateSelf(W.l("x"), W.l("y"), W.l("z"))
+  t: t => 
+  
+  t.translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
+  
+  //t.preMultiplySelf((new DOMMatrix()).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")))
+  
+  
+  //(new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")).multiplySelf(t)
   ,
   
   
@@ -212,8 +216,8 @@ W = {
     eye = new DOMMatrix();
     
     W.N = "C";
-    W.t(pv);
-    W.t(eye);
+    pv = W.t(pv);
+    eye = W.t(eye);
 
     gl.uniformMatrix4fv(
       gl.getUniformLocation(W.P, 'pv'),
@@ -395,7 +399,7 @@ W = {
     // Set the model matrix
     W.N = s.n;
     var m = new DOMMatrix(W?.n[s.g]?.m);
-    W.t(m);
+    m = W.t(m);
     W.n[s.n].m=m;
     gl.uniformMatrix4fv(
       gl.getUniformLocation(W.P, 'm'),
