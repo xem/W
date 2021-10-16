@@ -139,11 +139,11 @@ W = {
   l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition),
   
   // Transition an item
-  t: t => t.translateSelf(W.l("x"), W.l("y"), W.l("z"))
-           .rotateSelf(W.l("rx"),0,0)
-           .rotateSelf(0,W.l("ry"),0)
-           .rotateSelf(0,0,W.l("rz"))
-           .scaleSelf(W.l("w"),W.l("h"),W.l("d")),
+  t: t => t
+          .scaleSelf(W.l("w"),W.l("h"),W.l("d"))
+          .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
+          .translateSelf(W.l("x"), W.l("y"), W.l("z"))
+  ,
   
   
   // Framework
