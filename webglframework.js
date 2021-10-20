@@ -1,26 +1,31 @@
+// WebGL framework
+// ===============
 W = {
 
   // Globals
   // -------
   
-  o: 0,
-  p: {},    // previous states (list 1: opaque items, list 2: items with transparency)
-  n: {},    // next states
+  o: 0,     // object counter
+  p: {},    // objects previous states (list 1: opaque items, list 2: items with transparency)
+  n: {},    // objects next states
   textures: {},
   
   // WebGL helpers
   // -------------
   
   // Setup the WebGL program
-  s: async t => {
+  s: t => {
     
     // WebGL context
     gl = a.getContext("webgl2");
     
-    // Don't compute triangles back faces
-    //gl.enable(gl.CULL_FACE);
+    // Don't compute triangles back faces (optional)
+    // gl.enable(gl.CULL_FACE);
+    
+    // Default blending method for transparent objects
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    // Compile program
+    // New WebGL program
     W.P = gl.createProgram();
     
     // Vertex shader
@@ -41,12 +46,18 @@ W = {
       out vec3 v_position;
       out vec2 v_texCoord;
       void main() {
+        
+        // Billboards
         if(billboard.z > 0.){
           gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
         }
+        
+        // Other meshes
         else {
           gl_Position = pv * m * position;
         }
+        
+        // Varyings
         v_position = vec3(m * position);
         v_color = color;
         v_texCoord = tex;
@@ -71,12 +82,16 @@ W = {
       uniform sampler2D sampler;
       out vec4 c;
       void main() {
+        
+        // Fragments with transparency
         if(v_color.a > 0.){
           c = vec4(v_color.rgb * (
               max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
             ), v_color.a);
         }
+        
+        // Opaque fragments
         else {
           c = (texture(sampler, v_texCoord)) * vec4(
               vec3(1,1,1) * (
@@ -92,6 +107,7 @@ W = {
     gl.attachShader(W.P, t);
     console.log('fragment shader:', gl.getShaderInfoLog(t) || 'OK');
     
+    // Compile program
     gl.linkProgram(W.P);
     gl.useProgram(W.P);
     console.log('program:', gl.getProgramInfoLog(W.P) || 'OK');
@@ -102,34 +118,6 @@ W = {
     // Enable depth-sorting
     // gl.enable(gl.DEPTH_TEST);
     gl.enable(2929);
-
-    function makeTexture(image) {
-      let texture = gl.createTexture();
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      gl.generateMipmap(gl.TEXTURE_2D);
-      return texture;
-    }
-
-    // Look for img elements in the document and create textures from them.
-    let loadingImages = [];
-    for (let img of document.querySelectorAll("img")) {
-      if (img.complete) {
-        loadingImages.push(img);
-      } else {
-        loadingImages.push(new Promise((resolve, reject) => {
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(img);
-        }));
-      }
-    }
-
-    let loadedImages = await Promise.all(loadingImages);
-    for (let img of loadedImages) {
-      W.textures[img.id] = makeTexture(img);
-    }
   },
 
   // Transition helpers
@@ -139,26 +127,31 @@ W = {
   l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition),
   
   // Transition an item
-  t: t => 
-  
-  //t.translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
-  
-  //t.preMultiplySelf((new DOMMatrix()).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d"))
-  //)
-  
-  
-  (new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2).multiplySelf(t)
-  ,
-  
+  t: t => (new DOMMatrix)
+    .translateSelf(W.l("x"), W.l("y"), W.l("z"))
+    .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
+    .scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2)
+    .multiplySelf(t),
   
   // Framework
   // ---------
 
   // Set the new state of a 3D object (or group / camera / light source)
-  i: t => {
+  i: (t, texture) => {
     
-    // Default name
+    // Custom name or default name ("o" + auto-increment)
     t.n ||= "o" + W.o++;
+    
+    // If a new texture is provided, build it and save it in W.textures
+    if(t.diffuseMap && t.diffuseMap.id && !W.textures[t.diffuseMap.id]){
+      texture = gl.createTexture();
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.diffuseMap);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      W.textures[t.diffuseMap.id] = texture;
+    }
     
     // Merge previous state or default state with the new state passed in parameter
     t = {...(W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"}), ...t};
@@ -191,16 +184,9 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (p, v, m, i, s, vertices, texcoords, tex, buffer, transparent = []) => {
-    
-    //t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
-    //t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
-    //t3.value = [W.n.billboard3?.m?.m41, W.n.billboard3?.m?.m42, W.n.billboard3?.m?.m43];
-    //cam.value = [W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43];
-    //console.log(W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43) 
+  d: (p, v, m, i, s, vertices, texcoords, buffer, transparent = []) => {
     
     // Clear canvas
-    
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
     
@@ -212,81 +198,84 @@ W = {
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
-
-    // We're using one DOMMatrix for the eye, view, PV matrices.
-    v = new DOMMatrix();
-
-    // Eye (the camera's model matrix)
-    W.N = "C";
-    v = W.t(v);
-
-    gl.uniformMatrix4fv(
+    
+    // View Matrix (inverse of Camera Matrix)
+    v = new DOMMatrix();  // create an identity Matrix v
+    W.N = "C";            // consider the camera
+    v = W.t(v);           // apply the camera transformations to v
+    
+    gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'eye'),
       false,
       v.toFloat32Array()
     );
-
+    
     // Eye matrix → View matrix (inverted camera's model matrix)
     v.invertSelf();
 
     // PV matrix (projection matrix * view matrix)
     v.preMultiplySelf(p);
-
-    gl.uniformMatrix4fv(
+    
+    gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'pv'),
       false,
       v.toFloat32Array()
     );
 
+
+    // Reset next object's vertices / texture coordinates
     vertices = [];
     texCoords = [];
     
-    // First, render shapes with an opaque color using native depth-sorting and with no alpha blending
     for(i in W.n){
+      
+      // Render the shapes with no transparency (alpha blending disabled)
       if(!W.n[i].diffuseMap && !W.n[i].b[3]){
         W.r(W.n[i]);
       }
-    }
-    
-    // Then, sort the shapes with transparency from front to back and render then without depth-sorting and with alpha blending
-    //gl.disable(gl.DEPTH_TEST);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    
-    for(i in W.n){
-      if(W.n[i].diffuseMap || W.n[i].b[3]){
+      
+      // Add the objects with transparency (rgba or texture) in an array
+      else {
         transparent.push(W.n[i]);
       }
     }
-    //console.log(transparent);
+    
+    // Order transparent objects from back to front
     transparent.sort((a,b)=>{
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
       return a.m && b.m && (W.dist(b.m, W.n.C.m) - W.dist(a.m, W.n.C.m));
     });
-    //console.log(transparent.map(a=>a.n));
+
+    // And render them (alpha blending enabled)
+    gl.enable(gl.BLEND);
     for(i in transparent){
       W.r(transparent[i]);
     }
     
+    // Disable alpha blending for next frame
     gl.disable(gl.BLEND);
-    //gl.enable(gl.DEPTH_TEST);
   },
   
   // Render an object
+  // TODO: save buffers instead of redoing them at each frame
+  // TODO: texture cubes/pyramids?
   r: (s, center = [0,0,0]) => {
 
+    // If the object has a texture
     if (s.diffuseMap) {
+      
       // Enable texture 0
       gl.activeTexture(gl.TEXTURE0);
 
       // Set the texture's target (2D or cubemap)
-      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.diffuseMap]);
+      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.diffuseMap.id]);
 
       // Pass texture 0 to the sampler
       gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
     }
 
+    // If the object has a transition, increment its frame counter
     if(s.f < s.transition) s.f++;
 
     // Initialize a shape
@@ -365,7 +354,7 @@ W = {
       ];
     }  
 
-    // Anything else
+    // Anything else: TODO
     else {
       vertices = [];
       texCoords = [];
@@ -389,7 +378,7 @@ W = {
     gl.enableVertexAttribArray(buffer);
     
     
-    // Texture coords buffer
+    // Set the texture coordinatess buffer
     
     // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bindBuffer(34962, gl.createBuffer());
@@ -403,7 +392,7 @@ W = {
     gl.enableVertexAttribArray(buffer);
     
 
-    // Set shape color
+    // Set the color
     gl.vertexAttrib4fv(
       gl.getAttribLocation(W.P, 'color'),
       [...[...s.b].map(a => ("0x" + a) / 16), s.diffuseMap ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
@@ -415,13 +404,16 @@ W = {
     var m = new DOMMatrix(W?.n[s.g]?.m);
     m = W.t(m);
     W.n[s.n].m=m;
-    gl.uniformMatrix4fv(
+    gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'm'),
       false,
       m.toFloat32Array()
     );
     
+    // Consider the light
     W.N = "L";
+    
+    // Transition the light's direction and sent it to the shaders
     gl.uniform3f(
       gl.getUniformLocation(W.P, 'light'),
       W.l("x"), W.l("y"), W.l("z")
@@ -430,8 +422,8 @@ W = {
     // Billboard info: [width, height, isBillboard]
     gl.uniform3f(
       gl.getUniformLocation(W.P, 'billboard'),
-      s.w/4,
-      s.h/4,
+      s.w,
+      s.h,
       s.T == "b"
     );
     
@@ -440,16 +432,12 @@ W = {
     
   },
   
-  dist: (a, b) => {
-    return (b.m41 - a.m41)**2 + (b.m42 - a.m42)**2 + (b.m43 - a.m43)**2;
-  }
+  // Compute the distance squared between two objects (useful for sorting transparent items)
+  dist: (a, b) => (b.m41 - a.m41)**2 + (b.m42 - a.m42)**2 + (b.m43 - a.m43)**2
 }
 
-// Initialize WebGL program, light, amera, action
-async function main() {
-  await W.s();
-  W.light({z:1});
-  W.camera({});
-  setInterval(W.d, 16);
-  W.d();
-}
+// When everything is loaded: setup WebGL program, light, camera, action
+W.s();
+W.light({z:1});
+W.camera({});
+setInterval(W.d, 16);

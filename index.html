@@ -1,66 +1,33 @@
-﻿<link rel=icon href="data:image/svg+xml,W">
-<style>img{display:none}</style>
+﻿<!doctype html>
+<link rel=icon href="data:image/svg+xml,nofavicon">
 <canvas id=a width=780 height=500 style="border:1px solid"></canvas>
-
-<!-- <p>tree1 <input id=t1>
-<p>tree2 <input id=t2>
-<p>tree3 <input id=t3>
-<p>cam <input id=cam> -->
-
-<img src="tree.png" id=tree>
+<img src="tree.png" id=tree width=0 height=0>
 <script src="webglframework.js"></script>
 
 <br>
 <br>
 
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
-main().then(()=>{
-  W.camera({y:-2,z:50});
-  W.light({x:1,y:-.5,z:.5});
-  W.plane({n:"ground",w:50,h:50,z:0,b:'8d8'});
-  W.cube({n:"cube",x:-15,y:15,z:5,w:10,h:10,d:10,b:'68a'});
-  W.plane({n:"plane",x:15,y:15,z:5,w:10,h:10,rx:90,b:'68a'});
-  W.pyramid({n:"pyramid",x:0,y:15,z:5,w:10,h:10,d:10,rx:90,b:'68a'});
-  
-  W.cube({n:"cube2",x:-15,y:0,z:5,w:10,h:10,d:10,b:'68a8'});
-  W.plane({n:"plane2",x:15,y:0,z:5,w:10,h:10,rx:90,b:'68a8'});
-  W.pyramid({n:"pyramid2",x:0,y:0,z:5,w:10,h:10,d:10,rx:90,b:'68a8'});
-  
-  
-  W.plane({n:"plane3",x:-15,y:-20,z:8,w:16,h:16,rx:90,diffuseMap:"tree"});
-  W.billboard({n:"billboard1",x:15,y:-20,z:8,w:16,h:16,diffuseMap:"tree"});
-  setTimeout(()=>{
-    W.camera({rx:60,y:-45,z:30, transition:100})
-  },1000);
-});
 
-</script>
+W.camera({y:-2,z:50});
+W.light({x:1,y:-.5,z:.5});
+W.plane({n:"ground",w:50,h:50,z:0,b:'8d8'});
+W.cube({n:"cube",x:-15,y:15,z:5,w:10,h:10,d:10,b:'68a'});
+W.plane({n:"plane",x:15,y:15,z:5,w:10,h:10,rx:-90,b:'68a'});
+W.pyramid({n:"pyramid",x:0,y:15,z:5,w:10,h:10,d:10,rx:90,b:'68a'});
+W.cube({n:"cube2",x:-15,y:0,z:5,w:10,h:10,d:10,b:'68a8'});
+W.plane({n:"plane2",x:15,y:0,z:5,w:10,h:10,rx:-90,b:'68a8'});
+W.pyramid({n:"pyramid2",x:0,y:0,z:5,w:10,h:10,d:10,rx:90,b:'68a8'});
+W.plane({n:"plane3",x:-15,y:-20,z:8,w:16,h:16,rx:90,diffuseMap:tree});
+W.billboard({n:"billboard1",x:15,y:-15,z:8,w:16,h:16,diffuseMap:tree});
+setTimeout(()=>{
+  W.camera({rx:60,y:-45,z:30, transition:100})
+},1000);
+setTimeout(()=>{
+  W.camera({x:-20,rz:-40, transition:100})
+},3000);
+setTimeout(()=>{
+  W.camera({ry:-40, transition:100})
+},5000);
 
-<script>
-/*
-
-//W.group({n:"group"});
-  //W.pyramid({n:"pyramid",x:-10,y:35,z:-50,w:5,h:5,d:5,rx:90,b:'d55'});
-  W.cube({n:"block",x:0,y:0,z:16,w:8,h:8,d:16,rx:0,ry:0,b:'68ab'});
-  //W.plane({n:"plane",x:0,y:-30,z:5,w:10,h:10,rz:85,ry:50,b:'dda'});
-  //W.plane({n:"billboard1",x:0,y:20,z:10,w:10,h:10,rx:0,rx:-90,diffuseMap:"tree"});
-  //W.billboard({n:"billboard1",x:27,y:-40,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});//
-  //W.billboard({n:"billboard2",x:25,y:-30,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
-  //W.billboard({n:"billboard3",x:25,y:-26,z:6,w:6,h:6,rx:0,diffuseMap:"tree"});
-  //setTimeout(()=>{W.camera({rx:-85,rz:-180,x:0,y:-5,z:-80,transition:180})}, 1000);
-  //setTimeout(()=>{W.move({n:"pyramid",w:.1,h:.1,d:.1,z:20,rz:440,transition:200})}, 4000);
-  //setTimeout(()=>{W.move({n:"block",x:25,z:10,d:10,rx:0,ry:0,rz:85,transition:100})}, 6000);
-  //setTimeout(()=>{W.light({x:0,y:0,z:1,transition:100})}, 7000);
-  //setTimeout(()=>{W.move({n:"group",z:10,w:.5,h:.5,d:.5,rz:-270,transition:190})}, 4200);
-  //setTimeout(()=>{W.light({x:1,y:.5,z:.5,t:100})}, 9000);
-  //setTimeout(()=>{W.move({n:"plane",y:-10,z:2,rx:0,ry:0,rz:0,transition:100})}, 11000);
-  //setTimeout(()=>{W.camera({z:50,transition:100})}, 5000);
-  
-  setTimeout(()=>{
-    W.camera({rx:85,y:-100,z:30, transition:50})
-  },1000);
-  setTimeout(()=>{
-    //W.move({n:"block", z:-32, transition:50})
-  },2500);
-*/
 </script>
