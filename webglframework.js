@@ -147,7 +147,7 @@ W = {
   //)
   
   
-  (new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w"),W.l("h"),W.l("d")).multiplySelf(t)
+  (new DOMMatrix).translateSelf(W.l("x"), W.l("y"), W.l("z")).rotateSelf(W.l("rx"),W.l("ry"),W.l("rz")).scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2).multiplySelf(t)
   ,
   
   
@@ -191,13 +191,13 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (p, v, m, pv, i, s, vertices, tex, buffer, transparent = []) => {
+  d: (p, v, m, pv, i, s, vertices, texcoords, tex, buffer, transparent = []) => {
     
-    t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
-    t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
-    t3.value = [W.n.billboard3?.m?.m41, W.n.billboard3?.m?.m42, W.n.billboard3?.m?.m43];
-    cam.value = [W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43];
-    console.log(W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43) 
+    //t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
+    //t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
+    //t3.value = [W.n.billboard3?.m?.m41, W.n.billboard3?.m?.m42, W.n.billboard3?.m?.m43];
+    //cam.value = [W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43];
+    //console.log(W.n.C?.m?.m41, W.n.C?.m?.m42, W.n.C?.m?.m43) 
     
     // Clear canvas
     
@@ -312,7 +312,7 @@ W = {
     //    v6----- v5
     //   /|      /|
     //  v1------v0|
-    //  | |   x | |
+    //  | |  x  | |
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
@@ -332,25 +332,32 @@ W = {
         1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
         1,-1,-1,  -1, 1,-1,   1, 1,-1
       ];
+      
+      texCoords = [
+        0, 0, 0
+      ];
     }
     
-    // Pyramid (2 x 2 x sqrt(3))
-    // height = sqrt(3) / 2 * bottom == 3**.5
+    // Pyramid (2 x 2 x 2)
     //
     //      ^
     //     /\\
     //    // \ \
-    //   /+---\-+
-    //  //  x  \/
+    //   /+-x-\-+
+    //  //     \/
     //  +------+
     else if(s.T == "p"){
       vertices = [
-        -1, 0, 1,    1, 0, 1,  0, 3**.5, 0,  // Front
-         1, 0, 1,    1, 0,-1,  0, 3**.5, 0,  // Right
-         1, 0,-1,   -1, 0,-1,  0, 3**.5, 0,  // Back
-        -1, 0,-1,   -1, 0, 1,  0, 3**.5, 0,  // Left
-        -1, 0, 1,   -1, 0,-1,  1, 0, 1,  // Base
-        -1, 0,-1,    1, 0,-1,  1, 0, 1
+        -1, -1, 1,    1, -1, 1,  0, 1, 0,  // Front
+         1, -1, 1,    1, -1,-1,  0, 1, 0,  // Right
+         1, -1,-1,   -1, -1,-1,  0, 1, 0,  // Back
+        -1, -1,-1,   -1, -1, 1,  0, 1, 0,  // Left
+        -1, -1, 1,   -1, -1,-1,  1, -1, 1,  // Base
+        -1, -1,-1,    1, -1,-1,  1, -1, 1
+      ];
+      
+      texCoords = [
+        0, 0, 0
       ];
     }  
 
@@ -419,8 +426,8 @@ W = {
     // Billboard info: [width, height, isBillboard]
     gl.uniform3f(
       gl.getUniformLocation(W.P, 'billboard'),
-      s.w,
-      s.h,
+      s.w/4,
+      s.h/4,
       s.T == "b"
     );
     
