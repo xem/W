@@ -191,7 +191,7 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (p, v, m, pv, i, s, vertices, texcoords, tex, buffer, transparent = []) => {
+  d: (p, v, m, i, s, vertices, texcoords, tex, buffer, transparent = []) => {
     
     //t1.value = [W.n.billboard1?.m?.m41, W.n.billboard1?.m?.m42, W.n.billboard1?.m?.m43];
     //t2.value = [W.n.billboard2?.m?.m41, W.n.billboard2?.m?.m42, W.n.billboard2?.m?.m43];
@@ -212,26 +212,30 @@ W = {
       0, 0, (900 + 1) * 1 / (1 - 900), -1,
       0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
     ]);
-    
-    // View Matrix
+
+    // We're using one DOMMatrix for the eye, view, PV matrices.
     v = new DOMMatrix();
-    
+
+    // Eye (the camera's model matrix)
     W.N = "C";
     v = W.t(v);
-    v.invertSelf();
-    
+
     gl.uniformMatrix4fv(
       gl.getUniformLocation(W.P, 'eye'),
       false,
       v.toFloat32Array()
     );
-    
-    pv = v.preMultiplySelf(p);
-    
+
+    // Eye matrix → View matrix (inverted camera's model matrix)
+    v.invertSelf();
+
+    // PV matrix (projection matrix * view matrix)
+    v.preMultiplySelf(p);
+
     gl.uniformMatrix4fv(
       gl.getUniformLocation(W.P, 'pv'),
       false,
-      pv.toFloat32Array()
+      v.toFloat32Array()
     );
 
     vertices = [];
