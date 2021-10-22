@@ -86,7 +86,7 @@ W = {
         // Fragments with transparency
         if(v_color.a > 0.){
           c = vec4(v_color.rgb * (
-              max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+              max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
             ), v_color.a);
         }
@@ -95,7 +95,7 @@ W = {
         else {
           c = (texture(sampler, v_texCoord)) * vec4(
               vec3(1,1,1) * (
-              max(dot(light, normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+              max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
               + .2 // diffuse light
             ), 1
           );
@@ -327,7 +327,18 @@ W = {
       ];
       
       texCoords = [
-        0, 0, 0
+        1, 1,      0, 1,   0, 0, // front
+        1, 1,      0, 0,   1, 0,            
+        1, 1,      0, 1,   0, 0, // right
+        1, 1,      0, 0,   1, 0, 
+        1, 1,      0, 1,   0, 0, // up
+        1, 1,      0, 0,   1, 0,
+        1, 1,      0, 1,   0, 0, // left
+        1, 1,      0, 0,   1, 0,
+        1, 1,      0, 1,   0, 0, // down
+        1, 1,      0, 0,   1, 0,
+        1, 1,      0, 1,   0, 0, // back
+        1, 1,      0, 0,   1, 0,
       ];
     }
     
@@ -345,12 +356,17 @@ W = {
          1, -1, 1,    1, -1,-1,  0, 1, 0,  // Right
          1, -1,-1,   -1, -1,-1,  0, 1, 0,  // Back
         -1, -1,-1,   -1, -1, 1,  0, 1, 0,  // Left
-        -1, -1, 1,   -1, -1,-1,  1, -1, 1,  // Base
+        -1, -1, 1,   -1, -1,-1,  1, -1, 1, // Base
         -1, -1,-1,    1, -1,-1,  1, -1, 1
       ];
       
       texCoords = [
-        0, 0, 0
+         0, 1,   1, 1,  .5, 0,  // Front
+         0, 1,   1, 1,  .5, 0,  // Right
+         0, 1,   1, 1,  .5, 0,  // Back
+         0, 1,   1, 1,  .5, 0,  // Left
+         1, 1,   0, 1,   0, 0,  // base
+         1, 1,   0, 0,   1, 0,
       ];
     }  
 
