@@ -5,6 +5,8 @@ W = {
   // Globals
   // -------
   
+  last: 0,  // timestamp of last frame
+  dt: 0,    // delta time
   o: 0,     // object counter
   p: {},    // objects previous states (list 1: opaque items, list 2: items with transparency)
   n: {},    // objects next states
@@ -124,7 +126,9 @@ W = {
   // ------------------
 
   // Interpolate a property between two values
-  l: t => W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition),
+  l: t => W.n[W.N].transition ?
+    W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition)
+    : W.n[W.N][t],
   
   // Transition an item
   t: t => (new DOMMatrix)
@@ -157,10 +161,10 @@ W = {
     t = {...(W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"}), ...t};
     
     // Save the transition duration (in frames), or 0 by default
-    t.transition ||= 1;
+    t.transition ||= 0;
     
-    // Reset t frame counter
-    t.f = 1;                        
+    // Reset the transition timer.
+    t.f = 0;
     
     // Save new state
     W.n[t.n] = t;
@@ -184,7 +188,10 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (p, v, m, i, s, vertices, texcoords, buffer, transparent = []) => {
+  d: (now, p, v, m, i, s, vertices, texcoords, buffer, transparent = []) => {
+    W.dt = (now - W.last) / 1000;
+    W.last = now;
+    requestAnimationFrame(W.d);
     
     // Clear canvas
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -275,8 +282,10 @@ W = {
       gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
     }
 
-    // If the object has a transition, increment its frame counter
-    if(s.f < s.transition) s.f++;
+    // If the object has a transition, increment its timer...
+    if(s.f < s.transition) s.f += W.dt;
+    // ...but don't let it go over the transition duration.
+    if(s.f > s.transition) s.f = s.transition;
 
     // Initialize a shape
     
@@ -456,4 +465,4 @@ W = {
 W.s();
 W.light({z:1});
 W.camera({});
-setInterval(W.d, 16);
+W.d();
