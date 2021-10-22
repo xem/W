@@ -51,7 +51,7 @@ W = {
         
         // Billboards
         if(billboard.z > 0.){
-          gl_Position = pv * (m[3] + eye * (position * vec4(billboard, 0)));
+          gl_Position = pv * (m[3] + eye * (position * -vec4(billboard, 0)));
         }
         
         // Other meshes
@@ -126,8 +126,8 @@ W = {
   // ------------------
 
   // Interpolate a property between two values
-  l: t => W.n[W.N].transition ?
-    W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].transition)
+  l: t => W.n[W.N].t ?
+    W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].t)
     : W.n[W.N][t],
   
   // Transition an item
@@ -147,21 +147,21 @@ W = {
     t.n ||= "o" + W.o++;
     
     // If a new texture is provided, build it and save it in W.textures
-    if(t.diffuseMap && t.diffuseMap.id && !W.textures[t.diffuseMap.id]){
+    if(t.b && t.b.id && !W.textures[t.b.id]){
       texture = gl.createTexture();
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.diffuseMap);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.b);
       gl.generateMipmap(gl.TEXTURE_2D);
-      W.textures[t.diffuseMap.id] = texture;
+      W.textures[t.b.id] = texture;
     }
     
     // Merge previous state or default state with the new state passed in parameter
     t = {...(W.p[t.n] = W.n[t.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:"777"}), ...t};
     
     // Save the transition duration (in frames), or 0 by default
-    t.transition ||= 0;
+    t.t ||= 0;
     
     // Reset the transition timer.
     t.f = 0;
@@ -237,7 +237,7 @@ W = {
     for(i in W.n){
       
       // Render the shapes with no transparency (alpha blending disabled)
-      if(!W.n[i].diffuseMap && !W.n[i].b[3]){
+      if(!W.n[i].b.id && !W.n[i].b[3]){
         W.r(W.n[i]);
       }
       
@@ -270,22 +270,22 @@ W = {
   r: (s, center = [0,0,0]) => {
 
     // If the object has a texture
-    if (s.diffuseMap) {
+    if (s.b.id) {
       
       // Enable texture 0
       gl.activeTexture(gl.TEXTURE0);
 
       // Set the texture's target (2D or cubemap)
-      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.diffuseMap.id]);
+      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.b.id]);
 
       // Pass texture 0 to the sampler
       gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
     }
 
     // If the object has a transition, increment its timer...
-    if(s.f < s.transition) s.f += W.dt;
+    if(s.f < s.t) s.f += W.dt;
     // ...but don't let it go over the transition duration.
-    if(s.f > s.transition) s.f = s.transition;
+    if(s.f > s.t) s.f = s.t;
 
     // Initialize a shape
     
@@ -304,8 +304,8 @@ W = {
       ];
       
       texCoords = [
-        1, 1,     0, 1,    0, 0,
-        1, 1,     0, 0,    1, 0
+        1, 0,     0, 0,    0, 1,
+        1, 0,     0, 1,    1, 1
       ];
     }
     
@@ -323,14 +323,14 @@ W = {
       vertices = [
         1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
         1, 1, 1,  -1,-1, 1,   1,-1, 1,
-        1, 1, 1,   1,-1, 1,   1,-1,-1, // right
         1, 1, 1,   1,-1,-1,   1, 1,-1,
+        1, 1, 1,   1,-1, 1,   1,-1,-1, // right
         1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
         1, 1, 1,  -1, 1,-1,  -1, 1, 1,
        -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
        -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
-       -1,-1,-1,   1,-1,-1,   1,-1, 1, // down
-       -1,-1,-1,   1,-1, 1,  -1,-1, 1,
+       -1,-1, 1,   1,-1 ,1,   1,-1,-1, // down
+       -1,-1,1,   1,-1, -1,  -1,-1,-1,
         1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
         1,-1,-1,  -1, 1,-1,   1, 1,-1
       ];
@@ -370,12 +370,12 @@ W = {
       ];
       
       texCoords = [
-         0, 1,   1, 1,  .5, 0,  // Front
-         0, 1,   1, 1,  .5, 0,  // Right
-         0, 1,   1, 1,  .5, 0,  // Back
-         0, 1,   1, 1,  .5, 0,  // Left
-         1, 1,   0, 1,   0, 0,  // base
-         1, 1,   0, 0,   1, 0,
+         0, 0,   1, 0,  .5, 1,  // Front
+         0, 0,   1, 0,  .5, 1,  // Right
+         0, 0,   1, 0,  .5, 1,  // Back
+         0, 0,   1, 0,  .5, 1,  // Left
+         1, 0,   0, 0,   0, 1,  // base
+         1, 0,   0, 1,   1, 1,
       ];
     }  
 
@@ -416,13 +416,12 @@ W = {
     
     gl.enableVertexAttribArray(buffer);
     
-
-    // Set the color
+    // Set the color / texture
     gl.vertexAttrib4fv(
       gl.getAttribLocation(W.P, 'color'),
-      [...[...s.b].map(a => ("0x" + a) / 16), s.diffuseMap ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+      s.b.id ? [0,0,0,0] : [...[...s.b].map(a => ("0x" + a) / 16),
+      s.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
     );
-    
     
     // Set the model matrix
     W.N = s.n;
