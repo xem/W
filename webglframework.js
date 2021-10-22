@@ -49,16 +49,13 @@ W = {
       out vec2 v_texCoord;
       void main() {
         
-        // Billboards
-        if(billboard.z > 0.){
-          gl_Position = pv * (m[3] + eye * (position * -vec4(billboard, 0)));
-        }
-        
-        // Other meshes
-        else {
-          gl_Position = pv * m * position;
-        }
-        
+        // Set vertex position
+        gl_Position = pv * (
+          (billboard.z > 0.)
+          ? (m[3] + eye * (position * -vec4(billboard, 0))) // billboards
+          : (m * position) // other objects
+        );
+
         // Varyings
         v_position = vec3(m * position);
         v_color = color;
@@ -84,24 +81,11 @@ W = {
       uniform sampler2D sampler;
       out vec4 c;
       void main() {
-        
-        // Fragments with transparency
-        if(v_color.a > 0.){
-          c = vec4(v_color.rgb * (
-              max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
-              + .2 // diffuse light
-            ), v_color.a);
-        }
-        
-        // Opaque fragments
-        else {
-          c = (texture(sampler, v_texCoord)) * vec4(
-              vec3(1,1,1) * (
-              max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
-              + .2 // diffuse light
-            ), 1
-          );
-        }
+        vec4 col = (v_color.a == 0. ? texture(sampler, v_texCoord) : v_color);
+        c = vec4(col.rgb * (
+          max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+          + .2 // diffuse light
+        ), col.a);
       }
       `
     );
