@@ -172,7 +172,7 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (now, p, v, m, i, s, vertices, texcoords, buffer, transparent = []) => {
+  d: (now, p, v, m, i, s, buffer, transparent = []) => {
     W.dt = (now - W.last) / 1000;
     W.last = now;
     requestAnimationFrame(W.d);
@@ -212,11 +212,6 @@ W = {
       false,
       v.toFloat32Array()
     );
-
-
-    // Reset next object's vertices / texture coordinates
-    vertices = [];
-    texCoords = [];
     
     for(i in W.n){
       
@@ -251,7 +246,7 @@ W = {
   // Render an object
   // TODO: save buffers instead of redoing them at each frame
   // TODO: texture cubes/pyramids?
-  r: (s, center = [0,0,0]) => {
+  r: (s, center = [0,0,0], vertices, texCoords) => {
 
     // If the object has a texture
     if (s.b.id) {
