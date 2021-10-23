@@ -11,7 +11,7 @@
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
 onload = () => {
   W.camera({y:-2,z:65});
-  W.light({x:.2,y:-.3,z:.3});
+  W.light({x:.1,y:.3,z:.3});
   W.plane({n:"ground",w:50,h:70,z:0,b:'8d8'});
   W.cube({n:"cube",x:-15,y:20,z:5,w:10,h:10,d:10,b:'68a'});
   W.plane({n:"plane",x:15,y:20,z:5,w:10,h:10,rx:-90,b:'68a'});
@@ -30,10 +30,10 @@ onload = () => {
     W.camera({x:-40,rz:-50,t:2})
   },3000);
   setTimeout(()=>{
-    //W.camera({x:40,rz:50,t:2})
+    W.camera({x:40,rz:50,t:2})
   },5000);
   setTimeout(()=>{
-    //W.camera({rx:0,rz:0,x:0,y:-2,z:65,t:1})
+    W.camera({rx:0,rz:0,x:0,y:-2,z:65,t:1})
   },7000);
 }
 

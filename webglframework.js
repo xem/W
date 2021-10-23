@@ -5,12 +5,21 @@ W = {
   // Globals
   // -------
   
-  last: 0,  // timestamp of last frame
-  dt: 0,    // delta time
-  o: 0,     // object counter
-  p: {},    // objects previous states (list 1: opaque items, list 2: items with transparency)
-  n: {},    // objects next states
-  textures: {},
+  last: 0,        // timestamp of last frame
+  dt: 0,          // delta time
+  o: 0,           // object counter
+  p: {},          // objects previous states (list 1: opaque items, list 2: items with transparency)
+  n: {},          // objects next states
+  textures: {},   // textures list
+  vertices: {},   // vertex buffers 
+  texCoords: {},  // texture coordinates buffers 
+  perspective:    // perspective matrix: fov = .5rad, aspect = a.width/a.height, near: 1, far: 1000)
+    new DOMMatrix([
+      1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
+      0, 1 / Math.tan(.5), 0, 0, 
+      0, 0, (900 + 1) * 1 / (1 - 900), -1,
+      0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
+    ]),
   
   // WebGL helpers
   // -------------
@@ -27,6 +36,10 @@ W = {
     // Default blending method for transparent objects
     //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.blendFunc(770, 771);
+    
+    // Enable texture 0
+    // gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(33984);
 
     // New WebGL program
     W.P = gl.createProgram();
@@ -97,6 +110,113 @@ W = {
     // Enable depth-sorting
     // gl.enable(gl.DEPTH_TEST);
     gl.enable(2929);
+    
+    // Declare vertice positions and texture coordinates buffers of built-in shapes
+    
+    // Cube (2x2x2)
+    //
+    //    v6----- v5
+    //   /|      /|
+    //  v1------v0|
+    //  | |  x  | |
+    //  | |v7---|-|v4
+    //  |/      |/
+    //  v2------v3
+
+    gl.bindBuffer(34962, W.vertices.c = gl.createBuffer());
+    
+    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+      1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
+      1, 1, 1,  -1,-1, 1,   1,-1, 1,
+      1, 1, 1,   1,-1, 1,   1,-1,-1, // right
+      1, 1, 1,   1,-1,-1,   1, 1,-1,
+      1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
+      1, 1, 1,  -1, 1,-1,  -1, 1, 1,
+     -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
+     -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
+     -1,-1, 1,   1,-1 ,1,   1,-1,-1, // down
+     -1,-1, 1,   1,-1,-1,  -1,-1,-1,
+      1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
+      1,-1,-1,  -1, 1,-1,   1, 1,-1
+    ]), 35044); 
+
+    gl.bindBuffer(34962, W.texCoords.c = gl.createBuffer());
+    
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+      1, 1,      0, 1,   0, 0, // front
+      1, 1,      0, 0,   1, 0,            
+      1, 1,      0, 1,   0, 0, // right
+      1, 1,      0, 0,   1, 0, 
+      1, 1,      0, 1,   0, 0, // up
+      1, 1,      0, 0,   1, 0,
+      1, 1,      0, 1,   0, 0, // left
+      1, 1,      0, 0,   1, 0,
+      1, 1,      0, 1,   0, 0, // down
+      1, 1,      0, 0,   1, 0,
+      1, 1,      0, 1,   0, 0, // back
+      1, 1,      0, 0,   1, 0,
+    ]), 35044);
+    
+    
+    // Pyramid (2 x 2 x 2)
+    //
+    //      ^
+    //     /\\
+    //    // \ \
+    //   /+-x-\-+
+    //  //     \/
+    //  +------+
+    
+    gl.bindBuffer(34962, W.vertices.p = gl.createBuffer());
+    
+    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+      -1, -1, 1,    1, -1, 1,  0, 1, 0,  // Front
+       1, -1, 1,    1, -1,-1,  0, 1, 0,  // Right
+       1, -1,-1,   -1, -1,-1,  0, 1, 0,  // Back
+      -1, -1,-1,   -1, -1, 1,  0, 1, 0,  // Left
+      -1, -1, 1,   -1, -1,-1,  1,-1, 1,  // Base
+      -1, -1,-1,    1, -1,-1,  1,-1, 1
+    ]), 35044); 
+
+    gl.bindBuffer(34962, W.texCoords.p = gl.createBuffer());
+    
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+       0, 0,   1, 0,  .5, 1,  // Front
+       0, 0,   1, 0,  .5, 1,  // Right
+       0, 0,   1, 0,  .5, 1,  // Back
+       0, 0,   1, 0,  .5, 1,  // Left
+       1, 0,   0, 0,   0, 1,  // base
+       1, 0,   0, 1,   1, 1,
+    ]), 35044);
+    
+    
+    // Quad / billboard (2 x 2)
+    //
+    //  v1------v0
+    //  |       |
+    //  |   x   |
+    //  |       |
+    //  v2------v3
+    
+    gl.bindBuffer(34962, W.vertices.q = W.vertices.b = gl.createBuffer());
+    
+    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+      1, 1, 0,    -1, 1, 0,   -1,-1, 0,
+      1, 1, 0,    -1,-1, 0,    1,-1, 0
+    ]), 35044); 
+
+    gl.bindBuffer(34962, W.texCoords.q = W.texCoords.b = gl.createBuffer());
+    
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(34962, new Float32Array([
+      1, 0,     0, 0,    0, 1,
+      1, 0,     0, 1,    1, 1
+    ]), 35044);
   },
 
   // Transition helpers
@@ -166,7 +286,11 @@ W = {
   
   billboard: t => { t.T = "b"; W.i(t) },
   
-  cube: t => { t.T = "c"; W.i(t) },
+  cube: t => { 
+  
+    t.T = "c"; W.i(t)
+    
+  },
   
   pyramid: t => { t.T = "p"; W.i(t) },
   
@@ -186,17 +310,8 @@ W = {
     // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(16640);
     
-    // Projection matrix (TODO: only compute it onload and on canvas resize)
-    // (perspective matrix: fov = .5 radian, aspect = a.width/a.height, near: 1, far: 1000)
-    p = new DOMMatrix([
-      1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
-      0, 1 / Math.tan(.5), 0, 0, 
-      0, 0, (900 + 1) * 1 / (1 - 900), -1,
-      0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
-    ]);
-    
     // View Matrix (inverse of Camera Matrix)
-    v = new DOMMatrix();  // create an identity Matrix v
+    v = new DOMMatrix;    // create an identity Matrix v
     W.N = "C";            // consider the camera
     v = W.t(v);           // apply the camera transformations to v
     
@@ -210,7 +325,7 @@ W = {
     v.invertSelf();
 
     // PV matrix (projection matrix * view matrix)
-    v.preMultiplySelf(p);
+    v.preMultiplySelf(W.perspective);
     
     gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'pv'),
@@ -232,7 +347,7 @@ W = {
     }
     
     // Order transparent objects from back to front
-    transparent.sort((a,b)=>{
+    transparent.sort((a,b) => {
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
       return a.m && b.m && (W.dist(b.m, W.n.C.m) - W.dist(a.m, W.n.C.m));
@@ -249,16 +364,10 @@ W = {
   },
   
   // Render an object
-  // TODO: save buffers instead of redoing them at each frame
-  // TODO: texture cubes/pyramids?
   r: (s, center = [0,0,0], vertices, texCoords) => {
 
     // If the object has a texture
     if (s.b.id) {
-      
-      // Enable texture 0
-      // gl.activeTexture(gl.TEXTURE0);
-      gl.activeTexture(33984);
 
       // Set the texture's target (2D or cubemap)
       // gl.bindTexture(gl.TEXTURE_2D, W.textures[s.b.id]);
@@ -270,145 +379,14 @@ W = {
 
     // If the object has a transition, increment its timer...
     if(s.f < s.t) s.f += W.dt;
+    
     // ...but don't let it go over the transition duration.
     if(s.f > s.t) s.f = s.t;
-
-    // Initialize a shape
-    
-    // Plane (2 x 2)
-    //
-    //  v1------v0
-    //  |       |
-    //  |   x   |
-    //  |       |
-    //  v2------v3
-    if(s.T == "q" || s.T == "b"){
-    
-      vertices = [
-        1, 1, 0,    -1, 1, 0,   -1,-1, 0,
-        1, 1, 0,    -1,-1, 0,    1,-1, 0
-      ];
-      
-      texCoords = [
-        1, 0,     0, 0,    0, 1,
-        1, 0,     0, 1,    1, 1
-      ];
-    }
-    
-    // Cube (2x2x2)
-    //
-    //    v6----- v5
-    //   /|      /|
-    //  v1------v0|
-    //  | |  x  | |
-    //  | |v7---|-|v4
-    //  |/      |/
-    //  v2------v3
-    
-    else if(s.T == "c"){
-      vertices = [
-        1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
-        1, 1, 1,  -1,-1, 1,   1,-1, 1,
-        1, 1, 1,   1,-1,-1,   1, 1,-1,
-        1, 1, 1,   1,-1, 1,   1,-1,-1, // right
-        1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
-        1, 1, 1,  -1, 1,-1,  -1, 1, 1,
-       -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
-       -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
-       -1,-1, 1,   1,-1 ,1,   1,-1,-1, // down
-       -1,-1,1,   1,-1, -1,  -1,-1,-1,
-        1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
-        1,-1,-1,  -1, 1,-1,   1, 1,-1
-      ];
-      
-      texCoords = [
-        1, 1,      0, 1,   0, 0, // front
-        1, 1,      0, 0,   1, 0,            
-        1, 1,      0, 1,   0, 0, // right
-        1, 1,      0, 0,   1, 0, 
-        1, 1,      0, 1,   0, 0, // up
-        1, 1,      0, 0,   1, 0,
-        1, 1,      0, 1,   0, 0, // left
-        1, 1,      0, 0,   1, 0,
-        1, 1,      0, 1,   0, 0, // down
-        1, 1,      0, 0,   1, 0,
-        1, 1,      0, 1,   0, 0, // back
-        1, 1,      0, 0,   1, 0,
-      ];
-    }
-    
-    // Pyramid (2 x 2 x 2)
-    //
-    //      ^
-    //     /\\
-    //    // \ \
-    //   /+-x-\-+
-    //  //     \/
-    //  +------+
-    else if(s.T == "p"){
-      vertices = [
-        -1, -1, 1,    1, -1, 1,  0, 1, 0,  // Front
-         1, -1, 1,    1, -1,-1,  0, 1, 0,  // Right
-         1, -1,-1,   -1, -1,-1,  0, 1, 0,  // Back
-        -1, -1,-1,   -1, -1, 1,  0, 1, 0,  // Left
-        -1, -1, 1,   -1, -1,-1,  1, -1, 1, // Base
-        -1, -1,-1,    1, -1,-1,  1, -1, 1
-      ];
-      
-      texCoords = [
-         0, 0,   1, 0,  .5, 1,  // Front
-         0, 0,   1, 0,  .5, 1,  // Right
-         0, 0,   1, 0,  .5, 1,  // Back
-         0, 0,   1, 0,  .5, 1,  // Left
-         1, 0,   0, 0,   0, 1,  // base
-         1, 0,   0, 1,   1, 1,
-      ];
-    }  
-
-    // Anything else: TODO
-    else {
-      vertices = [];
-      texCoords = [];
-    }
     
     s.vertices = vertices;
     s.texCoords = texCoords;
     s.center = center;
 
-    // Set the position buffer
-    
-    //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bindBuffer(34962, gl.createBuffer());
-    
-    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array(vertices), 35044);      
-    
-    // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
-    gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
-    
-    gl.enableVertexAttribArray(buffer);
-    
-    
-    // Set the texture coordinatess buffer
-    
-    // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bindBuffer(34962, gl.createBuffer());
-    
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array(texCoords), 35044);
-    
-    // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
-    gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
-    
-    gl.enableVertexAttribArray(buffer);
-    
-    // Set the color / texture
-    gl.vertexAttrib4fv(
-      gl.getAttribLocation(W.P, 'color'),
-      s.b.id ? [0,0,0,0] : [...[...s.b].map(a => ("0x" + a) / 16),
-      s.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
-    );
-    
     // Set the model matrix
     W.N = s.n;
     var m = new DOMMatrix(W?.n[s.g]?.m);
@@ -419,27 +397,58 @@ W = {
       false,
       m.toFloat32Array()
     );
+
+    // Ignore camera, light
+    if(!["C","L"].includes(s.n)){
+
+      // Set the position buffer
+      
+      //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bindBuffer(34962, W.vertices[s.T]);
+      
+      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0);
+      
+      gl.enableVertexAttribArray(buffer);
+      
+      // Set the texture coordinatess buffer
+      
+      // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bindBuffer(34962, W.texCoords[s.T]);
+      
+      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
+      
+      gl.enableVertexAttribArray(buffer);
+      
+      // Set the color / texture
+      gl.vertexAttrib4fv(
+        gl.getAttribLocation(W.P, 'color'),
+        s.b.id ? [0,0,0,0] : [...[...s.b].map(a => ("0x" + a) / 16),
+        s.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+      );
+      
+      // Consider the light
+      W.N = "L";
+      
+      // Transition the light's direction and sent it to the shaders
+      gl.uniform3f(
+        gl.getUniformLocation(W.P, 'light'),
+        W.l("x"), W.l("y"), W.l("z")
+      );
+      
+      // Billboard info: [width, height, isBillboard]
+      gl.uniform3f(
+        gl.getUniformLocation(W.P, 'billboard'),
+        s.w,
+        s.h,
+        s.T == "b"
+      );
     
-    // Consider the light
-    W.N = "L";
-    
-    // Transition the light's direction and sent it to the shaders
-    gl.uniform3f(
-      gl.getUniformLocation(W.P, 'light'),
-      W.l("x"), W.l("y"), W.l("z")
-    );
-    
-    // Billboard info: [width, height, isBillboard]
-    gl.uniform3f(
-      gl.getUniformLocation(W.P, 'billboard'),
-      s.w,
-      s.h,
-      s.T == "b"
-    );
-    
-    // gl.drawArrays(gl.TRIANGLES, 0, vertices.length/3);
-    gl.drawArrays(4, 0, vertices.length/3);
-    
+      // Draw
+      // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE));
+      gl.drawArrays(4, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE));
+    }
   },
   
   // Compute the distance squared between two objects (useful for sorting transparent items)
