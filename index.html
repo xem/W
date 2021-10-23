@@ -1,8 +1,9 @@
 ﻿<!doctype html>
-<link rel=icon href="data:image/svg+xml,nofavicon">
 <canvas id=a width=780 height=500 style="border:1px solid"></canvas>
 <img src="tree.png" id=tree hidden>
 <img src="brick.png" id=brick hidden>
+<img src="obj2js/yoshi.png" id=yoshi hidden>
+<img src="obj2js/mario.png" id=mario hidden>
 <script src="webglframework.js"></script>
 
 <br>
@@ -11,7 +12,7 @@
 <script style="display:block;width:750px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
 onload = () => {
   W.camera({y:-2,z:65});
-  W.light({x:.1,y:.3,z:.3});
+  W.light({x:.1,y:-.3,z:.3});
   W.plane({n:"ground",w:50,h:70,z:0,b:'8d8'});
   W.cube({n:"cube",x:-15,y:20,z:5,w:10,h:10,d:10,b:'68a'});
   W.plane({n:"plane",x:15,y:20,z:5,w:10,h:10,rx:-90,b:'68a'});
@@ -23,6 +24,8 @@ onload = () => {
   W.plane({n:"plane3",x:15,y:-10,z:5,w:10,h:10,rx:-90,b:brick});
   W.pyramid({n:"pyramid3",x:0,y:-10,z:5,w:10,h:10,d:10,rx:90,b:brick});
   W.billboard({n:"billboard1",x:10,y:-20,z:6,w:12,h:12,b:tree});
+  W.yoshi({n:"yoshi1",x:-10,y:-25,z:5,w:10,h:10,d:10,rx:90,rz:180,b:yoshi});
+  W.mario({n:"mario1",x:-20,y:-25,z:10,w:10,h:10,d:10,rx:0,rz:180,b:mario});
   setTimeout(()=>{
     W.camera({rx:60,y:-55,z:20,t:2})
   },1000);

@@ -1,0 +1,24 @@
+<!doctype html>
+<script src="parse.js"></script>
+<h2>obj / mtl to JS converter</h2>
+<p>(only displays the data of obj group 0 for now)
+<p>
+obj path: <input id=obj value="yoshi.obj">  <button onclick="convert()">convert</button>
+<p>
+<textarea id=vertices rows=10 cols=50>// vertices</textarea>
+<p>
+<textarea id=texCoords rows=10 cols=50>// texture coordinates</textarea>
+<script>
+onload = convert = () => {
+  parseOBJ(obj.value).then(x=>{
+    console.log(x[0].groups[0]);
+    vertices.innerHTML = "// vertices\n";
+    texCoords.innerHTML = "// texture coordinates\n";
+    vertices.innerHTML += x[0].groups[0].v.map(x=>+(x.toFixed(3))).join(", ");
+    texCoords.innerHTML += x[0].groups[0].vt.map(x=>+(x.toFixed(3))).join(", ");
+  })
+}
+</script>
+<style>
+body { font-family: arial }
+</style>
