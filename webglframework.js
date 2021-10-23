@@ -57,15 +57,14 @@ W = {
       out vec4 v_position, v_color, v_texCoord;
       void main() {
         
-        // Set vertex position
-        gl_Position = pv * (
-          (billboard.z > 0.)
+        // Vertex position in the world space
+        v_position = (billboard.z > 0.)
           ? (m[3] + eye * (position * -vec4(billboard, 0))) // billboards
-          : (m * position) // other objects
-        );
+          : (m * position); // other objects
 
-        // Varyings
-        v_position = m * position;
+        gl_Position = pv * v_position;
+
+        // Other varyings passed to the fragment shader.
         v_color = color;
         v_texCoord = tex;
       }`
