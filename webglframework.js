@@ -25,7 +25,8 @@ W = {
     // gl.enable(gl.CULL_FACE);
     
     // Default blending method for transparent objects
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFunc(770, 771);
 
     // New WebGL program
     W.P = gl.createProgram();
@@ -37,16 +38,10 @@ W = {
       t = gl.createShader(35633),
       
       `#version 300 es
-      in vec4 position; 
-      in vec4 color;
-      in vec2 tex;
-      uniform mat4 pv;
-      uniform mat4 eye;
-      uniform mat4 m;
+      in vec4 position, color, tex;
+      uniform mat4 pv, eye, m;
       uniform vec3 billboard;
-      out vec4 v_color;
-      out vec3 v_position;
-      out vec2 v_texCoord;
+      out vec4 v_position, v_color, v_texCoord;
       void main() {
         
         // Set vertex position
@@ -57,7 +52,7 @@ W = {
         );
 
         // Varyings
-        v_position = vec3(m * position);
+        v_position = m * position;
         v_color = color;
         v_texCoord = tex;
       }`
@@ -74,16 +69,14 @@ W = {
       
       `#version 300 es
       precision highp float;
-      in vec3 v_position;
-      in vec4 v_color;
-      in vec2 v_texCoord;
+      in vec4 v_position, v_color, v_texCoord;
       uniform vec3 light;
       uniform sampler2D sampler;
       out vec4 c;
       void main() {
-        vec4 col = (v_color.a == 0. ? texture(sampler, v_texCoord) : v_color);
+        vec4 col = (v_color.a == 0. ? texture(sampler, v_texCoord.xy) : v_color);
         c = vec4(col.rgb * (
-          max(dot(normalize(light), normalize(cross(dFdx(v_position), dFdy(v_position)))), 0.0) // ambient light
+          max(dot(normalize(light), normalize(cross(dFdx(v_position.xyz), dFdy(v_position.xyz)))), 0.0) // ambient light
           + .2 // diffuse light
         ), col.a);
       }
@@ -132,12 +125,24 @@ W = {
     
     // If a new texture is provided, build it and save it in W.textures
     if(t.b && t.b.id && !W.textures[t.b.id]){
+      
       texture = gl.createTexture();
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.b);
-      gl.generateMipmap(gl.TEXTURE_2D);
+      
+      //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.pixelStorei(37441, true);
+      
+      //gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.bindTexture(3553, texture);
+      
+      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+      gl.pixelStorei(37440, 1);
+      
+      //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.b);
+      gl.texImage2D(3553, 0, 6408, 6408, 5121, t.b);
+      
+      //gl.generateMipmap(gl.TEXTURE_2D);
+      gl.generateMipmap(3553);
+      
       W.textures[t.b.id] = texture;
     }
     
@@ -252,10 +257,12 @@ W = {
     if (s.b.id) {
       
       // Enable texture 0
-      gl.activeTexture(gl.TEXTURE0);
+      // gl.activeTexture(gl.TEXTURE0);
+      gl.activeTexture(33984);
 
       // Set the texture's target (2D or cubemap)
-      gl.bindTexture(gl.TEXTURE_2D, W.textures[s.b.id]);
+      // gl.bindTexture(gl.TEXTURE_2D, W.textures[s.b.id]);
+      gl.bindTexture(3553, W.textures[s.b.id]);
 
       // Pass texture 0 to the sampler
       gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
