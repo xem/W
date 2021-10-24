@@ -9,7 +9,7 @@
 // If face normals are not present in the OBJ file, they're computed per face (not smoothed for each vertex) and put in the normals buffer.
 // All the polygons with 4 faces or more are converted in 2 or more consecutive triangles.
 // The object is centered on the origin by default but it can be disabled with center = 0.
-parseOBJ = async (objpath, center = 1) => {
+parseOBJ = async (objpath, center = 1, indexed = 1) => {
   
   // Temp vars
   var
@@ -44,6 +44,7 @@ parseOBJ = async (objpath, center = 1) => {
   tmp, i, j,
   A, B, C,
   AB, BC,
+  minX = 9e9, minY = 9e9, minZ = 9e9,
   
   // This function is called when a group is complete
   // It computes the normals if necessary, and generates the final buffers (v, vt, vn, rgb) from the indices arrays (vi, vti, vni)
@@ -79,9 +80,9 @@ parseOBJ = async (objpath, center = 1) => {
       C = v[vi[i+2]]/*.replace(/(\...).* /,"$1")*/;
       
       // Fill vertices buffer, offsetted to place the first vertex at 0,0,0 is center is set
-      currentgroup.v.push(A[0] - (center ? v[vi[0]][0] : 0), A[1] - (center ? v[vi[0]][1] : 0), A[2] - (center ? v[vi[0]][2] : 0));
-      currentgroup.v.push(B[0] - (center ? v[vi[0]][0] : 0), B[1] - (center ? v[vi[0]][1] : 0), B[2] - (center ? v[vi[0]][2] : 0));
-      currentgroup.v.push(C[0] - (center ? v[vi[0]][0] : 0), C[1] - (center ? v[vi[0]][1] : 0), C[2] - (center ? v[vi[0]][2] : 0));
+      currentgroup.v.push(A[0] - (center ? minX : 0), A[1] - (center ? minY : 0), A[2] - (center ? minZ : 0));
+      currentgroup.v.push(B[0] - (center ? minX : 0), B[1] - (center ? minY : 0), B[2] - (center ? minZ : 0));
+      currentgroup.v.push(C[0] - (center ? minX : 0), C[1] - (center ? minY : 0), C[2] - (center ? minZ : 0));
       
       // Fill rgb buffer if vertices include colors directly in the obj file
       if(A.length > 5){
@@ -158,11 +159,17 @@ parseOBJ = async (objpath, center = 1) => {
     // Save group smoothness
     currentgroup.s = currents;
     
+    // Save indices lists
+    currentgroup.vi = vi;
+    currentgroup.vti = vti;
+    currentgroup.vni = vni;
+
     // Add group in current object
     currentobj.groups.push(currentgroup);
     
     // Reset group
     currentgroup = {};
+    
     
     // Reset indices arrays
     vi = [];
@@ -328,6 +335,9 @@ parseOBJ = async (objpath, center = 1) => {
         tmp = [];
         objlist.map((x, y) => tmp.push(+x));
         v.push(tmp);
+        minX = Math.min(minX, tmp[0]);
+        minY = Math.min(minY, tmp[1]);
+        minZ = Math.min(minZ, tmp[2]);
         break;
         
       // New vertex texture coordinates
@@ -395,5 +405,6 @@ parseOBJ = async (objpath, center = 1) => {
   // Push the last group in the current object and the last object in obj
   endGroup();
   obj.push(currentobj);
+  obj.push({v, vt, vn});
   return obj;
 }

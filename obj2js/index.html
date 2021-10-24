@@ -1,24 +1,47 @@
 <!doctype html>
 <script src="parse.js"></script>
 <h2>obj / mtl to JS converter</h2>
-<p>(only displays the data of obj group 0 for now)
+obj path: <input id=obj value="yoshi.obj">
+<button onclick="convert()">convert</button>
+( Vertices scale: <input type=number value=1 id=scale onchange="convert()" oninput="convert()" min=1 max=100>,  max decimals: <input type=number value=4 id=round1 onchange="convert()" oninput="convert()" min=0 max=10> / 
+TexCoords max decimals: <input type=number value=4 id=round2 onchange="convert()" oninput="convert()" min=1 max=10> )
 <p>
-obj path: <input id=obj value="yoshi.obj">  <button onclick="convert()">convert</button>
+Unindexed  <i id=out1i></i>
+<p><textarea id=out1 rows=20></textarea>
 <p>
-<textarea id=vertices rows=10 cols=50>// vertices</textarea>
+<p>Indexed  <i id=out2i></i>
+<p><textarea id=out2 rows=20></textarea>
 <p>
-<textarea id=texCoords rows=10 cols=50>// texture coordinates</textarea>
 <script>
 onload = convert = () => {
   parseOBJ(obj.value).then(x=>{
     console.log(x[0].groups[0]);
-    vertices.innerHTML = "// vertices\n";
-    texCoords.innerHTML = "// texture coordinates\n";
-    vertices.innerHTML += x[0].groups[0].v.map(x=>+(x.toFixed(3))).join(", ");
-    texCoords.innerHTML += x[0].groups[0].vt.map(x=>+(x.toFixed(3))).join(", ");
+    console.log(z=x);
+    out1.innerHTML = "vertices=[";
+    out1.innerHTML += x[0].groups[0].v.map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
+    out1.innerHTML += "]\ntexCoords=[";
+    out1.innerHTML += x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",");
+    out1.innerHTML += "]";
+    out1i.innerHTML = out1.innerHTML.length + " bytes";
+    out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
+    
+    out2.innerHTML = "vertices=[";
+    out2.innerHTML += x[1].v.flat().map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
+    out2.innerHTML += "]\nverticesIndices=[";
+    out2.innerHTML += x[0].groups[0].vi.map(x=>+x).join(",");
+    out2.innerHTML += "]\ntexCoords=[";
+    out2.innerHTML += x[1].vt.flat().map(x=>+((x).toFixed(round2.value))).join(",");
+    out2.innerHTML += "]\ntexCoordsIndices=[";
+    out2.innerHTML += x[0].groups[0].vti.map(x=>+x).join(",");
+    out2.innerHTML += "]";
+    out2.innerHTML = out2.innerHTML.replace(/(\D)0\./g,"$1.");
+    out2i.innerHTML = out2.innerHTML.length + " bytes";
   })
 }
 </script>
 <style>
-body { font-family: arial }
+body { font-family: arial; font-size: 11px; }
+textarea { width: 98vw; height: calc((100vh - 18em)/2); font-size: 10px;line-height: 9px }
+input, button { font-size: 11px; }
+#round1, #round2, #scale { width: 30px }
 </style>
