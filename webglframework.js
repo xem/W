@@ -442,7 +442,7 @@ W = {
     
       // Draw
       // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
-      gl.drawArrays(4, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
+      gl.drawArrays(4, 0, gl.getBufferParameter(34962, 34660)/8);
     }
     
   },

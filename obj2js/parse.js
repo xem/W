@@ -45,6 +45,7 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
   A, B, C,
   AB, BC,
   minX = 9e9, minY = 9e9, minZ = 9e9,
+  maxX = -9e9, maxY = -9e9, maxZ = -9e9,
   
   // This function is called when a group is complete
   // It computes the normals if necessary, and generates the final buffers (v, vt, vn, rgb) from the indices arrays (vi, vti, vni)
@@ -338,6 +339,9 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
         minX = Math.min(minX, tmp[0]);
         minY = Math.min(minY, tmp[1]);
         minZ = Math.min(minZ, tmp[2]);
+        maxX = Math.max(maxX, tmp[0]);
+        maxY = Math.max(maxY, tmp[1]);
+        maxZ = Math.max(maxZ, tmp[2]);
         break;
         
       // New vertex texture coordinates
@@ -405,6 +409,6 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
   // Push the last group in the current object and the last object in obj
   endGroup();
   obj.push(currentobj);
-  obj.push({v, vt, vn});
+  obj.push({v, vt, vn, maxX,maxY,maxZ, minX, minY, minZ, size: Math.max(maxX-minX, maxY-minY, maxZ-minZ)});
   return obj;
 }

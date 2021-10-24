@@ -9,12 +9,16 @@ TexCoords max decimals: <input type=number value=4 id=round2 onchange="convert()
 Unindexed  <i id=out1i></i>
 <p><textarea id=out1 rows=20></textarea>
 <p>
+<p>ASCII <i id=out3i></i>
+<p><textarea id=out3 rows=20></textarea>
+<!--p>
 <p>Indexed  <i id=out2i></i>
-<p><textarea id=out2 rows=20></textarea>
+<p><textarea id=out2 rows=20></textarea-->
 <p>
 <script>
 onload = convert = () => {
   parseOBJ(obj.value).then(x=>{
+    size = x[1].size;
     console.log(x[0].groups[0]);
     console.log(z=x);
     out1.innerHTML = "vertices=[";
@@ -25,7 +29,7 @@ onload = convert = () => {
     out1i.innerHTML = out1.innerHTML.length + " bytes";
     out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
     
-    out2.innerHTML = "vertices=[";
+    /*out2.innerHTML = "vertices=[";
     out2.innerHTML += x[1].v.flat().map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
     out2.innerHTML += "]\nverticesIndices=[";
     out2.innerHTML += x[0].groups[0].vi.map(x=>+x).join(",");
@@ -35,7 +39,14 @@ onload = convert = () => {
     out2.innerHTML += x[0].groups[0].vti.map(x=>+x).join(",");
     out2.innerHTML += "]";
     out2.innerHTML = out2.innerHTML.replace(/(\D)0\./g,"$1.");
-    out2i.innerHTML = out2.innerHTML.length + " bytes";
+    out2i.innerHTML = out2.innerHTML.length + " bytes";*/
+    
+    out3.innerHTML = "vertices='";
+    out3.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCharCode(32+(+((x/size*95).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'")).join("");
+    out3.innerHTML += "'\ntexCoords='";
+    out3.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode(32+(+((x*95).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'")).join("");
+    out3.innerHTML += "'";
+    out3i.innerHTML = out3.innerHTML.length + " bytes";
   })
 }
 </script>
