@@ -8,7 +8,7 @@ W = {
   last: 0,        // timestamp of last frame
   dt: 0,          // delta time
   o: 0,           // object counter
-  p: {},          // objects previous states (list 1: opaque items, list 2: items with transparency)
+  p: {},          // objects previous states
   n: {},          // objects next states
   textures: {},   // textures list
   vertices: {},   // vertex buffers 
@@ -56,14 +56,15 @@ W = {
       uniform vec3 billboard;
       out vec4 v_position, v_color, v_texCoord;
       void main() {
-
+        
+        // Set vertex position
         gl_Position = pv * (
           v_position = (billboard.z > 0.)
           ? (m[3] + eye * (position * -vec4(billboard, 0))) // billboards
           : (m * position) // other objects
         );
 
-        // Other varyings passed to the fragment shader.
+        // Varyings
         v_color = color;
         v_texCoord = tex;
       }`
@@ -157,7 +158,6 @@ W = {
       1, 1,      0, 0,   1, 0,
     ]), 35044);
     
-    
     // Pyramid (2 x 2 x 2)
     //
     //      ^
@@ -215,7 +215,6 @@ W = {
       1, 0,     0, 0,    0, 1,
       1, 0,     0, 1,    1, 1
     ]), 35044);
-
   },
 
   // Transition helpers
@@ -289,10 +288,6 @@ W = {
   
   pyramid: t => { t.T = "p"; W.i(t) },
   
-  yoshi: t => { t.T = "y"; W.i(t) },
-  
-  mario: t => { t.T = "m"; W.i(t) },
-  
   move: t => W.i(t),
   
   camera: t => { t.n = "C", W.i(t) },
@@ -346,7 +341,7 @@ W = {
     }
     
     // Order transparent objects from back to front
-    transparent.sort((a,b) => {
+    transparent.sort((a, b) => {
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
       return a.m && b.m && (W.dist(b.m, W.n.C.m) - W.dist(a.m, W.n.C.m));
@@ -363,7 +358,7 @@ W = {
   },
   
   // Render an object
-  r: (s, center = [0,0,0], vertices, texCoords) => {
+  r: (s, center = [0,0,0], vertices, texCoords, buffer) => {
 
     // If the object has a texture
     if (s.b.id) {
@@ -378,14 +373,13 @@ W = {
 
     // If the object has a transition, increment its timer...
     if(s.f < s.t) s.f += W.dt;
-    
     // ...but don't let it go over the transition duration.
     if(s.f > s.t) s.f = s.t;
     
     s.vertices = vertices;
     s.texCoords = texCoords;
     s.center = center;
-
+    
     // Set the model matrix
     W.N = s.n;
     var m = new DOMMatrix(W?.n[s.g]?.m);
@@ -396,19 +390,21 @@ W = {
       false,
       m.toFloat32Array()
     );
-
+    
     // Ignore camera, light
     if(!["C","L"].includes(s.n)){
+      s.center = center;
 
       // Set the position buffer
       
       //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-      gl.bindBuffer(34962, W.vertices[s.T]);
+      gl.bindBuffer(34962, W.vertices[s.T]);      
       
-      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0);
-      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0);
+      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
+      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
       
       gl.enableVertexAttribArray(buffer);
+      
       
       // Set the texture coordinatess buffer
       
@@ -445,9 +441,10 @@ W = {
       );
     
       // Draw
-      // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE));
-      gl.drawArrays(4, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE));
+      // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
+      gl.drawArrays(4, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
     }
+    
   },
   
   // Compute the distance squared between two objects (useful for sorting transparent items)
