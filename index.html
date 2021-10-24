@@ -6,6 +6,8 @@
 <img src="obj2js/mario1.png" id=mario1 hidden>
 <img src="obj2js/mario2.png" id=mario2 hidden>
 <script src="webglframework.js"></script>
+<script src="mario.js"></script>
+<script src="yoshi.js"></script>
 
 <br>
 <br>
@@ -25,8 +27,8 @@ onload = () => {
   W.plane({n:"plane3",x:15,y:-10,z:5,w:10,h:10,rx:-90,b:brick});
   W.pyramid({n:"pyramid3",x:0,y:-10,z:5,w:10,h:10,d:10,rx:90,b:brick});
   W.billboard({n:"billboard1",x:10,y:-20,z:6,w:12,h:12,b:tree});
-  W.yoshi({n:"yoshi1",x:0,y:-30,z:0,w:.2,h:.2,d:.2,rx:90,rz:180,b:yoshi});
   W.mario({n:"mario1",x:-10,y:-25,z:0,w:.2,h:.2,d:.2,rx:0,rz:180,b:mario1});
+  W.yoshi({n:"yoshi1",x:0,y:-30,z:0,w:.2,h:.2,d:.2,rx:90,rz:180,b:yoshi});
   setTimeout(()=>{
     W.camera({rx:60,x:-10,y:-55,z:20,t:2})
   },1000);
