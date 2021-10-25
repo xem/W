@@ -9,7 +9,7 @@
 // If face normals are not present in the OBJ file, they're computed per face (not smoothed for each vertex) and put in the normals buffer.
 // All the polygons with 4 faces or more are converted in 2 or more consecutive triangles.
 // The object is centered on the origin by default but it can be disabled with center = 0.
-parseOBJ = async (objpath, center = 1, indexed = 1) => {
+parseOBJ = async (file, center = 1) => {
   
   // Temp vars
   var
@@ -51,20 +51,6 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
   // It computes the normals if necessary, and generates the final buffers (v, vt, vn, rgb) from the indices arrays (vi, vti, vni)
   // The group is then added to the current object and a new one is created
   endGroup = x => {
-    
-    // Copy material in group
-    if(currentusemtl){
-      var tmp = mtl.find(x => x.name == currentusemtl);
-      currentgroup.Ka = tmp.Ka || [0, 0, 0];
-      currentgroup.Kd = tmp.Kd || [0, 0, 0];
-      currentgroup.Ks = tmp.Ks || [0, 0, 0];
-      currentgroup.Ns = tmp.Ns || 0;
-      currentgroup.d = tmp.d || 1;
-      currentgroup.illum = tmp.illum || 1;
-      currentgroup.map_Ka = tmp.map_Ka || '';
-      currentgroup.map_Kd = tmp.map_Kd || '';
-      currentgroup.map_Ks = tmp.map_Ks || '';
-    }
     
     currentgroup.v = [];
     currentgroup.vt = [];
@@ -178,11 +164,7 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
     vni = [];
   };
   
-  // Isolate OBJ file's folder
-  objfolder = /.*\//.exec(objpath) || '';
-  
-  // Request OBJ file, remove comments and split lines
-  file = await(await fetch(objpath)).text();
+
   //console.log(file);
   objlines = file.replace(/#.*\n*/g,'').split(/[\r\n]+/);
     
@@ -201,83 +183,7 @@ parseOBJ = async (objpath, center = 1, indexed = 1) => {
     switch(objcommand){
       
       // Load MTL file
-      case 'mtllib':
-      
-        // Isolate MTL file's folder (relative to OBJ folder)
-        mtlfolder = /.*\//.exec(objfolder + objparam) || '';
-        
-        // Request MTL file, remove comments and split lines
-        file = await(await fetch(objfolder + objparam)).text();
-        mtllines = file.replace(/#.*\n*/g,'').split(/[\r\n]+/);
-        //console.log(file);
-          
-        // For each line
-        for(mtlline of mtllines){
-          
-          // Separate command and param(s)
-          [mtlcommand, mtlparam] = mtlline.split(/ (.*)/);
-          
-          // Split params as a list if possible
-          if(mtlparam){
-            mtllist = mtlparam.split(/ +/);
-          }
-          
-          // Interpret each line
-          switch(mtlcommand){
-            
-            // New material
-            case 'newmtl':
-              
-              // Save current material and create a new one (if it's not empty)
-              if(Object.keys(currentmtl).length){
-                mtl.push(currentmtl);
-                currentmtl = {};
-              }
-              
-              // Save material name
-              currentmtl.name = mtlparam;
-              break;
-              
-            // Ambient/diffuse/specular color
-            case 'Ka':
-            case 'Kd':
-            case 'Ks':
-            
-              // Save the r, g, b values as a float array
-              currentmtl[mtlcommand] = mtllist.map(x => +x);
-              break;
-              
-            // Shininess, illumination mode, diffuseness
-            case 'Ns':
-            case 'illum':
-            case 'd':
-              
-              // Save the value as a float
-              currentmtl[mtlcommand] +mtlparam;
-              break;
-              
-            // Transparency
-            case 'tr':
-            
-              // Save the opposite in d
-              currentmt.d = 1 - +mtlparam;
-              break;
-              
-            // Ambient/diffuse/specular texture map
-            case 'map_Ka':
-            case 'map_Kd':
-            case 'map_Ks':
-            
-              // Save the value as a string (path relative to the MTL file)
-              currentmtl[mtlcommand] = mtlfolder + mtlparam;
-              break;
-          }
-        }
-        
-        // Push the last material in mtl
-        mtl.push(currentmtl);
-        
-        break;
+      // not here
       
       // Use a material for the following groups
       case 'usemtl':

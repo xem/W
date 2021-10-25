@@ -1,33 +1,56 @@
 <!doctype html>
 <script src="parse.js"></script>
-<h2>obj / mtl to JS converter</h2>
-obj path: <input id=obj value="yoshi.obj">
-<button onclick="convert()">convert</button>
-( Vertices scale: <input type=number value=1 id=scale onchange="convert()" oninput="convert()" min=1 max=100>,  max decimals: <input type=number value=4 id=round1 onchange="convert()" oninput="convert()" min=0 max=10> / 
-TexCoords max decimals: <input type=number value=4 id=round2 onchange="convert()" oninput="convert()" min=1 max=10> )
+<h2>obj / mtl to WebGL buffer converter</h2>
+<b>OBJ file</b>: <button id=mario>Mario</button> <button id=yoshi>Yoshi</button> or <input type=file id=obj>
+<p><b>Options</b>: float range <input type=number value=10 id=scale onchange="convert()" oninput="convert()" min=1>, 
+max decimals (vertices): <input type=number value=4 id=round1 onchange="convert()" oninput="convert()" min=0 max=10>, 
+max decimals (textures): <input type=number value=4 id=round2 onchange="convert()" oninput="convert()" min=1 max=10>,
+Unicode precision: <input type=number value=127 id=unicode onchange="convert()" oninput="convert()" min=1>
 <p>
-Unindexed  <i id=out1i></i>
-<p><textarea id=out1 rows=20></textarea>
-<p>
-<p>ASCII <i id=out3i></i>
-<p><textarea id=out3 rows=20></textarea>
-<!--p>
-<p>Indexed  <i id=out2i></i>
-<p><textarea id=out2 rows=20></textarea-->
-<p>
+<table>
+<tr><th>Unindexed: floats (<i id=out1i>0 bytes</i>)<th>Unicode (<i id=out2i>0 chars</i>)
+<tr><td><textarea id=out1 rows=20></textarea><td><textarea id=out2 rows=20></textarea>
+<tr><th>Indexed: floats (<i id=out3i>0 bytes</i>)<th>Unicode (<i id=out4i>0 chars</i>)
+<tr><td><textarea id=out4 rows=20></textarea><td><textarea id=out4 rows=20></textarea>
+</table>
+
 <script>
-onload = convert = () => {
-  parseOBJ(obj.value).then(x=>{
+convert = () => {
+  parseOBJ(file).then(x=>{
     size = x[1].size;
-    console.log(x[0].groups[0]);
+    //console.log(x[0].groups[0]);
     console.log(z=x);
-    out1.innerHTML = "vertices=[";
-    out1.innerHTML += x[0].groups[0].v.map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
-    out1.innerHTML += "]\ntexCoords=[";
+    out1.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
+gl.bufferData(34962, new Float32Array([`;
+    out1.innerHTML += x[0].groups[0].v.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",");
+    out1.innerHTML += `].map(x=>x/${scale.value})), 35044); 
+gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
+gl.bufferData(34962, new Float32Array([`;
     out1.innerHTML += x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",");
-    out1.innerHTML += "]";
-    out1i.innerHTML = out1.innerHTML.length + " bytes";
+    out1.innerHTML += `]), 35044);
+W["${name}"]=t=>{t.T="${name}";W.i(t)}`;
+    out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
     out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
+    
+    
+    
+    
+    out2.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
+gl.bufferData(34962, new Float32Array([...
+  '`;
+    out2.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\\0")).join("");
+    out2.innerHTML += `'
+].map(a=>(a.codePointAt())/${unicode.value})
+), 35044); 
+gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
+gl.bufferData(34962, new Float32Array([...
+  '`;
+    out2.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode((+((x*unicode.value).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\\0")).join("");
+    out2.innerHTML += `'
+].map(a=>(a.codePointAt())/${unicode.value})
+), 35044);
+W["${name}"]=t=>{t.T="${name}";W.i(t)}`;
+    out2i.innerHTML = new Intl.NumberFormat("en-US").format(out2.innerHTML.length) + " chars";
     
     /*out2.innerHTML = "vertices=[";
     out2.innerHTML += x[1].v.flat().map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
@@ -40,19 +63,39 @@ onload = convert = () => {
     out2.innerHTML += "]";
     out2.innerHTML = out2.innerHTML.replace(/(\D)0\./g,"$1.");
     out2i.innerHTML = out2.innerHTML.length + " bytes";*/
-    
-    out3.innerHTML = "vertices='";
-    out3.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCharCode(32+(+((x/size*95).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'")).join("");
-    out3.innerHTML += "'\ntexCoords='";
-    out3.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode(32+(+((x*95).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'")).join("");
-    out3.innerHTML += "'";
-    out3i.innerHTML = out3.innerHTML.length + " bytes";
   })
+}
+
+mario.onclick = async () => {
+  name = "mario";
+  file = await(await fetch("mario.obj")).text();
+  convert();
+}
+
+yoshi.onclick = async () => {
+  name = "yoshi";
+  file = await(await fetch("yoshi.obj")).text();
+  convert();
+}
+
+obj.onload = obj.oninput = () => {
+  if (obj.files && obj.files[0]) {
+    var myFile = obj.files[0];
+    var reader = new FileReader();
+    
+    reader.addEventListener('load', function (e) {
+      file = e.target.result;
+      name = obj.files[0].name.replace(/\.obj/i,"");
+      convert();
+    });
+    
+    reader.readAsBinaryString(myFile);
+  }   
 }
 </script>
 <style>
 body { font-family: arial; font-size: 11px; }
-textarea { width: 98vw; height: calc((100vh - 18em)/2); font-size: 10px;line-height: 9px }
+textarea { width: 47.5vw; height: calc((100vh - 17em)/2); font-size: 10px;line-height: 9px }
 input, button { font-size: 11px; }
-#round1, #round2, #scale { width: 30px }
+#round1, #round2, #scale, #unicode { width: 35px }
 </style>
