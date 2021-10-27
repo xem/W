@@ -34,18 +34,17 @@ W["${name}"]=t=>{t.T="${name}";W.i(t)}`;
     
     
     
-    
     out2.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
 gl.bufferData(34962, new Float32Array([...
   '`;
-    out2.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\\0")).join("");
+    out2.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
     out2.innerHTML += `'
 ].map(a=>(a.codePointAt())/${unicode.value})
 ), 35044); 
 gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
 gl.bufferData(34962, new Float32Array([...
   '`;
-    out2.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode((+((x*unicode.value).toFixed(0)))).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\\0")).join("");
+    out2.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
     out2.innerHTML += `'
 ].map(a=>(a.codePointAt())/${unicode.value})
 ), 35044);
