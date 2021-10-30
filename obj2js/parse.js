@@ -20,6 +20,10 @@ parseOBJ = async (file, center = 1) => {
   vti = [],       // texture coordinates indices for current group
   vni = [],       // normals indices for current group
   mtl = [],       // materials 
+  indices = [],   // indices (vertices and texture coordinates combined)
+  indexDict = {}, // dictionnary
+  indexv = [],    // vertices index
+  indexvt = [],   // texture coordinates index
   currentvn = [], // current group normals
   obj = [],       // output
   currentobj = {groups: []},
@@ -55,18 +59,84 @@ parseOBJ = async (file, center = 1) => {
     currentgroup.v = [];
     currentgroup.vt = [];
     currentgroup.vn = [];
+    currentgroup.indices = [];
+    currentgroup.indexDict = [];
+    currentgroup.indexv = [];
+    currentgroup.indexvt = [];
     currentgroup.rgb = [];
     currentvn = [];
+    currentDict = [];
+    lastIndex = 0;
+    
 
     // For every vertex triplet
     for(i = 0; i < vi.length; i += 3){
       
       // Retrieve vertices
-      A = v[vi[i+0]]/*.replace(/(\...).* /,"$1")*/;
-      B = v[vi[i+1]]/*.replace(/(\...).* /,"$1")*/;
-      C = v[vi[i+2]]/*.replace(/(\...).* /,"$1")*/;
+      A = v[vi[i+0]];
+      B = v[vi[i+1]];
+      C = v[vi[i+2]];
       
-      // Fill vertices buffer, offsetted to place the first vertex at 0,0,0 is center is set
+      if(vti.length){
+        
+        
+        // Vertex 1
+        currentDict = vi[i+0] + "/" + vti[i+0];
+
+        // Add current dict entry into dictionary if not already present
+        // And push corresponding items in indexv and indexvt
+        if((t = currentgroup.indexDict.indexOf(currentDict)) == -1){
+          currentgroup.indexDict.push(currentDict);
+          currentgroup.indexv.push(...A);
+          currentgroup.indexvt.push(...vt[vti[i+0]]);
+        }
+        
+        // Add an entry
+        t = currentgroup.indexDict.indexOf(currentDict);
+        currentgroup.indices.push(t);
+        
+        
+        
+        
+        
+        // Vertex 2
+        currentDict = vi[i+1] + "/" + vti[i+1];
+
+        // Add current dict entry into dictionary if not already present
+        // And push corresponding items in indexv and indexvt
+        if((t = currentgroup.indexDict.indexOf(currentDict)) == -1){
+          currentgroup.indexDict.push(currentDict);
+          currentgroup.indexv.push(...B);
+          currentgroup.indexvt.push(...vt[vti[i+1]]);
+        }
+        
+        // Add an entry
+        t = currentgroup.indexDict.indexOf(currentDict);
+        currentgroup.indices.push(t);
+        
+        
+        
+        
+        // Vertex 3
+        currentDict = vi[i+2] + "/" + vti[i+2];
+
+        // Add current dict entry into dictionary if not already present
+        // And push corresponding items in indexv and indexvt
+        if((t = currentgroup.indexDict.indexOf(currentDict)) == -1){
+          currentgroup.indexDict.push(currentDict);
+          currentgroup.indexv.push(...C);
+          currentgroup.indexvt.push(...vt[vti[i+2]]);
+        }
+        
+        // Add an entry
+        t = currentgroup.indexDict.indexOf(currentDict);
+        currentgroup.indices.push(t);
+        
+        
+      }
+      
+      
+      // Fill vertices buffer
       currentgroup.v.push(A[0] - (center ? minX : 0), A[1] - (center ? minY : 0), A[2] - (center ? minZ : 0));
       currentgroup.v.push(B[0] - (center ? minX : 0), B[1] - (center ? minY : 0), B[2] - (center ? minZ : 0));
       currentgroup.v.push(C[0] - (center ? minX : 0), C[1] - (center ? minY : 0), C[2] - (center ? minZ : 0));
@@ -166,7 +236,7 @@ parseOBJ = async (file, center = 1) => {
   
 
   //console.log(file);
-  objlines = file.replace(/#.*\n*/g,'').split(/[\r\n]+/);
+  objlines = file.replace(/#.*\n*/g,'').split(/ *[\r\n]+/);
     
   // For each line
   for(objline of objlines){

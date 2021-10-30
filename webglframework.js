@@ -2,24 +2,28 @@
 // ===============
 W = {
 
-  // Globals
-  // -------
+  // Reset the framework
+  reset: t => {
+    
+    // Globals
+    // -------
   
-  last: 0,        // timestamp of last frame
-  dt: 0,          // delta time
-  o: 0,           // object counter
-  p: {},          // objects previous states
-  n: {},          // objects next states
-  textures: {},   // textures list
-  vertices: {},   // vertex buffers 
-  texCoords: {},  // texture coordinates buffers 
-  perspective:    // perspective matrix: fov = .5rad, aspect = a.width/a.height, near: 1, far: 1000)
-    new DOMMatrix([
-      1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
-      0, 1 / Math.tan(.5), 0, 0, 
-      0, 0, (900 + 1) * 1 / (1 - 900), -1,
-      0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
-    ]),
+    W.last = 0;         // timestamp of last frame
+    W.dt = 0;           // delta time
+    W.o = 0;            // object counter
+    W.p = {};           // objects previous states
+    W.n = {};           // objects next states
+    W.textures = {};    // textures list
+    W.vertices = {};    // vertex buffers 
+    W.texCoords = {};   // texture coordinates buffers 
+    W.perspective =     // perspective matrix: fov = .5rad, aspect = a.width/a.height, near: 1, far: 1000)
+      new DOMMatrix([
+        1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
+        0, 1 / Math.tan(.5), 0, 0, 
+        0, 0, (900 + 1) * 1 / (1 - 900), -1,
+        0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
+      ]);
+  },
   
   // WebGL helpers
   // -------------
@@ -221,7 +225,7 @@ W = {
   // ------------------
 
   // Interpolate a property between two values
-  l: t => W.n[W.N].t ?
+  l: t => W.n[W.N]?.t ?
     W.p[W.N][t] + (W.n[W.N][t] -  W.p[W.N][t]) * (W.n[W.N].f / W.n[W.N].t)
     : W.n[W.N][t],
   
@@ -235,14 +239,14 @@ W = {
   // Framework
   // ---------
 
-  // Set the new state of a 3D object (or group / camera / light source)
+  // Init an object (or set a new state to it)
   i: (t, texture) => {
     
     // Custom name or default name ("o" + auto-increment)
     t.n ||= "o" + W.o++;
     
     // If a new texture is provided, build it and save it in W.textures
-    if(t.b && t.b.id && !W.textures[t.b.id]){
+    if(t.b && t.b.id && t.b.width && !W.textures[t.b.id]){
       
       texture = gl.createTexture();
       
@@ -391,8 +395,8 @@ W = {
       m.toFloat32Array()
     );
     
-    // Ignore camera, light
-    if(!["C","L"].includes(s.n)){
+    // Ignore camera, light, groups
+    if(!["C","L"].includes(s.n) && s.T != "g"){
       s.center = center;
 
       // Set the position buffer
@@ -452,6 +456,7 @@ W = {
 }
 
 // When everything is loaded: setup WebGL program, light, camera, action
+W.reset();
 W.s();
 W.light({z:1});
 W.camera({});
