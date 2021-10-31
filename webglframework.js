@@ -452,44 +452,37 @@ W = {
       
        
     
-      /*// TMP
+      // TMP
       
-      // Create a cube
-      var vertices = new Float32Array([  // Vertex coordinates
+      /*// Set position
+      gl.bindBuffer(gl.ARRAY_BUFFER, W.vertices["mario"] = gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([  // Vertex coordinates
          1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0, // front
          1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0, // right
          1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0, // up
         -1.0, 1.0, 1.0,  -1.0, 1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0,-1.0, 1.0, // left
         -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0, // down
          1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0  // back
-      ]);
+      ]), gl.STATIC_DRAW);
+      var a = gl.getAttribLocation(W.P, "position");
+      gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a);
 
-      var indices = new Uint8Array([  // Indices
+      // Set indices
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,  new Uint16Array([
         //0, 1, 2,   0, 2, 3,  // front
         4, 5, 6,   4, 6, 7,  // right
         8, 9, 10,  8, 10,11, // up
         //12,13,14,  12,14,15, // left
         //16,17,18,  16,18,19, // down
         //20,21,22,  20,22,23  // back
-      ]);
-      
+      ]), gl.STATIC_DRAW);
       var n = 12;
-
-      // Set position
-      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-      var a = gl.getAttribLocation(W.P, "position");
-      gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(a);
-
-      // Set indices
-      var indexBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
       // render
       //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+      gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
     */
 
     

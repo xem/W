@@ -29,7 +29,7 @@ convert = () => {
     
     parseOBJ(file).then(x=>{
       size = x[1].size;
-      //console.log(x[0]);
+      console.log(x[0]);
       //console.log(z=x);
       out1.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
   gl.bufferData(34962, new Float32Array([`;
@@ -68,18 +68,55 @@ convert = () => {
       out2.innerHTML += `\nW["${name}_txt"]=t=>{t.T="${name}_txt";W.i(t)}`;
       out2i.innerHTML = new Intl.NumberFormat("en-US").format(out2.innerHTML.length) + " chars";
       
-      /*out2.innerHTML = "vertices=[";
-      out2.innerHTML += x[1].v.flat().map(x=>+((x*scale.value).toFixed(round1.value))).join(",");
-      out2.innerHTML += "]\nverticesIndices=[";
-      out2.innerHTML += x[0].groups[0].vi.map(x=>+x).join(",");
-      out2.innerHTML += "]\ntexCoords=[";
-      out2.innerHTML += x[1].vt.flat().map(x=>+((x).toFixed(round2.value))).join(",");
-      out2.innerHTML += "]\ntexCoordsIndices=[";
-      out2.innerHTML += x[0].groups[0].vti.map(x=>+x).join(",");
-      out2.innerHTML += "]";
-      out2.innerHTML = out2.innerHTML.replace(/(\D)0\./g,"$1.");
-      out2i.innerHTML = out2.innerHTML.length + " bytes";*/
       
+      out3.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
+  gl.bufferData(34962, new Float32Array([`;
+      out3.innerHTML += x[0].groups[0].indexv.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",");
+      out3.innerHTML += `].map(x=>x/${scale.value}-.5)), 35044);`;
+      if(x[0].groups[0].indexvt.length){
+      out3.innerHTML += `
+  gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
+  gl.bufferData(34962, new Float32Array([`;
+      out3.innerHTML += x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",");
+      out3.innerHTML += `]), 35044);`;
+      }
+      out3.innerHTML += `\nW["${name}"]=t=>{t.T="${name}";W.i(t)}
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, W.indices["${name}"] = gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([`
+      out3.innerHTML += x[0].groups[0].indices.map(x=>+x).join(",");
+      out3.innerHTML += `]), gl.STATIC_DRAW);`;
+      out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
+      out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
+      
+      
+      out4.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
+  gl.bufferData(34962, new Float32Array([...`;
+      
+      out4.innerHTML += x[0].groups[0].indexv.map(x=>String.fromCharCode((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
+      
+      out4.innerHTML += `'
+  ].map(a=>(a.codePointAt())/${unicode.value}-.5)
+  ), 35044);`;
+      if(x[0].groups[0].indexvt.length){
+      out4.innerHTML += `
+  gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
+  gl.bufferData(34962, new Float32Array([...`;
+      
+      out4.innerHTML += x[0].groups[0].indexvt.map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
+      
+      out4.innerHTML += `'
+  ].map(a=>(a.codePointAt())/${unicode.value})
+  ), 35044);`;
+      }
+      out4.innerHTML += `\nW["${name}"]=t=>{t.T="${name}";W.i(t)}
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, W.indices["${name}"] = gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([...`
+      
+      out4.innerHTML += x[0].groups[0].indices.map(x=>String.fromCodePoint(x)).join("");
+      
+      out4.innerHTML += `].map(a=>a.codePointAt())), gl.STATIC_DRAW);`;
+      out4.innerHTML = out4.innerHTML.replace(/(\D)0\./g,"$1.");
+      out4i.innerHTML = new Intl.NumberFormat("en-US").format(out4.innerHTML.length) + " chars";
       
       //console.log(out1.value);
       eval(out1.value);
@@ -93,7 +130,10 @@ convert = () => {
       W[name+"_txt"]({n:"obj2",g:"g2",x:0,y:0,z:0,w:70,h:70,d:70,b:e.type == "error" ? "777" : texture});
       W.move({n:"g1",rx:3600,rz:3600,t:100});
       W.move({n:"g2",rx:3600,rz:3600,t:100});
-      
+      setInterval(()=>{
+        W.move({n:"g1",rx:3600,rz:3600,t:100});
+        W.move({n:"g2",rx:3600,rz:3600,t:100});
+      },100000);
     
     })
 
