@@ -14,8 +14,9 @@ W = {
     W.p = {};           // objects previous states
     W.n = {};           // objects next states
     W.textures = {};    // textures list
-    W.vertices = {};    // vertex buffers 
+    W.vertices = {};    // vertex buffers
     W.texCoords = {};   // texture coordinates buffers 
+    W.indices = {};     // index buffers
     W.perspective =     // perspective matrix: fov = .5rad, aspect = a.width/a.height, near: 1, far: 1000)
       new DOMMatrix([
         1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
@@ -380,8 +381,8 @@ W = {
     // ...but don't let it go over the transition duration.
     if(s.f > s.t) s.f = s.t;
     
-    s.vertices = vertices;
-    s.texCoords = texCoords;
+    //s.vertices = vertices;
+    //s.texCoords = texCoords;
     s.center = center;
     
     // Set the model matrix
@@ -412,14 +413,16 @@ W = {
       
       // Set the texture coordinatess buffer
       
-      // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-      gl.bindBuffer(34962, W.texCoords[s.T]);
-      
-      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
-      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
-      
-      gl.enableVertexAttribArray(buffer);
-      
+      if(W.texCoords[s.T]){
+        // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bindBuffer(34962, W.texCoords[s.T]);
+        
+        // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
+        
+        gl.enableVertexAttribArray(buffer);
+      }
+        
       // Set the color / texture
       gl.vertexAttrib4fv(
         gl.getAttribLocation(W.P, 'color'),
@@ -443,10 +446,62 @@ W = {
         s.h,
         s.T == "b"
       );
+      
+      
+      
+      
+       
+    
+      /*// TMP
+      
+      // Create a cube
+      var vertices = new Float32Array([  // Vertex coordinates
+         1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0, // front
+         1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0, // right
+         1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0, // up
+        -1.0, 1.0, 1.0,  -1.0, 1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0,-1.0, 1.0, // left
+        -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0, // down
+         1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0  // back
+      ]);
+
+      var indices = new Uint8Array([  // Indices
+        //0, 1, 2,   0, 2, 3,  // front
+        4, 5, 6,   4, 6, 7,  // right
+        8, 9, 10,  8, 10,11, // up
+        //12,13,14,  12,14,15, // left
+        //16,17,18,  16,18,19, // down
+        //20,21,22,  20,22,23  // back
+      ]);
+      
+      var n = 12;
+
+      // Set position
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      var a = gl.getAttribLocation(W.P, "position");
+      gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(a);
+
+      // Set indices
+      var indexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+      // render
+      //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+    */
+
+    
+    
+    
+    
+    
     
       // Draw
       // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
       gl.drawArrays(4, 0, gl.getBufferParameter(34962, 34660)/8);
+      
     }
     
   },
