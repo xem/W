@@ -231,11 +231,17 @@ W = {
     : W.n[W.N][t],
   
   // Transition an item
-  t: t => (new DOMMatrix)
-    .translateSelf(W.l("x"), W.l("y"), W.l("z"))
-    .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
-    .scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2)
-    .multiplySelf(t),
+  t: t =>
+    (
+      W.n[W.N]
+      ? (new DOMMatrix)
+        .translateSelf(W.l("x"), W.l("y"), W.l("z"))
+        .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
+        .scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2)
+        .multiplySelf(t)
+      : new DOMMatrix
+    )
+  ,
   
   // Framework
   // ---------
