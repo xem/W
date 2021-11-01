@@ -56,6 +56,7 @@ parseOBJ = async (file, center = 1) => {
   // The group is then added to the current object and a new one is created
   endGroup = x => {
     
+    currentgroup.originalv = [];
     currentgroup.v = [];
     currentgroup.vt = [];
     currentgroup.vn = [];
@@ -137,6 +138,12 @@ parseOBJ = async (file, center = 1) => {
       
       
       // Fill vertices buffer
+      
+      currentgroup.originalv.push(A[0], A[1], A[2]);
+      currentgroup.originalv.push(B[0], B[1], B[2]);
+      currentgroup.originalv.push(C[0], C[1], C[2]);
+      
+      
       currentgroup.v.push(A[0] - (center ? minX : 0), A[1] - (center ? minY : 0), A[2] - (center ? minZ : 0));
       currentgroup.v.push(B[0] - (center ? minX : 0), B[1] - (center ? minY : 0), B[2] - (center ? minZ : 0));
       currentgroup.v.push(C[0] - (center ? minX : 0), C[1] - (center ? minY : 0), C[2] - (center ? minZ : 0));
