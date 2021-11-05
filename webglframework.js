@@ -231,14 +231,13 @@ W = {
     : W.n[W.N][t],
   
   // Transition an item
-  t: t =>
+  t: () =>
     (
       W.n[W.N]
       ? (new DOMMatrix)
         .translateSelf(W.l("x"), W.l("y"), W.l("z"))
         .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
         .scaleSelf(W.l("w"),W.l("h"),W.l("d"))
-        .multiplySelf(t)
       : new DOMMatrix
     )
   ,
@@ -393,9 +392,8 @@ W = {
     
     // Set the model matrix
     W.N = s.n;
-    var m = new DOMMatrix(W?.n[s.g]?.m);
-    m = W.t(m);
-    W.n[s.n].m=m;
+    var m = W.n[s.n].m = W.t().preMultiplySelf(W.n[s.g]?.m);
+
     gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'm'),
       false,
