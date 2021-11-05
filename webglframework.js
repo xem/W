@@ -237,7 +237,7 @@ W = {
       ? (new DOMMatrix)
         .translateSelf(W.l("x"), W.l("y"), W.l("z"))
         .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
-        .scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2)
+        .scaleSelf(W.l("w"),W.l("h"),W.l("d"))
         .multiplySelf(t)
       : new DOMMatrix
     )
