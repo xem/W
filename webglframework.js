@@ -389,15 +389,23 @@ W = {
     //s.vertices = vertices;
     //s.texCoords = texCoords;
     s.center = center;
-    
-    // Set the model matrix
+
+    // Set the object as the currently updated object.
     W.N = s.n;
-    var m = W.n[s.n].m = W.t().preMultiplySelf(W.n[s.g]?.m);
+
+    // Compose the model matrix from lerped transformations.
+    W.n[s.n].m = W.t();
+
+    // If the object is in a group…
+    if (W.n[s.g]) {
+      // …left-multiply the model matrix by the group's model matrix.
+      W.n[s.n].m.preMultiplySelf(W.n[s.g].m);
+    }
 
     gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'm'),
       false,
-      m.toFloat32Array()
+      W.n[s.n].m.toFloat32Array()
     );
     
     // Ignore camera, light, groups
