@@ -231,14 +231,13 @@ W = {
     : W.n[W.N][t],
   
   // Transition an item
-  t: t =>
+  t: () =>
     (
       W.n[W.N]
       ? (new DOMMatrix)
         .translateSelf(W.l("x"), W.l("y"), W.l("z"))
         .rotateSelf(W.l("rx"),W.l("ry"),W.l("rz"))
-        .scaleSelf(W.l("w")/2,W.l("h")/2,W.l("d")/2)
-        .multiplySelf(t)
+        .scaleSelf(W.l("w"),W.l("h"),W.l("d"))
       : new DOMMatrix
     )
   ,
@@ -390,16 +389,23 @@ W = {
     //s.vertices = vertices;
     //s.texCoords = texCoords;
     s.center = center;
-    
-    // Set the model matrix
+
+    // Set the object as the currently updated object.
     W.N = s.n;
-    var m = new DOMMatrix(W?.n[s.g]?.m);
-    m = W.t(m);
-    W.n[s.n].m=m;
+
+    // Compose the model matrix from lerped transformations.
+    W.n[s.n].m = W.t();
+
+    // If the object is in a group…
+    if (W.n[s.g]) {
+      // …left-multiply the model matrix by the group's model matrix.
+      W.n[s.n].m.preMultiplySelf(W.n[s.g].m);
+    }
+
     gl.uniformMatrix4fv(  // send it to the shaders
       gl.getUniformLocation(W.P, 'm'),
       false,
-      m.toFloat32Array()
+      W.n[s.n].m.toFloat32Array()
     );
     
     // Ignore camera, light, groups
