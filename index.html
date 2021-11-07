@@ -62,8 +62,9 @@ onload = () => {
   W.plane({n:"plane3",g:"g1",x:15,y:-10,z:5,w:5,h:5,rx:-90,b:brick});
   W.pyramid({n:"pyramid3",g:"g1",x:0,y:-10,z:5,w:5,h:5,d:5,rx:90,b:brick});
   W.billboard({n:"billboard1",g:"g1",x:5,y:-25,z:6,w:6,h:6,b:tree});
-  setTimeout(()=>W.move({n:"g1",z:5,t:2}),2000);
+  setTimeout(()=>W.move({n:"g1",z:10,t:2}),2000);
   setTimeout(()=>W.move({n:"g1",rz:180,t:2}),4000);
+  setTimeout(()=>{W.camera({z:30,y:-60,rx:80,t:5})},2000);
 }
 </script>
 

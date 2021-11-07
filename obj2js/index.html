@@ -185,22 +185,17 @@ convert = () => {
       eval(out1.value);
       eval(out2.value);
       //console.log(W.mario);
-      W.camera({x:0,z:30});
+      W.camera({x:0,z:50});
       W.light({x:.1,y:-.3,z:.3});
-      W.group({n:"g0", x:-.8});
+      W.group({n:"g0", x:-40});
       W.group({n:"g1", x:0});
-      W.group({n:"g2", x:.8});
-      W[name+"_original"]({n:"obj0",g:"g0",x:0,y:0,z:0,w:70,h:70,d:70,b:e.type == "error" ? "777" : texture});
-      W[name]({n:"obj1",g:"g1",x:0,y:0,z:0,w:70,h:70,d:70,b:e.type == "error" ? "777" : texture});
-      W[name+"_txt"]({n:"obj2",g:"g2",x:0,y:0,z:0,w:70,h:70,d:70,b:e.type == "error" ? "777" : texture});
+      W.group({n:"g2", x:40});
+      W[name+"_original"]({n:"obj0",g:"g0",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W[name]({n:"obj1",g:"g1",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W[name+"_txt"]({n:"obj2",g:"g2",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
       W.move({n:"g0",rx:3600,rz:3600,t:100});
       W.move({n:"g1",rx:3600,rz:3600,t:100});
       W.move({n:"g2",rx:3600,rz:3600,t:100});
-      setInterval(()=>{
-        W.move({n:"g0",rx:3600,rz:3600,t:100});
-        W.move({n:"g1",rx:3600,rz:3600,t:100});
-        W.move({n:"g2",rx:3600,rz:3600,t:100});
-      },100000);
     
     })
 
