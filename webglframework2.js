@@ -1,13 +1,12 @@
 // WebGL framework
 // ===============
-W = {
 
+W = {
+  
   // Reset the framework
-  reset: t => {
+  reset: canvas => {
     
     // Globals
-    // -------
-  
     W.last = 0;         // timestamp of last frame
     W.dt = 0;           // delta time
     W.o = 0;            // object counter
@@ -17,43 +16,30 @@ W = {
     W.vertices = {};    // vertex buffers
     W.texCoords = {};   // texture coordinates buffers 
     W.indices = {};     // index buffers
-    W.perspective =     // perspective matrix: fov = .5rad, aspect = a.width/a.height, near: 1, far: 1000)
+    W.perspective =     // perspective matrix: fov = .5rad, aspect = canvas.width/canvas.height, near: 1, far: 1000)
       new DOMMatrix([
-        1 / Math.tan(.5) / (a.width/a.height), 0, 0, 0, 
+        1 / Math.tan(.5) / (canvas.width/canvas.height), 0, 0, 0, 
         0, 1 / Math.tan(.5), 0, 0, 
         0, 0, (900 + 1) * 1 / (1 - 900), -1,
         0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
       ]);
-  },
-  
-  // WebGL helpers
-  // -------------
-  
-  // Setup the WebGL program
-  s: t => {
-    
+
     // WebGL context
-    gl = a.getContext("webgl2");
-    
-    // Don't compute triangles back faces (optional)
-    // gl.enable(gl.CULL_FACE);
+    W.gl = canvas.getContext("webgl2");
     
     // Default blending method for transparent objects
-    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.blendFunc(770, 771);
+    W.gl.blendFunc(770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */);
     
     // Enable texture 0
-    // gl.activeTexture(gl.TEXTURE0);
-    gl.activeTexture(33984);
+    W.gl.activeTexture(33984 /* TEXTURE0 */);
 
     // New WebGL program
-    W.P = gl.createProgram();
+    W.P = W.gl.createProgram();
     
     // Vertex shader
-    gl.shaderSource(
+    W.gl.shaderSource(
       
-      // t = gl.createShader(gl.VERTEX_SHADER);
-      t = gl.createShader(35633),
+      t = W.gl.createShader(35633 /* VERTEX_SHADER */),
       
       `#version 300 es
       in vec4 position, color, tex;
@@ -74,15 +60,14 @@ W = {
         v_texCoord = tex;
       }`
     );
-    gl.compileShader(t);
-    gl.attachShader(W.P, t);
-    console.log('vertex shader:', gl.getShaderInfoLog(t) || 'OK');
+    W.gl.compileShader(t);
+    W.gl.attachShader(W.P, t);
+    console.log('vertex shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
     // Fragment shader
-    gl.shaderSource(
+    W.gl.shaderSource(
 
-      // t = gl.createShader(gl.FRAGMENT_SHADER);
-      t = gl.createShader(35632),
+      t = W.gl.createShader(35632 /* FRAGMENT_SHADER */),
       
       `#version 300 es
       precision highp float;
@@ -96,28 +81,26 @@ W = {
           max(dot(normalize(light), normalize(cross(dFdx(v_position.xyz), dFdy(v_position.xyz)))), 0.0) // directional light
           + .2 // ambient light
         ), col.a);
-      }
-      `
+      }`
     );
-    gl.compileShader(t);
-    gl.attachShader(W.P, t);
-    console.log('fragment shader:', gl.getShaderInfoLog(t) || 'OK');
+    W.gl.compileShader(t);
+    W.gl.attachShader(W.P, t);
+    console.log('fragment shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
     // Compile program
-    gl.linkProgram(W.P);
-    gl.useProgram(W.P);
-    console.log('program:', gl.getProgramInfoLog(W.P) || 'OK');
+    W.gl.linkProgram(W.P);
+    W.gl.useProgram(W.P);
+    console.log('program:', W.gl.getProgramInfoLog(W.P) || 'OK');
     
-    // Set background color (rgba)
-    gl.clearColor(1, 1, 1, 1);
+    // Set background color (RGBA)
+    W.gl.clearColor(1, 1, 1, 1);
     
-    // Enable depth-sorting
-    // gl.enable(gl.DEPTH_TEST);
-    gl.enable(2929);
+    // Enable depth sorting
+    W.gl.enable(2929 /* DEPTH_TEST */);
     
     // Declare vertice positions and texture coordinates buffers of built-in shapes
     
-    // Cube (2x2x2)
+    // Cube
     //
     //    v6----- v5
     //   /|      /|
@@ -127,28 +110,24 @@ W = {
     //  |/      |/
     //  v2------v3
 
-    gl.bindBuffer(34962, W.vertices.c = gl.createBuffer());
-    
-    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
-      1, 1, 1,  -1, 1, 1,  -1,-1, 1, // front
-      1, 1, 1,  -1,-1, 1,   1,-1, 1,
-      1, 1, 1,   1,-1, 1,   1,-1,-1, // right
-      1, 1, 1,   1,-1,-1,   1, 1,-1,
-      1, 1, 1,   1, 1,-1,  -1, 1,-1, // up
-      1, 1, 1,  -1, 1,-1,  -1, 1, 1,
-     -1, 1, 1,  -1, 1,-1,  -1,-1,-1, // left
-     -1, 1, 1,  -1,-1,-1,  -1,-1, 1,
-     -1,-1, 1,   1,-1 ,1,   1,-1,-1, // down
-     -1,-1, 1,   1,-1,-1,  -1,-1,-1,
-      1,-1,-1,  -1,-1,-1,  -1, 1,-1, // back
-      1,-1,-1,  -1, 1,-1,   1, 1,-1
-    ]), 35044); 
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.vertices.c = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
+      .5, .5, .5,  -.5, .5, .5,  -.5,-.5, .5, // front
+      .5, .5, .5,  -.5,-.5, .5,   .5,-.5, .5,
+      .5, .5, .5,   .5,-.5, .5,   .5,-.5,-.5, // right
+      .5, .5, .5,   .5,-.5,-.5,   .5, .5,-.5,
+      .5, .5, .5,   .5, .5,-.5,  -.5, .5,-.5, // up
+      .5, .5, .5,  -.5, .5,-.5,  -.5, .5, .5,
+     -.5, .5, .5,  -.5, .5,-.5,  -.5,-.5,-.5, // left
+     -.5, .5, .5,  -.5,-.5,-.5,  -.5,-.5, .5,
+     -.5,-.5, .5,   .5,-.5 ,.5,   .5,-.5,-.5, // down
+     -.5,-.5, .5,   .5,-.5,-.5,  -.5,-.5,-.5,
+      .5,-.5,-.5,  -.5,-.5,-.5,  -.5, .5,-.5, // back
+      .5,-.5,-.5,  -.5, .5,-.5,   .5, .5,-.5
+    ]), 35044 /* STATIC_DRAW */); 
 
-    gl.bindBuffer(34962, W.texCoords.c = gl.createBuffer());
-    
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.texCoords.c = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
       1, 1,      0, 1,   0, 0, // front
       1, 1,      0, 0,   1, 0,            
       1, 1,      0, 1,   0, 0, // right
@@ -161,9 +140,9 @@ W = {
       1, 1,      0, 0,   1, 0,
       1, 1,      0, 1,   0, 0, // back
       1, 1,      0, 0,   1, 0,
-    ]), 35044);
+    ]), 35044 /* STATIC_DRAW */);
     
-    // Pyramid (2 x 2 x 2)
+    // Pyramid
     //
     //      ^
     //     /\\
@@ -172,32 +151,27 @@ W = {
     //  //     \/
     //  +------+
     
-    gl.bindBuffer(34962, W.vertices.p = gl.createBuffer());
-    
-    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
-      -1, -1, 1,    1, -1, 1,  0, 1, 0,  // Front
-       1, -1, 1,    1, -1,-1,  0, 1, 0,  // Right
-       1, -1,-1,   -1, -1,-1,  0, 1, 0,  // Back
-      -1, -1,-1,   -1, -1, 1,  0, 1, 0,  // Left
-      -1, -1, 1,   -1, -1,-1,  1,-1, 1,  // Base
-      -1, -1,-1,    1, -1,-1,  1,-1, 1
-    ]), 35044); 
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.vertices.p = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
+      -.5,-.5, .5,    .5,-.5, .5,   0, .5, 0,  // Front
+       .5,-.5, .5,    .5,-.5,-.5,   0, .5, 0,  // Right
+       .5,-.5,-.5,   -.5,-.5,-.5,   0, .5, 0,  // Back
+      -.5,-.5,-.5,   -.5 -.5, .5,   0, .5, 0,  // Left
+      -.5,-.5, .5,   -.5,-.5,-.5,  .5,-.5,.5,  // Base
+      -.5,-.5,-.5,    .5,-.5,-.5,  .5,-.5,.5
+    ]), 35044 /* STATIC_DRAW */); 
 
-    gl.bindBuffer(34962, W.texCoords.p = gl.createBuffer());
-    
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.texCoords.p = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
        0, 0,   1, 0,  .5, 1,  // Front
        0, 0,   1, 0,  .5, 1,  // Right
        0, 0,   1, 0,  .5, 1,  // Back
        0, 0,   1, 0,  .5, 1,  // Left
        1, 0,   0, 0,   0, 1,  // base
        1, 0,   0, 1,   1, 1,
-    ]), 35044);
+    ]), 35044 /* STATIC_DRAW */);
     
-    
-    // Quad / billboard (2 x 2)
+    // Quad / billboard
     //
     //  v1------v0
     //  |       |
@@ -205,21 +179,22 @@ W = {
     //  |       |
     //  v2------v3
     
-    gl.bindBuffer(34962, W.vertices.q = W.vertices.b = gl.createBuffer());
-    
-    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
-      1, 1, 0,    -1, 1, 0,   -1,-1, 0,
-      1, 1, 0,    -1,-1, 0,    1,-1, 0
-    ]), 35044); 
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.vertices.q = W.vertices.b = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
+      .5, .5, 0,    -.5, .5, 0,   -.5,-.5, 0,
+      .5, .5, 0,    -.5,-.5, 0,    .5,-.5, 0
+    ]), 35044 /* STATIC_DRAW */); 
 
-    gl.bindBuffer(34962, W.texCoords.q = W.texCoords.b = gl.createBuffer());
-    
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    gl.bufferData(34962, new Float32Array([
+    W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.texCoords.q = W.texCoords.b = W.gl.createBuffer());
+    W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array([
       1, 0,     0, 0,    0, 1,
       1, 0,     0, 1,    1, 1
-    ]), 35044);
+    ]), 35044 /* STATIC_DRAW */);
+    
+    // When everything is loaded: set light, camera, and draw
+    W.light({z:1});
+    W.camera({});
+    W.d();
   },
 
   // Transition helpers
@@ -253,24 +228,12 @@ W = {
     
     // If a new texture is provided, build it and save it in W.textures
     if(t.b && t.b.id && t.b.width && !W.textures[t.b.id]){
-      
-      texture = gl.createTexture();
-      
-      //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      gl.pixelStorei(37441, true);
-      
-      //gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.bindTexture(3553, texture);
-      
-      //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.pixelStorei(37440, 1);
-      
-      //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t.b);
-      gl.texImage2D(3553, 0, 6408, 6408, 5121, t.b);
-      
-      //gl.generateMipmap(gl.TEXTURE_2D);
-      gl.generateMipmap(3553);
-      
+      texture = W.gl.createTexture();
+      W.gl.pixelStorei(37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, true);
+      W.gl.bindTexture(3553 /* TEXTURE_2D */, texture);
+      W.gl.pixelStorei(37440 /* UNPACK_FLIP_Y_WEBGL */, 1);
+      W.gl.texImage2D(3553 /* TEXTURE_2D */, 0, 6408 /* RGBA */, 6408 /* RGBA */, 5121 /* UNSIGNED_BYTE */, t.b);
+      W.gl.generateMipmap(3553 /* TEXTURE_2D */);
       W.textures[t.b.id] = texture;
     }
     
@@ -311,16 +274,15 @@ W = {
     requestAnimationFrame(W.d);
     
     // Clear canvas
-    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.clear(16640);
+    W.gl.clear(16640 /* W.gl.COLOR_BUFFER_BIT | W.gl.DEPTH_BUFFER_BIT */);
     
     // View Matrix (inverse of Camera Matrix)
     v = new DOMMatrix;    // create an identity Matrix v
     W.N = "C";            // consider the camera
     v = W.t(v);           // apply the camera transformations to v
     
-    gl.uniformMatrix4fv(  // send it to the shaders
-      gl.getUniformLocation(W.P, 'eye'),
+    W.gl.uniformMatrix4fv(  // send it to the shaders
+      W.gl.getUniformLocation(W.P, 'eye'),
       false,
       v.toFloat32Array()
     );
@@ -331,8 +293,8 @@ W = {
     // PV matrix (projection matrix * view matrix)
     v.preMultiplySelf(W.perspective);
     
-    gl.uniformMatrix4fv(  // send it to the shaders
-      gl.getUniformLocation(W.P, 'pv'),
+    W.gl.uniformMatrix4fv(  // send it to the shaders
+      W.gl.getUniformLocation(W.P, 'pv'),
       false,
       v.toFloat32Array()
     );
@@ -357,14 +319,14 @@ W = {
       return a.m && b.m && (W.dist(b.m, W.n.C.m) - W.dist(a.m, W.n.C.m));
     });
 
-    // And render them (alpha blending enabled)
-    gl.enable(gl.BLEND);
+    // And render them (alpha blending enabled, backgace culling disabled)
+    W.gl.enable(3042 /* BLEND */);
     for(i in transparent){
       W.r(transparent[i]);
     }
     
-    // Disable alpha blending for next frame
-    gl.disable(gl.BLEND);
+    // Disable alpha blending and enable backface culling for next frame
+    W.gl.disable(3042 /* BLEND */);
   },
   
   // Render an object
@@ -374,11 +336,10 @@ W = {
     if (s.b.id) {
 
       // Set the texture's target (2D or cubemap)
-      // gl.bindTexture(gl.TEXTURE_2D, W.textures[s.b.id]);
-      gl.bindTexture(3553, W.textures[s.b.id]);
+      W.gl.bindTexture(3553 /* TEXTURE_2D */, W.textures[s.b.id]);
 
       // Pass texture 0 to the sampler
-      gl.uniform1i(gl.getUniformLocation(W.P, 'sampler'), 0);
+      W.gl.uniform1i(W.gl.getUniformLocation(W.P, 'sampler'), 0);
     }
 
     // If the object has a transition, increment its timer...
@@ -398,12 +359,13 @@ W = {
 
     // If the object is in a group…
     if (W.n[s.g]) {
+
       // …left-multiply the model matrix by the group's model matrix.
       W.n[s.n].m.preMultiplySelf(W.n[s.g].m);
     }
 
-    gl.uniformMatrix4fv(  // send it to the shaders
-      gl.getUniformLocation(W.P, 'm'),
+    W.gl.uniformMatrix4fv(  // send it to the shaders
+      W.gl.getUniformLocation(W.P, 'm'),
       false,
       W.n[s.n].m.toFloat32Array()
     );
@@ -413,31 +375,20 @@ W = {
       s.center = center;
 
       // Set the position buffer
-      
-      //gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-      gl.bindBuffer(34962, W.vertices[s.T]);      
-      
-      // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, gl.FLOAT, false, 0, 0)
-      gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'position'), 3, 5126, false, 0, 0)
-      
-      gl.enableVertexAttribArray(buffer);
-      
+      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.vertices[s.T]);
+      W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.P, 'position'), 3, 5126 /* FLOAT */, false, 0, 0)
+      W.gl.enableVertexAttribArray(buffer);
       
       // Set the texture coordinatess buffer
-      
       if(W.texCoords[s.T]){
-        // gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bindBuffer(34962, W.texCoords[s.T]);
-        
-        // gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 3, gl.FLOAT, false, 0, 0);
-        gl.vertexAttribPointer(buffer = gl.getAttribLocation(W.P, 'tex'), 2, 5126, false, 0, 0);
-        
-        gl.enableVertexAttribArray(buffer);
+        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.texCoords[s.T]);
+        W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.P, 'tex'), 2, 5126 /* FLOAT */, false, 0, 0);
+        W.gl.enableVertexAttribArray(buffer);
       }
         
       // Set the color / texture
-      gl.vertexAttrib4fv(
-        gl.getAttribLocation(W.P, 'color'),
+      W.gl.vertexAttrib4fv(
+        W.gl.getAttribLocation(W.P, 'color'),
         s.b.id ? [0,0,0,0] : [...[...s.b].map(a => ("0x" + a) / 16),
         s.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
       );
@@ -446,67 +397,21 @@ W = {
       W.N = "L";
       
       // Transition the light's direction and sent it to the shaders
-      gl.uniform3f(
-        gl.getUniformLocation(W.P, 'light'),
+      W.gl.uniform3f(
+        W.gl.getUniformLocation(W.P, 'light'),
         W.l("x"), W.l("y"), W.l("z")
       );
       
       // Billboard info: [width, height, isBillboard]
-      gl.uniform3f(
-        gl.getUniformLocation(W.P, 'billboard'),
+      W.gl.uniform3f(
+        W.gl.getUniformLocation(W.P, 'billboard'),
         s.w,
         s.h,
         s.T == "b"
       );
-      
-      
-      
-      
-       
-    
-      // TMP
-      
-      /*// Set position
-      gl.bindBuffer(gl.ARRAY_BUFFER, W.vertices["mario"] = gl.createBuffer());
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([  // Vertex coordinates
-         1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0, // front
-         1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0, // right
-         1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0, // up
-        -1.0, 1.0, 1.0,  -1.0, 1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0,-1.0, 1.0, // left
-        -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0, // down
-         1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0  // back
-      ]), gl.STATIC_DRAW);
-      var a = gl.getAttribLocation(W.P, "position");
-      gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(a);
 
-      // Set indices
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,  new Uint16Array([
-        //0, 1, 2,   0, 2, 3,  // front
-        4, 5, 6,   4, 6, 7,  // right
-        8, 9, 10,  8, 10,11, // up
-        //12,13,14,  12,14,15, // left
-        //16,17,18,  16,18,19, // down
-        //20,21,22,  20,22,23  // back
-      ]), gl.STATIC_DRAW);
-      var n = 12;
-
-      // render
-      //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
-    */
-
-    
-    
-    
-    
-    
-    
       // Draw
-      // gl.drawArrays(gl.TRIANGLES, 0, gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)/8);
-      gl.drawArrays(4, 0, gl.getBufferParameter(34962, 34660)/8);
-      
+      W.gl.drawArrays(4 /* TRIANGLES */, 0, W.gl.getBufferParameter(34962 /* ARRAY_BUFFER */, 34660 /* BUFFER_SIZE */) / 8);
     }
     
   },
@@ -514,10 +419,3 @@ W = {
   // Compute the distance squared between two objects (useful for sorting transparent items)
   dist: (a, b) => (b.m41 - a.m41)**2 + (b.m42 - a.m42)**2 + (b.m43 - a.m43)**2
 }
-
-// When everything is loaded: setup WebGL program, light, camera, action
-W.reset();
-W.s();
-W.light({z:1});
-W.camera({});
-W.d();

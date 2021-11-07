@@ -1,11 +1,11 @@
 ﻿<!doctype html>
-<canvas id=a width=850 height=500 style="border:1px solid"></canvas>
+<canvas id=canvas width=850 height=500 style="border:1px solid"></canvas>
 <img src="tree.png" id=tree hidden>
 <img src="brick.png" id=brick hidden>
 <img src="obj2js/yoshi.png" id=yoshi hidden>
 <img src="obj2js/mario.png" id=mario1 hidden>
 <img src="obj2js/mario2.png" id=mario2 hidden>
-<script src="webglframework.js"></script>
+<script src="webglframework2.js"></script>
 <script src="mario.js"></script>
 <script src="yoshi.js"></script>
 
@@ -14,6 +14,7 @@
 
 <script style="display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
 onload = () => {
+  W.reset(canvas);
   W.camera({y:0,z:85});
   W.light({x:.1,y:-.3,z:.3});
   W.plane({n:"ground",w:50,h:70,z:0,b:'8d8'});
