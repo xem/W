@@ -2,21 +2,22 @@
 // ===============
 
 W = {
-  
+
   // Reset the framework
+  // param: <canvas> element
   reset: canvas => {
     
     // Globals
-    W.last = 0;         // timestamp of last frame
-    W.dt = 0;           // delta time
-    W.o = 0;            // object counter
+    W.lastFrame = 0;    // timestamp of last frame
+    W.objs = 0;         // object counter
+    W.models = {};      // list of 3D models that can be rendered by the framework
     W.p = {};           // objects previous states
     W.n = {};           // objects next states
     W.textures = {};    // textures list
     W.vertices = {};    // vertex buffers
     W.texCoords = {};   // texture coordinates buffers 
     W.indices = {};     // index buffers
-    W.perspective =     // perspective matrix: fov = .5rad, aspect = canvas.width/canvas.height, near: 1, far: 1000)
+    W.perspective =     // perspective matrix (fov:.5rad, aspect:canvas.width/canvas.height, near:1, far:1000)
       new DOMMatrix([
         1 / Math.tan(.5) / (canvas.width/canvas.height), 0, 0, 0, 
         0, 1 / Math.tan(.5), 0, 0, 
@@ -33,69 +34,74 @@ W = {
     // Enable texture 0
     W.gl.activeTexture(33984 /* TEXTURE0 */);
 
-    // New WebGL program
-    W.P = W.gl.createProgram();
+    // Create a WebGL program
+    W.program = W.gl.createProgram();
     
-    // Vertex shader
+    // Create a Vertex shader
+    // (this GLSL program is called for every vertex of the scene)
     W.gl.shaderSource(
       
       t = W.gl.createShader(35633 /* VERTEX_SHADER */),
       
-      `#version 300 es
-      in vec4 position, color, tex;
-      uniform mat4 pv, eye, m;
-      uniform vec3 billboard;
-      out vec4 v_position, v_color, v_texCoord;
+      `#version 300 es                        // WebGL 2.0 header
+      in vec4 pos, col, tex;                  // Vertex attributes: position, color, texture coordinates
+      uniform mat4 pv, eye, m;                // Uniform transformation matrices: projection * view, eye, model
+      uniform vec4 bb;                        // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
+      out vec4 v_pos, v_col, v_tex;           // Varyings sent to the fragment shader: position, color, texture coordinates
       void main() {
-        
-        // Set vertex position
-        gl_Position = pv * (
-          v_position = (billboard.z > 0.)
-          ? (m[3] + eye * (position * -vec4(billboard, 0))) // billboards
-          : (m * position) // other objects
+        gl_Position = pv * (                  // Set vertex position: p * v * v_pos
+          v_pos = bb.z > 0.                   // Set v_pos varying:
+          ? m[3] - eye * (pos * bb)           // Billboards always face the camera:  p * v * distance - eye * (position * [w, h, 1.0, 0.0])
+          : m * pos                           // Other objects rotate normally:      p * v * m * position
         );
-
-        // Varyings
-        v_color = color;
-        v_texCoord = tex;
+        v_col = col, v_tex = tex;             // Set v_col and v_tex varyings 
       }`
     );
+    
+    // Compile the Vertex shader and attach it to the program
     W.gl.compileShader(t);
-    W.gl.attachShader(W.P, t);
+    W.gl.attachShader(W.program, t);
     console.log('vertex shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
-    // Fragment shader
+    // Create a Fragment shader
+    // (This GLSL program is called for every fragment (pixel) of the scene)
     W.gl.shaderSource(
 
       t = W.gl.createShader(35632 /* FRAGMENT_SHADER */),
       
-      `#version 300 es
-      precision highp float;
-      in vec4 v_position, v_color, v_texCoord;
-      uniform vec3 light;
-      uniform sampler2D sampler;
-      out vec4 c;
+      `#version 300 es                        // WebGL 2.0 header
+      precision highp float;                  // Set default float precision
+      in vec4 v_pos, v_col, v_tex;            // Varyings received from the vertex shader: position, color, texture coordinates
+      uniform vec3 light;                     // Uniform: light direction
+      uniform sampler2D sampler;              // Uniform: 2D texture
+      out vec4 c;                             // Output: final fragment color
+
+      // The code below displays either colored or textured fragments
+      // To simplify, we decided to enable texturing if the Alpha value of the color is "0.0", and to use a color otherwise
       void main() {
-        vec4 col = (v_color.a == 0. ? texture(sampler, v_texCoord.xy) : v_color);
-        c = vec4(col.rgb * (
-          max(dot(normalize(light), normalize(cross(dFdx(v_position.xyz), dFdy(v_position.xyz)))), 0.0) // directional light
-          + .2 // ambient light
-        ), col.a);
+        // base color (rgba or texture)
+        c = v_col.a > 0. ? v_col : texture(sampler, v_tex.xy);
+
+        // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
+        c = vec4(c.rgb * (max(dot(light, normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);  
       }`
     );
+    
+    // Compile the Fragment shader and attach it to the program
     W.gl.compileShader(t);
-    W.gl.attachShader(W.P, t);
+    W.gl.attachShader(W.program, t);
     console.log('fragment shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
-    // Compile program
-    W.gl.linkProgram(W.P);
-    W.gl.useProgram(W.P);
-    console.log('program:', W.gl.getProgramInfoLog(W.P) || 'OK');
+    // Compile the program
+    W.gl.linkProgram(W.program);
+    W.gl.useProgram(W.program);
+    console.log('program:', W.gl.getProgramInfoLog(W.program) || 'OK');
     
-    // Set background color (RGBA)
+    // Set the scene's background color (RGBA)
     W.gl.clearColor(1, 1, 1, 1);
     
-    // Enable depth sorting
+    // Enable fragments depth sorting
+    // (the fragments of close objects will automatically overlap the fragments of further objects)
     W.gl.enable(2929 /* DEPTH_TEST */);
     
     // Declare vertice positions and texture coordinates buffers of built-in shapes
@@ -224,7 +230,7 @@ W = {
   i: (t, texture) => {
     
     // Custom name or default name ("o" + auto-increment)
-    t.n ||= "o" + W.o++;
+    t.n ||= "o" + W.objs++;
     
     // If a new texture is provided, build it and save it in W.textures
     if(t.b && t.b.id && t.b.width && !W.textures[t.b.id]){
@@ -268,9 +274,9 @@ W = {
   light: t => { t.n = "L"; W.i(t) },
   
   // Draw
-  d: (now, p, v, m, i, s, buffer, transparent = []) => {
-    W.dt = (now - W.last) / 1000;
-    W.last = now;
+  d: (now, p, v, m, i, s, dt, buffer, transparent = []) => {
+    dt = now - W.lastFrame;
+    W.lastFrame = now;
     requestAnimationFrame(W.d);
     
     // Clear canvas
@@ -282,7 +288,7 @@ W = {
     v = W.t(v);           // apply the camera transformations to v
     
     W.gl.uniformMatrix4fv(  // send it to the shaders
-      W.gl.getUniformLocation(W.P, 'eye'),
+      W.gl.getUniformLocation(W.program, 'eye'),
       false,
       v.toFloat32Array()
     );
@@ -294,7 +300,7 @@ W = {
     v.preMultiplySelf(W.perspective);
     
     W.gl.uniformMatrix4fv(  // send it to the shaders
-      W.gl.getUniformLocation(W.P, 'pv'),
+      W.gl.getUniformLocation(W.program, 'pv'),
       false,
       v.toFloat32Array()
     );
@@ -303,7 +309,7 @@ W = {
       
       // Render the shapes with no transparency (alpha blending disabled)
       if(!W.n[i].b.id && !W.n[i].b[3]){
-        W.r(W.n[i]);
+        W.r(W.n[i], dt);
       }
       
       // Add the objects with transparency (rgba or texture) in an array
@@ -322,7 +328,7 @@ W = {
     // And render them (alpha blending enabled, backgace culling disabled)
     W.gl.enable(3042 /* BLEND */);
     for(i in transparent){
-      W.r(transparent[i]);
+      W.r(transparent[i], dt);
     }
     
     // Disable alpha blending and enable backface culling for next frame
@@ -330,7 +336,7 @@ W = {
   },
   
   // Render an object
-  r: (s, center = [0,0,0], vertices, texCoords, buffer) => {
+  r: (s, dt, center = [0,0,0], vertices, texCoords, buffer) => {
 
     // If the object has a texture
     if (s.b.id) {
@@ -339,11 +345,12 @@ W = {
       W.gl.bindTexture(3553 /* TEXTURE_2D */, W.textures[s.b.id]);
 
       // Pass texture 0 to the sampler
-      W.gl.uniform1i(W.gl.getUniformLocation(W.P, 'sampler'), 0);
+      W.gl.uniform1i(W.gl.getUniformLocation(W.program, 'sampler'), 0);
     }
 
     // If the object has a transition, increment its timer...
-    if(s.f < s.t) s.f += W.dt;
+    if(s.f < s.t) s.f += dt;
+    
     // ...but don't let it go over the transition duration.
     if(s.f > s.t) s.f = s.t;
     
@@ -365,7 +372,7 @@ W = {
     }
 
     W.gl.uniformMatrix4fv(  // send it to the shaders
-      W.gl.getUniformLocation(W.P, 'm'),
+      W.gl.getUniformLocation(W.program, 'm'),
       false,
       W.n[s.n].m.toFloat32Array()
     );
@@ -376,19 +383,19 @@ W = {
 
       // Set the position buffer
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.vertices[s.T]);
-      W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.P, 'position'), 3, 5126 /* FLOAT */, false, 0, 0)
+      W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'pos'), 3, 5126 /* FLOAT */, false, 0, 0)
       W.gl.enableVertexAttribArray(buffer);
       
       // Set the texture coordinatess buffer
       if(W.texCoords[s.T]){
         W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.texCoords[s.T]);
-        W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.P, 'tex'), 2, 5126 /* FLOAT */, false, 0, 0);
+        W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'tex'), 2, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
         
       // Set the color / texture
       W.gl.vertexAttrib4fv(
-        W.gl.getAttribLocation(W.P, 'color'),
+        W.gl.getAttribLocation(W.program, 'col'),
         s.b.id ? [0,0,0,0] : [...[...s.b].map(a => ("0x" + a) / 16),
         s.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
       );
@@ -398,16 +405,17 @@ W = {
       
       // Transition the light's direction and sent it to the shaders
       W.gl.uniform3f(
-        W.gl.getUniformLocation(W.P, 'light'),
+        W.gl.getUniformLocation(W.program, 'light'),
         W.l("x"), W.l("y"), W.l("z")
       );
       
-      // Billboard info: [width, height, isBillboard]
-      W.gl.uniform3f(
-        W.gl.getUniformLocation(W.P, 'billboard'),
+      // Billboard info: [width, height, isBillboard, 0]
+      W.gl.uniform4f(
+        W.gl.getUniformLocation(W.program, 'bb'),
         s.w,
         s.h,
-        s.T == "b"
+        s.T == "b",
+        0
       );
 
       // Draw
