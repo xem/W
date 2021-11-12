@@ -21,7 +21,7 @@ Unicode precision: <input type=number value=127 id=unicode onchange="convert()" 
 <script>
 gl = a.getContext("webgl2");
 convert = () => {
-  W.reset();
+  W.reset(a);
 
   texture.src=name + ".png";
   texture.onload = texture.onerror = e => {
@@ -31,83 +31,53 @@ convert = () => {
     parseOBJ(file).then(x=>{
       size = x[1].size;
       console.log(x[0]);
-      console.log(z=x);
+      console.log(z=x, size);
       
       
       
-      outoriginal.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}_original"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      outoriginal.innerHTML += x[0].groups[0].originalv.map(x=>+x).join(",");
-      outoriginal.innerHTML += `]), 35044);`;
-      if(x[0].groups[0].vt.length){
-      outoriginal.innerHTML += `
-  gl.bindBuffer(34962, W.texCoords["${name}_original"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      outoriginal.innerHTML += x[0].groups[0].vt.map(x=>+x).join(",");
-      outoriginal.innerHTML += `]), 35044);`;
-      }
-      outoriginal.innerHTML += `\nW["${name}_original"]=t=>{t.T="${name}_original";W.i(t)}`;
+      
+      outoriginal.innerHTML = `W.models["${name}_original"] = {
+  vertices: [${x[0].groups[0].originalv.map(x=>+x).join(",")}],
+  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+x).join(",") : ""}]
+};
+W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       outoriginal.innerHTML = outoriginal.innerHTML.replace(/(\D)0\./g,"$1.");
       outoriginali.innerHTML = new Intl.NumberFormat("en-US").format(outoriginal.innerHTML.length) + " bytes";
       
       
       
       
-      originalcentered = `gl.bindBuffer(34962, W.vertices["${name}_original"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      originalcentered += x[0].groups[0].v.map(x=>+((x*scale.value/size))).join(",");
-      originalcentered += `].map(x=>x/${scale.value}-.5)), 35044);`;
-      if(x[0].groups[0].vt.length){
-      originalcentered += `
-  gl.bindBuffer(34962, W.texCoords["${name}_original"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      originalcentered += x[0].groups[0].vt.map(x=>+((x))).join(",");
-      originalcentered += `]), 35044);`;
-      }
-      originalcentered += `\nW["${name}_original"]=t=>{t.T="${name}_original";W.i(t)}`;
+      originalcentered = `W.models["${name}_original"] = {
+  vertices: [${x[0].groups[0].v.map(x=>+((x*scale.value/size))).join(",")}],
+  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+((x))).join(",") : ""}]
+};
+W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       
       
       
       
-      out1.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      out1.innerHTML += x[0].groups[0].v.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",");
-      out1.innerHTML += `].map(x=>x/${scale.value}-.5)), 35044);`;
-      if(x[0].groups[0].vt.length){
-      out1.innerHTML += `
-  gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      out1.innerHTML += x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",");
-      out1.innerHTML += `]), 35044);`;
-      }
-      out1.innerHTML += `\nW["${name}"]=t=>{t.T="${name}";W.i(t)}`;
+      out1.innerHTML = `W.models["${name}"] = {
+  vertices: [${x[0].groups[0].v.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",")}],
+  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") : ""}]
+};
+W["${name}"] = settings => W.setState(settings, "${name}");`;
       out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
       out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
       
       
       
-      out2.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}_txt"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([...
-    '`;
-      out2.innerHTML += x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
-      out2.innerHTML += `'
-  ].map(a=>(a.codePointAt())/${unicode.value}-.5)
-  ), 35044);`;
-      if(x[0].groups[0].vt.length){
-    out2.innerHTML += `
-  gl.bindBuffer(34962, W.texCoords["${name}_txt"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([...
-    '`;
-      out2.innerHTML += x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
-      out2.innerHTML += `'
-  ].map(a=>(a.codePointAt())/${unicode.value})
-  ), 35044);`;
-      }
-      out2.innerHTML += `\nW["${name}_txt"]=t=>{t.T="${name}_txt";W.i(t)}`;
+      
+      out2.innerHTML = `W.models["${name}_txt"] = {
+  vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value}-.5),
+  uv: [...'${x[0].groups[0].vt.length ? x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") : ""}'].map(a=>(a.codePointAt())/${unicode.value})
+};
+W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       out2i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out2.innerHTML)).length) + " bytes";
       
       
+     // TODO
       
+     /* 
       
       
       outoriginalindexed.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}_original"] = gl.createBuffer());
@@ -151,8 +121,8 @@ convert = () => {
       out3.innerHTML += `]), gl.STATIC_DRAW);`;
       out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
       out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
-      
-      
+     
+     
       out4.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}_txt"] = gl.createBuffer());
   gl.bufferData(34962, new Float32Array([...`;
       out4.innerHTML += x[0].groups[0].indexv.map(x=>String.fromCharCode((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
@@ -179,13 +149,13 @@ convert = () => {
       out4.innerHTML += `].map(a=>a.codePointAt())), gl.STATIC_DRAW);`;
       out4.innerHTML = out4.innerHTML.replace(/(\D)0\./g,"$1.");
       out4i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out4.innerHTML)).length) + " bytes";
-      
+      */
       //console.log(out1.value);
       eval(originalcentered);
       eval(out1.value);
       eval(out2.value);
       //console.log(W.mario);
-      W.camera({x:0,z:50});
+      W.camera({x:0,z:100});
       W.light({x:.1,y:-.3,z:.3});
       W.group({n:"g0", x:-40});
       W.group({n:"g1", x:0});
@@ -193,9 +163,9 @@ convert = () => {
       W[name+"_original"]({n:"obj0",g:"g0",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
       W[name]({n:"obj1",g:"g1",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
       W[name+"_txt"]({n:"obj2",g:"g2",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
-      W.move({n:"g0",rx:3600,rz:3600,t:100});
-      W.move({n:"g1",rx:3600,rz:3600,t:100});
-      W.move({n:"g2",rx:3600,rz:3600,t:100});
+      W.move({n:"g0",rx:3600,rz:3600,t:100000});
+      W.move({n:"g1",rx:3600,rz:3600,t:100000});
+      W.move({n:"g2",rx:3600,rz:3600,t:100000});
     
     })
 

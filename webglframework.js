@@ -111,8 +111,8 @@ W = {
     // (the fragments of close objects will automatically overlap the fragments of further objects)
     W.gl.enable(2929 /* DEPTH_TEST */);
     
-    // When everything is loaded: set light, camera, and draw
-    W.light({z:1});
+    // When everything is loaded: set light, camera, and draw the scene
+    W.light({z: 1});
     W.camera({});
     W.draw();
   },
@@ -169,7 +169,7 @@ W = {
   
   move: t => W.setState(t),
   
-  delete: t => delete W.n[t.n],
+  delete: t => delete W.next[t.n],
   
   camera: t => W.setState(t, t.n = 'camera'),
     
@@ -207,9 +207,13 @@ W = {
       v.toFloat32Array()
     );
     
-    // Render all the objects in the scene
-    //console.log(W.next);
+    // Transition the light's direction and send it to the shaders
+    W.gl.uniform3f(
+      W.gl.getUniformLocation(W.program, 'light'),
+      W.lerp('light','x'), W.lerp('light','y'), W.lerp('light','z')
+    );
     
+    // Render all the objects in the scene
     for(i in W.next){
       
       // Render the shapes with no transparency (alpha blending disabled)
@@ -301,7 +305,7 @@ W = {
     
     // Don't render camera, light, groups
     if(!['camera','light','group'].includes(object.type)){
-
+      
       // Set the position buffer
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].verticesBuffer);
       W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'pos'), 3, 5126 /* FLOAT */, false, 0, 0)
@@ -313,19 +317,6 @@ W = {
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'uv'), 2, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
-        
-      // Set the color / texture
-      W.gl.vertexAttrib4fv(
-        W.gl.getAttribLocation(W.program, 'col'),
-        object.b.id ? [0,0,0,0] : [...[...object.b].map(a => ('0x' + a) / 16),
-        object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
-      );
-      
-      // Transition the light's direction and sent it to the shaders
-      W.gl.uniform3f(
-        W.gl.getUniformLocation(W.program, 'light'),
-        W.lerp('light','x'), W.lerp('light','y'), W.lerp('light','z')
-      );
       
       // If the object is a billboard: send a specific uniform to the shaders:
       // [width, height, isBillboard = 1, 0]
@@ -337,10 +328,9 @@ W = {
         0
       );
 
-      // Draw
-      W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
+      // Use a renderer (triangles by default)
+      W.renderers[object.r || 'triangles'](object);
     }
-    
   }
 };
 
@@ -357,6 +347,12 @@ W = {
 // Custom models can be added from the same model, an OBJ importer is available on https://xem.github.io/WebGLFramework/obj2js/
 
 // Plane / billboard
+//
+//  v1------v0
+//  |       |
+//  |   x   |
+//  |       |
+//  v2------v3
 W.models.plane = W.models.billboard = {
   vertices: [
     .5, .5, 0,    -.5, .5, 0,   -.5,-.5, 0,
@@ -372,6 +368,14 @@ W.plane = settings => W.setState(settings, 'plane');
 W.billboard = settings => W.setState(settings, 'billboard');
 
 // Cube
+//
+//    v6----- v5
+//   /|      /|
+//  v1------v0|
+//  | |  x  | |
+//  | |v7---|-|v4
+//  |/      |/
+//  v2------v3
 W.models.cube = {
   vertices: [
     .5, .5, .5,  -.5, .5, .5,  -.5,-.5, .5, // front
@@ -405,6 +409,13 @@ W.models.cube = {
 W.cube = settings => W.setState(settings, 'cube');
 
 // Pyramid
+//
+//      ^
+//     /\\
+//    // \ \
+//   /+-x-\-+
+//  //     \/
+//  +------+
 W.models.pyramid = {
   vertices: [
     -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
@@ -433,12 +444,32 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
 // ==================
 
 // Each rendered defines a way to draw a 3D model on the canvas
-// Default: TRIANGLES mode, optional: LINES mode
-// Custom renderers can be added from the same model
-W.renderers.triangles = () => {
+// They support both indexed and unindexed draw calls
+// Default: TRIANGLES mode
+// Optional: LINES mode
+
+W.renderers.triangles = object => {
   
+  // Set the color / texture
+  W.gl.vertexAttrib4fv(
+    W.gl.getAttribLocation(W.program, 'col'),
+    object.b.id ? [0,0,0,0] : [...[...object.b].map(a => ('0x' + a) / 16),
+    object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+  );
+
+  // Draw
+  W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
 };
 
-W.renderers.lines = () => {
+W.renderers.lines = object => {
   
-};
+  // Set the color (blue)
+  W.gl.vertexAttrib4fv(
+    W.gl.getAttribLocation(W.program, 'col'),
+    [0,0,1,1]
+  );
+  
+  // Draw
+  W.gl.drawArrays(2 /* LINES */, 0, W.models[object.type].vertices.length / 3);
+  
+}
