@@ -30,15 +30,13 @@ convert = () => {
     
     parseOBJ(file).then(x=>{
       size = x[1].size;
-      console.log(x[0]);
-      console.log(z=x, size);
+      console.log(z=x, +scale.value, size);
       
       
       
       
       outoriginal.innerHTML = `W.models["${name}_original"] = {
-  vertices: [${x[0].groups[0].originalv.map(x=>+x).join(",")}],
-  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+x).join(",") : ""}]
+  vertices: [${x[0].groups[0].originalv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+x).join(",") + "]") : ""}
 };
 W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       outoriginal.innerHTML = outoriginal.innerHTML.replace(/(\D)0\./g,"$1.");
@@ -46,10 +44,9 @@ W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       
       
       
-      
+      // original, centered and resized for the demo
       originalcentered = `W.models["${name}_original"] = {
-  vertices: [${x[0].groups[0].v.map(x=>+((x*scale.value/size))).join(",")}],
-  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+((x))).join(",") : ""}]
+  vertices: [${x[0].groups[0].v.map(x=>+((x/size))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x))).join(",") + "]") : ""}
 };
 W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       
@@ -57,8 +54,7 @@ W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       
       
       out1.innerHTML = `W.models["${name}"] = {
-  vertices: [${x[0].groups[0].v.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",")}],
-  uv: [${x[0].groups[0].vt.length ? x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") : ""}]
+  vertices: [${x[0].groups[0].v.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""}
 };
 W["${name}"] = settings => W.setState(settings, "${name}");`;
       out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
@@ -68,12 +64,10 @@ W["${name}"] = settings => W.setState(settings, "${name}");`;
       
       
       out2.innerHTML = `W.models["${name}_txt"] = {
-  vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value}-.5),
-  uv: [...'${x[0].groups[0].vt.length ? x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") : ""}'].map(a=>(a.codePointAt())/${unicode.value})
+  vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "]'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""}
 };
 W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       out2i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out2.innerHTML)).length) + " bytes";
-      
       
      // TODO
       
@@ -155,14 +149,14 @@ W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       eval(out1.value);
       eval(out2.value);
       //console.log(W.mario);
-      W.camera({x:0,z:100});
+      W.camera({x:0,z:70});
       W.light({x:.1,y:-.3,z:.3});
-      W.group({n:"g0", x:-40});
+      W.group({n:"g0", x:-45});
       W.group({n:"g1", x:0});
-      W.group({n:"g2", x:40});
-      W[name+"_original"]({n:"obj0",g:"g0",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
-      W[name]({n:"obj1",g:"g1",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
-      W[name+"_txt"]({n:"obj2",g:"g2",x:0,y:0,z:0,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W.group({n:"g2", x:45});
+      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
       W.move({n:"g0",rx:3600,rz:3600,t:100000});
       W.move({n:"g1",rx:3600,rz:3600,t:100000});
       W.move({n:"g2",rx:3600,rz:3600,t:100000});
