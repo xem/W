@@ -15,7 +15,7 @@
 <script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
 onload = () => {
   W.reset(canvas);
-  W.camera({y:0,z:85});
+  W.camera({y:-5,z:85});
   W.light({x:.2,y:-.5,z:.5});
   W.plane({n:'ground',w:50,h:80,z:-.5,b:'8d8'});
   W.group({n:'shapes'});
@@ -35,19 +35,13 @@ onload = () => {
   W.group({n:'mariogroup',x:-10,y:-30});
   W.mario({n:'mario1',g:'mariogroup',x:2,y:0,z:0,w:10,h:10,d:10,rx:0,rz:180,b:mario1});
   W.yoshi({n:'yoshi1',x:0,y:-38,z:0,w:10,h:10,d:10,rx:90,rz:180,b:yoshi});
-  setTimeout(()=>{
-    W.camera({rx:60,z:20,x:6,y:-52,rz:20,t:2000})
-  },1000);
-  setTimeout(()=>{
-    W.move({n:'mariogroup',rz:60,t:2000});
-    W.move({n:'yoshi1',y:-30,rx:0,t:1000});
-  },4000);
-  setTimeout(()=>{
-    W.move({n:'mario1',b:mario2});
-    W.move({n:'shapes',rz:180,z:10,w:.5,h:.5,d:.5,t:3000});
-    W.light({x:-.2,y:.5,z:.2,t:3000});
-    W.delete({n:'yoshi1'});
-  },6500);
+  W.camera({rx:60,z:20,x:6,y:-52,rz:20,t:2000}, 1000)
+  W.move({n:'mariogroup',rz:60,t:2000}, 4000);
+  W.move({n:'yoshi1',y:-30,rx:0,t:1000}, 4000);
+  W.move({n:'mario1',b:mario2},6500);
+  W.move({n:'shapes',rz:180,z:10,w:.5,h:.5,d:.5,t:3000}, 6500);
+  W.light({x:-.2,y:.5,z:.2,t:3000}, 6500);
+  W.delete({n:'yoshi1'}, 6500);
 }
 
 </script>

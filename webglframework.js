@@ -8,7 +8,7 @@ W = {
   models: {},
   
   // List of renderers
-  // (see the end of the file for built-in models: triangle, wireframe...)
+  // (see the end of the file for built-in renderers: triangles, lines...)
   renderers: {},
 
   // Reset the framework
@@ -16,15 +16,11 @@ W = {
   reset: canvas => {
     
     // Globals
-    W.lastFrame = 0;    // Timestamp of last frame
     W.objs = 0;         // Object counter
     W.current = {};     // Objects current states
     W.next = {};        // Objects next states
     W.textures = {};    // Textures list
-    //W.vertices = {};    // Vertex buffers
-    //W.uv = {};          // Texture coordinates buffers 
-    //W.indices = {};     // Index buffers
-    W.perspective =     // Perspective matrix (fov: .5rad, aspect: canvas.width/canvas.height, near: 1, far: 1000)
+    W.perspective =     // Perspective matrix (fov: .5rad, aspect: width/height, near: 1, far: 1000)
       new DOMMatrix([
         1 / Math.tan(.5) / (canvas.width/canvas.height), 0, 0, 0, 
         0, 1 / Math.tan(.5), 0, 0, 
@@ -51,6 +47,7 @@ W = {
       t = W.gl.createShader(35633 /* VERTEX_SHADER */),
       
       `#version 300 es
+      precision highp float;                  // Set default float precision
       in vec4 pos, col, uv;                   // Vertex attributes: position, color, texture coordinates
       uniform mat4 pv, eye, m;                // Uniform transformation matrices: projection * view, eye, model
       uniform vec4 bb;                        // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
@@ -111,32 +108,15 @@ W = {
     // (the fragments of close objects will automatically overlap the fragments of further objects)
     W.gl.enable(2929 /* DEPTH_TEST */);
     
-    // When everything is loaded: set light, camera, and draw the scene
+    // When everything is loaded: set default light / camera, and draw the scene
     W.light({z: 1});
     W.camera({});
     W.draw();
   },
 
-  // Interpolate a property between two values
-  lerp: (item, property) => 
-    W.next[item]?.t
-    ? W.current[item][property] + (W.next[item][property] -  W.current[item][property]) * (W.next[item].f / W.next[item].t)
-    : W.next[item][property],
-  
-  // Transition an item
-  transition: item =>
-    W.next[item]
-    ? (new DOMMatrix)
-      .translateSelf(W.lerp(item, 'x'), W.lerp(item, 'y'), W.lerp(item, 'z'))
-      .rotateSelf(W.lerp(item, 'rx'),W.lerp(item, 'ry'),W.lerp(item, 'rz'))
-      .scaleSelf(W.lerp(item, 'w'),W.lerp(item, 'h'),W.lerp(item, 'd'))
-    : new DOMMatrix,
-
   // Set a state to an object
-  setState: (state, type, texture) => {
-    
-    //console.log(state);
-    
+  setState: (state, type, texture, i, vertices, AB, BC, normal) => {
+
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
     
@@ -151,32 +131,34 @@ W = {
       W.textures[state.b.id] = texture;
     }
     
-    // Merge previous state or default state with the new state passed in parameter
-    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'000'}), ...state};
+    // Save object's type,
+    // merge previous state (or default state) with the new state passed in parameter,
+    // and reset f (the transition timer)
+    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888'}), ...state, f:0};
     
-    // Save the transition duration (in frames), or 0 by default
-    state.t ||= 0;
+    // Build the model's vertices buffer if it doesn't exist yet
+    if(W.models[state.type]?.vertices && !W.models?.[state.type].verticesBuffer){
+      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].verticesBuffer = W.gl.createBuffer());
+      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].vertices), 35044 /*STATIC_DRAW*/); 
+    }
     
-    // Reset the transition timer.
-    state.f = 0;
+    // Build the model's uv buffer if it doesn't exist yet
+    if(W.models[state.type]?.uv && !W.models[state.type].uvBuffer){
+      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].uvBuffer = W.gl.createBuffer());
+      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].uv), 35044 /*STATIC_DRAW*/); 
+    }
+    
+    // Compute the model's smooth normals if they don't exist yet
+    // TODO
     
     // Save new state
     W.next[state.n] = state;
   },
   
-  // Objects in the scene
-  group: t => W.setState(t, 'group'),
-  
-  move: t => W.setState(t),
-  
-  delete: t => delete W.next[t.n],
-  
-  camera: t => W.setState(t, t.n = 'camera'),
+  // Draw the scene
+  draw: (now, dt, v, i, transparent = []) => {
     
-  light: t => W.setState(t, t.n = 'light'),
-  
-  // Draw
-  draw: (now, p, v, m, i, s, dt, buffer, transparent = []) => {
+    // Loop and measure time delta between frames
     dt = now - W.lastFrame;
     W.lastFrame = now;
     requestAnimationFrame(W.draw);
@@ -184,9 +166,8 @@ W = {
     // Clear canvas
     W.gl.clear(16640 /* W.gl.COLOR_BUFFER_BIT | W.gl.DEPTH_BUFFER_BIT */);
     
-    // Create a matrix called v
-    v = new DOMMatrix;    // create an identity Matrix v
-    v = W.transition('camera');  // apply the camera transformations to v
+    // Create a matrix called v containing the current camera transformation
+    v = W.transition('camera');
     
     // Send it to the shaders as the Eye matrix
     W.gl.uniformMatrix4fv(
@@ -196,8 +177,9 @@ W = {
     );
     
     // Invert it to obtain the View matrix
-    // then premultiply the Perspective matrix created in W.reset() to obtain a Projection-View matrix
     v.invertSelf();
+
+    // Premultiply it with the Perspective matrix to obtain a Projection-View matrix
     v.preMultiplySelf(W.perspective);
     
     // send it to the shaders as the pv matrix
@@ -216,24 +198,22 @@ W = {
     // Render all the objects in the scene
     for(i in W.next){
       
-      // Render the shapes with no transparency (alpha blending disabled)
+      // Render the shapes with no transparency (RGB color)
       if(!W.next[i].b.id && !W.next[i].b[3]){
         W.render(W.next[i], dt);
       }
       
-      // Add the objects with transparency (rgba or texture) in an array
+      // Add the objects with transparency (RGBA or texture) in an array
       else {
         transparent.push(W.next[i]);
       }
     }
     
-    //console.log(transparent);
-    
     // Order transparent objects from back to front
     transparent.sort((a, b) => {
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
-      return a.m && b.m && (W.dist(b.m, W.next.camera.m) - W.dist(a.m, W.next.camera.m));
+      return W.dist(b) - W.dist(a);
     });
 
     // Enable alpha plending
@@ -248,27 +228,8 @@ W = {
     W.gl.disable(3042 /* BLEND */);
   },
   
-  // Compute the distance squared between two objects (useful for sorting transparent items)
-  dist: (a, b) => (b.m41 - a.m41)**2 + (b.m42 - a.m42)**2 + (b.m43 - a.m43)**2,
-  
   // Render an object
-  render: (object, dt, vertices, uv, buffer) => {
-    
-    //console.log(W.models[object.type]);
-    
-    // Build vertices buffer if it doesn't exist yet
-    if(W.models[object.type]?.vertices && !W.models?.[object.type].verticesBuffer){
-      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].verticesBuffer = W.gl.createBuffer());
-      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[object.type].vertices), 35044 /*STATIC_DRAW*/); 
-    }
-    
-    // Build uv buffer if it doesn't exist yet
-    if(W.models[object.type]?.uv && !W.models[object.type].uvBuffer){
-      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].uvBuffer = W.gl.createBuffer());
-      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[object.type].uv), 35044 /*STATIC_DRAW*/); 
-    }
-    
-    //console.log(W.models[object.type]);
+  render: (object, dt, buffer) => {
 
     // If the object has a texture
     if (object.b.id) {
@@ -296,27 +257,30 @@ W = {
       W.next[object.n].m.preMultiplySelf(W.next[object.g].m);
     }
 
-    // send the model matrix to the shaders
+    // send the model matrix to the vertex shader
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'm'),
       false,
       W.next[object.n].m.toFloat32Array()
     );
     
-    // Don't render camera, light, groups
+    // Don't render inisible items (camera, light, groups)
     if(!['camera','light','group'].includes(object.type)){
       
-      // Set the position buffer
+      // Send the position buffer to the vertex shader
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].verticesBuffer);
       W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'pos'), 3, 5126 /* FLOAT */, false, 0, 0)
       W.gl.enableVertexAttribArray(buffer);
       
-      // Set the texture coordinatess buffer (if any)
+      // Send the texture coordinatess buffer to the vertex shader (if any)
       if(W.models[object.type].uvBuffer){
         W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].uvBuffer);
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'uv'), 2, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
+      
+      // Set the normals buffer
+      // TODO
       
       // If the object is a billboard: send a specific uniform to the shaders:
       // [width, height, isBillboard = 1, 0]
@@ -331,11 +295,47 @@ W = {
       // Use a renderer (triangles by default)
       W.renderers[object.r || 'triangles'](object);
     }
-  }
+  },
+  
+  // Helpers
+  // -------
+  
+  // Interpolate a property between two values
+  lerp: (item, property) => 
+    W.next[item]?.t
+    ? W.current[item][property] + (W.next[item][property] -  W.current[item][property]) * (W.next[item].f / W.next[item].t)
+    : W.next[item][property],
+  
+  // Transition an item
+  transition: (item, m = new DOMMatrix) =>
+    W.next[item]
+    ? m
+      .translateSelf(W.lerp(item, 'x'), W.lerp(item, 'y'), W.lerp(item, 'z'))
+      .rotateSelf(W.lerp(item, 'rx'),W.lerp(item, 'ry'),W.lerp(item, 'rz'))
+      .scaleSelf(W.lerp(item, 'w'),W.lerp(item, 'h'),W.lerp(item, 'd'))
+    : m,
+    
+  // Compute the distance squared between two objects (useful for sorting transparent items)
+  dist: (a, b = W.next.camera) => a && b ? (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2 : 0,
+  
+  // Built-in objects
+  // ----------------
+  
+  group: t => W.setState(t, 'group'),
+  
+  move: (t, delay) => setTimeout(()=>{ W.setState(t) }, delay || 1),
+  
+  delete: (t, delay) => setTimeout(()=>{ delete W.next[t.n] }, delay || 1),
+  
+  camera: (t, delay) => setTimeout(()=>{ W.setState(t, t.n = 'camera') }, delay || 1),
+    
+  light: (t, delay) => delay ? setTimeout(()=>{ W.setState(t, t.n = 'light') }, delay) : W.setState(t, t.n = 'light'),
 };
 
-// Built-in models
-// ===============
+
+
+// 3D models
+// =========
 
 // Each model has:
 // - A vertices array [x, y, z, x, y, z...]
@@ -343,7 +343,7 @@ W = {
 // - An indices array (optional, enables drawElements rendering... if absent: drawArrays is ised)
 // - A normals array [nx, ny, nz, nx, ny, nz...] (optional... if absent: hard/smooth normals are computed by the framework when they're needed)
 // The buffers (vertices, uv, indices) are built automatically when they're needed
-// Any built-in model can be removed to save space
+// All models are optional, you can remove the ones you don't need to save space
 // Custom models can be added from the same model, an OBJ importer is available on https://xem.github.io/WebGLFramework/obj2js/
 
 // Plane / billboard
@@ -353,6 +353,7 @@ W = {
 //  |   x   |
 //  |       |
 //  v2------v3
+
 W.models.plane = W.models.billboard = {
   vertices: [
     .5, .5, 0,    -.5, .5, 0,   -.5,-.5, 0,
@@ -376,6 +377,7 @@ W.billboard = settings => W.setState(settings, 'billboard');
 //  | |v7---|-|v4
 //  |/      |/
 //  v2------v3
+
 W.models.cube = {
   vertices: [
     .5, .5, .5,  -.5, .5, .5,  -.5,-.5, .5, // front
@@ -416,6 +418,7 @@ W.cube = settings => W.setState(settings, 'cube');
 //   /+-x-\-+
 //  //     \/
 //  +------+
+
 W.models.pyramid = {
   vertices: [
     -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
@@ -440,13 +443,13 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
 
 
 
-// Built-in renderers
-// ==================
+// Renderers
+// =========
 
 // Each rendered defines a way to draw a 3D model on the canvas
 // They support both indexed and unindexed draw calls
+
 // Default: TRIANGLES mode
-// Optional: LINES mode
 
 W.renderers.triangles = object => {
   
@@ -461,6 +464,9 @@ W.renderers.triangles = object => {
   W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
 };
 
+
+// Optional: LINES mode
+
 W.renderers.lines = object => {
   
   // Set the color (blue)
@@ -471,5 +477,4 @@ W.renderers.lines = object => {
   
   // Draw
   W.gl.drawArrays(2 /* LINES */, 0, W.models[object.type].vertices.length / 3);
-  
 }
