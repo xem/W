@@ -1,0 +1,67 @@
+﻿<!doctype html>
+<canvas id=canvas width=850 height=500 style='border:1px solid'></canvas>
+<img src='tree.png' id=tree hidden>
+<img src='obj2js/mario.png' id=mario hidden>
+<img src='obj2js/yoshi.png' id=yoshi hidden>
+<script src='webglframework.js'></script>
+<script src='mario.js'></script>
+<script src='yoshi.js'></script>
+
+<br>
+<br>
+
+<script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
+map = [
+"055555555555555552",
+"055555557755555552",
+"000555567765555012",
+"210555566665555012",
+"210555554455555012",
+"210000004400000012",
+"210000004400000012",
+"211111111111113112",
+"222211111122220222",
+"222212222222100000",
+"222211111222000000",
+"222211111222000000",
+"222222222222000000",
+"222222222222000000"
+];
+
+onload = () => {
+  W.reset(canvas);
+  W.gl.clearColor(0,0,0,1);
+  W.light({x:.2,y:.5});
+  W.camera({x:9,y:20,rx:-35,z:25});
+  W.group({n:'g1'});
+  i = 0;
+  for(z in map){
+    for(x in map[z]){
+      h = 1+[0,.8,1,.2,.2,6,9,12][map[z][x]]
+      W.cube({g:'g1',x,z,h,y:h/2,b:['0df','ed7','0a0','da4','cdd','cdd','cdd','cdd'][map[z][x]]});
+      if(map[z][x] == 2 & !(i % 7)){
+        console.log(x,z);
+        W.billboard({g:'g1',x:x,y:2.5,z,w:1.5,h:1.5,b:tree});
+      }
+      i++;
+    }
+  }
+  
+  W.cube({g:'g1',x:8.5,z:4,w:3,h:4,y:6,b:'cdd'});
+  
+  for(i = 0; i < 7; i++){
+    W.pyramid({g:'g1',x:[30,30,30.5,8,52,58,3][i]/4+1,z:[0,0,0,12,12,-6,-6][i]/4+2,y:[25,37,47,25,25,25,25][i]/4+2,w:[13,5,3,2,2,3,3][i],d:[8,4,3,2,2,3,3][i],h:2,b:'b31'});
+  }
+  
+  W.mario({g:'g1',x:8,z:10,w:2,h:2,d:2,y:2,rx:-90,ry:180,b:mario});
+  W.yoshi({g:'g1',x:5,z:4,w:2,h:2,d:2,y:8,rx:0,ry:180,b:yoshi});
+  
+  t = 0;
+  setInterval(()=>{
+    t+=.1;
+    W.move({n:'g1',ry:Math.cos(t/5)*25});
+  },16);
+}
+
+</script>
+
