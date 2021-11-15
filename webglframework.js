@@ -115,7 +115,7 @@ W = {
   },
 
   // Set a state to an object
-  setState: (state, type, texture, i, vertices, AB, BC, normal) => {
+  setState: (state, type, texture, i, vertices) => {
 
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
@@ -264,15 +264,15 @@ W = {
       W.next[object.n].m.toFloat32Array()
     );
     
-    // Don't render inisible items (camera, light, groups)
+    // Don't render invisible items (camera, light, groups)
     if(!['camera','light','group'].includes(object.type)){
       
-      // Send the position buffer to the vertex shader
+      // Set up the position buffer
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].verticesBuffer);
       W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'pos'), 3, 5126 /* FLOAT */, false, 0, 0)
       W.gl.enableVertexAttribArray(buffer);
       
-      // Send the texture coordinatess buffer to the vertex shader (if any)
+      // Set up the texture coordinatess buffer (if any)
       if(W.models[object.type].uvBuffer){
         W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].uvBuffer);
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'uv'), 2, 5126 /* FLOAT */, false, 0, 0);
