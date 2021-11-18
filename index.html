@@ -1,48 +1,48 @@
 ﻿<!doctype html>
-<canvas id=a width=850 height=500 style="border:1px solid"></canvas>
-<img src="tree.png" id=tree hidden>
-<img src="brick.png" id=brick hidden>
-<img src="obj2js/yoshi.png" id=yoshi hidden>
-<img src="obj2js/mario.png" id=mario1 hidden>
-<img src="obj2js/mario2.png" id=mario2 hidden>
-<script src="webglframework.js"></script>
-<script src="mario.js"></script>
-<script src="yoshi.js"></script>
+<canvas id=canvas width=850 height=500 style='border:1px solid'></canvas>
+<img src='tree.png' id=tree hidden>
+<img src='brick.png' id=brick hidden>
+<img src='obj2js/yoshi.png' id=yoshi hidden>
+<img src='obj2js/mario.png' id=mario1 hidden>
+<img src='obj2js/mario2.png' id=mario2 hidden>
+<script src='webglframework.js'></script>
+<script src='mario.js'></script>
+<script src='yoshi.js'></script>
 
 <br>
 <br>
 
-<script style="display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre">
+<script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
 onload = () => {
-  W.camera({y:0,z:85});
-  W.light({x:.1,y:-.3,z:.3});
-  W.plane({n:"ground",w:50,h:70,z:0,b:'8d8'});
-  W.group({n:"shapes"});
-  W.cube({n:"cube",g:"shapes",x:-15,y:20,z:5,w:10,h:10,d:10,b:'68a'});
-  W.plane({n:"plane",g:"shapes",x:15,y:20,z:5,w:10,h:10,rx:-90,b:'68a'});
-  W.pyramid({n:"pyramid",g:"shapes",x:0,y:20,z:5,w:10,h:10,d:10,rx:90,b:'68a'});
-  W.cube({n:"cube2",g:"shapes",x:-15,y:5,z:5,w:10,h:10,d:10,b:'68a8'});
-  W.plane({n:"plane2",g:"shapes",x:15,y:5,z:5,w:10,h:10,rx:-90,b:'68a8'});
-  W.pyramid({n:"pyramid2",g:"shapes",x:0,y:5,z:5,w:10,h:10,d:10,rx:90,b:'68a8'});
-  W.cube({n:"cube3",g:"shapes",x:-15,y:-10,z:5,w:10,h:10,d:10,b:brick});
-  W.plane({n:"plane3",g:"shapes",x:15,y:-10,z:5,w:10,h:10,rx:-90,b:brick});
-  W.pyramid({n:"pyramid3",g:"shapes",x:0,y:-10,z:5,w:10,h:10,d:10,rx:90,b:brick});
-  W.billboard({n:"billboard1",x:10,y:-20,z:6,w:12,h:12,b:tree});
-  W.group({n:"mariogroup",x:-10,y:-25});
-  W.mario({n:"mario1",g:"mariogroup",x:2,y:0,z:0,w:10,h:10,d:10,rx:0,rz:180,b:mario1});
-  W.yoshi({n:"yoshi1",x:0,y:-28,z:0,w:10,h:10,d:10,rx:90,rz:180,b:yoshi});
-  setTimeout(()=>{
-    W.camera({rx:60,z:20,x:6,y:-42,rz:20,t:2})
-  },1000);
-  setTimeout(()=>{
-    W.move({n:"mariogroup",rz:60,t:2});
-    W.move({n:"yoshi1",y:-18,rx:0,t:1});
-  },4000);
-  setTimeout(()=>{
-    W.move({n:"mario1",b:mario2});
-    W.move({n:"shapes",rz:180,z:10,w:.5,h:.5,d:.5,t:3});
-    W.light({x:-.1,y:.3,z:.1,t:3});
-  },6500);
+  W.reset(canvas);
+  W.camera({y:-5,z:85});
+  W.light({x:.2,y:-.5,z:.5});
+  W.plane({n:'ground',w:50,h:80,z:-.5,b:'8d8'});
+  W.group({n:'shapes'});
+  W.cube({n:'cube',g:'shapes',x:-15,y:30,z:5,w:10,h:10,d:10,b:'68a'});
+  W.plane({n:'plane',g:'shapes',x:15,y:30,z:5,w:10,h:10,rx:-90,b:'68a'});
+  W.pyramid({n:'pyramid',g:'shapes',x:0,y:30,z:5,w:10,h:10,d:10,rx:90,b:'68a'});
+  W.cube({n:'cube2',g:'shapes',x:-15,y:15,z:5,w:10,h:10,d:10,b:'68a8'});
+  W.plane({n:'plane2',g:'shapes',x:15,y:15,z:5,w:10,h:10,rx:-90,b:'68a8'});
+  W.pyramid({n:'pyramid2',g:'shapes',x:0,y:15,z:5,w:10,h:10,d:10,rx:90,b:'68a8'});
+  W.cube({g:'shapes',x:-15,y:0,z:5,w:10,h:10,d:10,b:brick});
+  W.plane({g:'shapes',x:15,y:0,z:5,w:10,h:10,rx:-90,b:brick});
+  W.pyramid({g:'shapes',x:0,y:0,z:5,w:10,h:10,d:10,rx:90,b:brick});
+  W.cube({g:'shapes',x:-15,y:-15,z:5,w:10,h:10,d:10,b:brick,r:'lines'});
+  W.plane({g:'shapes',x:15,y:-15,z:5,w:10,h:10,rx:-90,b:brick,r:'lines'});
+  W.pyramid({g:'shapes',x:0,y:-15,z:5,w:10,h:10,d:10,rx:90,b:brick,r:'lines'});
+  W.billboard({n:'billboard1',x:15,y:-30,z:6,w:12,h:12,b:tree});
+  W.group({n:'mariogroup',x:-10,y:-30});
+  W.mario({n:'mario1',g:'mariogroup',x:2,y:0,z:0,w:10,h:10,d:10,rx:0,rz:180,b:mario1});
+  W.yoshi({n:'yoshi1',x:0,y:-38,z:0,w:10,h:10,d:10,rx:90,rz:180,b:yoshi});
+  W.camera({rx:60,z:20,x:6,y:-52,rz:20,t:2000}, 1000)
+  W.move({n:'mariogroup',rz:60,t:2000}, 4000);
+  W.move({n:'yoshi1',y:-30,rx:0,t:1000}, 4000);
+  W.move({n:'mario1',b:mario2},6500);
+  W.move({n:'shapes',rz:180,z:10,w:.5,h:.5,d:.5,t:3000}, 6500);
+  W.light({x:-.2,y:.5,z:.2,t:3000}, 6500);
+  W.delete({n:'yoshi1'}, 6500);
 }
+
 </script>
 
