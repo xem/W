@@ -1,13 +1,13 @@
 <!doctype html>
-<canvas id=canvas width=850 height=500 style='border:1px solid'></canvas>
+<canvas id=canvas width=1200 height=500 style='border:1px solid'></canvas>
 <script src='webglframework.js'></script>
 
 <br>
 <br>
 
-<script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
+<script style='display:block;width:1160px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
 
-// Set up the scene
+// Set up the scene with a cube at the center
 onload = () => {
   W.reset(canvas);
   W.camera({z:2});
@@ -18,68 +18,25 @@ onload = () => {
 u=r=d=l=0;
 onkeydown=onkeyup=e=>this['lurd************************l**r************l*d***u**u'[e.which-37]]=+!!e.type[5];
 
-
-// Create a matrix representing a rotation around an arbitrary axis [x, y, z]
-fromRotation = (axis, angle) => {
-
-  var x = axis[0], y = axis[1], z = axis[2];
-  var len = Math.hypot(x, y, z);
-  var s, c, t;
-  if (len == 0) return null;
-  len = 1 / len;
-  x *= len;
-  y *= len;
-  z *= len;
-  s = Math.sin(angle);
-  c = Math.cos(angle);
-  t = 1 - c;
-  return new DOMMatrix([
-    x * x * t + c,      y * x * t + z * s,  z * x * t - y * s,   0,
-    x * y * t - z * s,  y * y * t + c,      z * y * t + x * s,   0,
-    x * z * t + y * s,  y * z * t - x * s,  z * z * t + c,       0,
-    0, 0, 0, 1
-  ]);
-};
-
-// Apply a matrix transformation to a custom axis
-axisTransformMatrix = (a, m) => {
-  let x = a[0], y = a[1], z = a[2];
-  let w = (m.m14 * x + m.m24 * y + m.m34 * z + m.m44) || 1.0;
-  return new Float32Array([
-    (m.m11 * x + m.m21 * y + m.m31 * z + m.m41) / w,
-    (m.m12 * x + m.m22 * y + m.m32 * z + m.m42) / w,
-    (m.m13 * x + m.m23 * y + m.m33 * z + m.m43) / w
-  ]);
-}
-
-
-// Use custom transform matrix (W.move({n,M}))
+// Create a custom transform matrix for the cube
 modelMatrix = new DOMMatrix();
 
+// Draw
 draw = () => {
+
+  // Loop
   requestAnimationFrame(draw);
-  
-  // Set angles
-  rx = (d - u) * 5;
-  ry = (r - l) * 5;
 
-  // Compute rotation axis (perpendicular to mouse movement)
-  axis = [rx, ry, 0];
+  // Compute rotation axis from the arrow keys
+  let axis = new DOMPoint(rx = d - u, ry = r - l, 0);
 
-  // Inverse the rotation that has been done so far
-  inverseRotation = (new DOMMatrix(modelMatrix)).invertSelf();
-  
-  // Apply the inverse rotation to the rotation axis
-  axis = axisTransformMatrix(axis, inverseRotation);
-  
-  // Compute the new rotation matrix "deltaRotation" along the axis
-  deltaRotation = fromRotation(axis, Math.hypot(rx, ry) / 100);
+  // Apply the inverse of the existing model matrix to the new rotation axis to get back to the the World coordinates
+  let newAxis = axis.matrixTransform((new DOMMatrix(modelMatrix)).invertSelf());
 
-  // Compute the rotation: rotation * deltaRotation
-  if(deltaRotation){
-    modelMatrix.multiplySelf(deltaRotation);
-  }
+  // Apply the new rotation along this transformed axis up to 5 degrees per frame
+  modelMatrix.rotateAxisAngleSelf(newAxis.x, newAxis.y, newAxis.z, Math.hypot(rx, ry) * 5);
 
+  // Move the cube
   W.move({n:"cube", M: modelMatrix});
 };
 draw();
