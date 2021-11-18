@@ -1,0 +1,22 @@
+<!doctype html>
+<canvas id=canvas width=850 height=500 style='border:1px solid'></canvas>
+<script src='webglframework.js'></script>
+
+<br>
+<br>
+
+<script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
+onload = () => {
+  
+  W.reset(canvas);
+  W.camera({z:5});
+  W.cube({n:"cube", x:0, y: 0, z: 0, w:2, h:2, d:2, b:"5af"});
+  
+}
+
+// Direction keys (https://xem.github.io/articles/jsgamesinputs.html)
+u=r=d=l=0;
+onkeydown=onkeyup=e=>this['lurd************************l**r************l*d***u**u'[e.which-37]]=e.type[5];
+
+</script>
+
