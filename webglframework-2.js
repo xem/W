@@ -1,9 +1,6 @@
 // WebGL framework
 // ===============
 
-
-
-
 W = ((objs, current, next, lastFrame, textures, perspective, draw, render, lerp, transition, dist) => {
   
   // Draw the scene
@@ -278,7 +275,7 @@ W = ((objs, current, next, lastFrame, textures, perspective, draw, render, lerp,
       
       console.log("reset", current);
       // When everything is loaded: set default light / camera, and draw the scene
-      W.light({z: 1});
+      W.light({y: 1});
       W.camera({});
       draw();
     },

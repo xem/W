@@ -109,7 +109,7 @@ W = {
     W.gl.enable(2929 /* DEPTH_TEST */);
     
     // When everything is loaded: set default light / camera, and draw the scene
-    W.light({z: 1});
+    W.light({y: 1});
     W.camera({});
     W.draw();
   },
@@ -261,7 +261,7 @@ W = {
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'm'),
       false,
-      W.next[object.n].m.toFloat32Array()
+      (W.next[object.n].M || W.next[object.n].m).toFloat32Array()
     );
     
     // Don't render invisible items (camera, light, groups)

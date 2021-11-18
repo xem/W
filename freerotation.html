@@ -6,17 +6,83 @@
 <br>
 
 <script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
+
+// Set up the scene
 onload = () => {
-  
   W.reset(canvas);
-  W.camera({z:5});
-  W.cube({n:"cube", x:0, y: 0, z: 0, w:2, h:2, d:2, b:"5af"});
-  
+  W.camera({z:2});
+  W.cube({n:"cube", b:"5af", rx: 45});
 }
 
 // Direction keys (https://xem.github.io/articles/jsgamesinputs.html)
 u=r=d=l=0;
-onkeydown=onkeyup=e=>this['lurd************************l**r************l*d***u**u'[e.which-37]]=e.type[5];
+onkeydown=onkeyup=e=>this['lurd************************l**r************l*d***u**u'[e.which-37]]=+!!e.type[5];
+
+
+// Create a matrix representing a rotation around an arbitrary axis [x, y, z]
+fromRotation = (axis, angle) => {
+
+  var x = axis[0], y = axis[1], z = axis[2];
+  var len = Math.hypot(x, y, z);
+  var s, c, t;
+  if (len == 0) return null;
+  len = 1 / len;
+  x *= len;
+  y *= len;
+  z *= len;
+  s = Math.sin(angle);
+  c = Math.cos(angle);
+  t = 1 - c;
+  return new DOMMatrix([
+    x * x * t + c,      y * x * t + z * s,  z * x * t - y * s,   0,
+    x * y * t - z * s,  y * y * t + c,      z * y * t + x * s,   0,
+    x * z * t + y * s,  y * z * t - x * s,  z * z * t + c,       0,
+    0, 0, 0, 1
+  ]);
+};
+
+// Apply a matrix transformation to a custom axis
+axisTransformMatrix = (a, m) => {
+  let x = a[0], y = a[1], z = a[2];
+  let w = (m.m14 * x + m.m24 * y + m.m34 * z + m.m44) || 1.0;
+  return new Float32Array([
+    (m.m11 * x + m.m21 * y + m.m31 * z + m.m41) / w,
+    (m.m12 * x + m.m22 * y + m.m32 * z + m.m42) / w,
+    (m.m13 * x + m.m23 * y + m.m33 * z + m.m43) / w
+  ]);
+}
+
+
+// Use custom transform matrix (W.move({n,M}))
+modelMatrix = new DOMMatrix();
+
+draw = () => {
+  requestAnimationFrame(draw);
+  
+  // Set angles
+  rx = (d - u) * 5;
+  ry = (r - l) * 5;
+
+  // Compute rotation axis (perpendicular to mouse movement)
+  axis = [rx, ry, 0];
+
+  // Inverse the rotation that has been done so far
+  inverseRotation = (new DOMMatrix(modelMatrix)).invertSelf();
+  
+  // Apply the inverse rotation to the rotation axis
+  axis = axisTransformMatrix(axis, inverseRotation);
+  
+  // Compute the new rotation matrix "deltaRotation" along the axis
+  deltaRotation = fromRotation(axis, Math.hypot(rx, ry) / 100);
+
+  // Compute the rotation: rotation * deltaRotation
+  if(deltaRotation){
+    modelMatrix.multiplySelf(deltaRotation);
+  }
+
+  W.move({n:"cube", M: modelMatrix});
+};
+draw();
 
 </script>
 
