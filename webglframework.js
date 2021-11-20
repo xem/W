@@ -279,6 +279,12 @@ W = {
         W.gl.enableVertexAttribArray(buffer);
       }
       
+      if(W.models[object.type].indices){
+        W.models[object.type].indicesBuffer = W.gl.createBuffer();
+        W.gl.bindBuffer(W.gl.ELEMENT_ARRAY_BUFFER, W.models[object.type].indicesBuffer);
+        W.gl.bufferData(W.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(W.models[object.type].indices), W.gl.STATIC_DRAW);
+      }
+      
       // Set the normals buffer
       // TODO
       
@@ -316,7 +322,7 @@ W = {
     : m,
     
   // Compute the distance squared between two objects (useful for sorting transparent items)
-  dist: (a, b = W.next.camera) => a && b ? (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2 : 0,
+  dist: (a, b = W.next.camera) => a?.m && b?.m ? (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2 : 0,
   
   // Built-in objects
   // ----------------
@@ -452,6 +458,7 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
 // Default: TRIANGLES mode
 
 W.renderers.triangles = object => {
+  //console.log(object);
   
   // Set the color / texture
   W.gl.vertexAttrib4fv(
@@ -461,7 +468,12 @@ W.renderers.triangles = object => {
   );
 
   // Draw
-  W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
+  if(W.models[object.type].indicesBuffer){
+    W.gl.drawElements(4 /* TRIANGLES */, W.models[object.type].indices.length, W.gl.UNSIGNED_SHORT, 0);
+  }
+  else {
+    W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
+  }
 };
 
 

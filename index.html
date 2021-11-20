@@ -33,8 +33,9 @@ onload = () => {
   W.pyramid({g:'shapes',x:0,y:-15,z:5,w:10,h:10,d:10,rx:90,b:brick,r:'lines'});
   W.billboard({n:'billboard1',x:15,y:-30,z:6,w:12,h:12,b:tree});
   W.group({n:'mariogroup',x:-10,y:-30});
-  W.mario({n:'mario1',g:'mariogroup',x:2,y:0,z:0,w:10,h:10,d:10,rx:0,rz:180,b:mario1});
+  W.mario({n:'mario1',g:'mariogroup',x:0,y:0,z:5,w:10,h:10,d:10,rx:0,rz:180,b:mario1});
   W.yoshi({n:'yoshi1',x:0,y:-38,z:0,w:10,h:10,d:10,rx:90,rz:180,b:yoshi});
+  
   W.camera({rx:60,z:20,x:6,y:-52,rz:20,t:2000}, 1000)
   W.move({n:'mariogroup',rz:60,t:2000}, 4000);
   W.move({n:'yoshi1',y:-30,rx:0,t:1000}, 4000);
