@@ -48,17 +48,19 @@ W = {
       
       `#version 300 es
       precision highp float;                  // Set default float precision
-      in vec4 pos, col, uv;                   // Vertex attributes: position, color, texture coordinates
+      in vec4 pos, col, uv, normal;           // Vertex attributes: position, color, texture coordinates, normal (if any)
       uniform mat4 pv, eye, m;                // Uniform transformation matrices: projection * view, eye, model
       uniform vec4 bb;                        // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
-      out vec4 v_pos, v_col, v_uv;            // Varyings sent to the fragment shader: position, color, texture coordinates
+      out vec4 v_pos, v_col, v_uv, v_normal;  // Varyings sent to the fragment shader: position, color, texture coordinates, normal (if any)
       void main() {
         gl_Position = pv * (                  // Set vertex position: p * v * v_pos
           v_pos = bb.z > 0.                   // Set v_pos varying:
           ? m[3] - eye * (pos * bb)           // Billboards always face the camera:  p * v * distance - eye * (position * [w, h, 1.0, 0.0])
           : m * pos                           // Other objects rotate normally:      p * v * m * position
         );
-        v_col = col, v_uv = uv;               // Set v_col and v_uv varyings 
+        v_col = col;                          // Set varyings 
+        v_uv = uv;
+        v_normal = normal;
       }`
     );
     
@@ -75,8 +77,9 @@ W = {
       
       `#version 300 es
       precision highp float;                  // Set default float precision
-      in vec4 v_pos, v_col, v_uv;             // Varyings received from the vertex shader: position, color, texture coordinates
-      uniform vec3 light;                     // Uniform: light direction
+      in vec4 v_pos, v_col, v_uv, v_normal;   // Varyings received from the vertex shader: position, color, texture coordinates, normal (if any)
+      uniform vec3 light;                     // Uniform: light direction, smooth normals enabled
+      uniform vec4 s;                    
       uniform sampler2D sampler;              // Uniform: 2D texture
       out vec4 c;                             // Output: final fragment color
 
@@ -87,7 +90,12 @@ W = {
         c = v_col.a > 0. ? v_col : texture(sampler, v_uv.xy);
 
         // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
-        c = vec4(c.rgb * (max(dot(light, normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);  
+        if(s[0] == 1.){
+          c = vec4(c.rgb * (max(dot(light, normalize(vec3(v_normal))), 0.0) + .2), c.a);
+        }
+        else {
+          c = vec4(c.rgb * (max(dot(light, normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);
+        }
       }`
     );
     
@@ -115,7 +123,7 @@ W = {
   },
 
   // Set a state to an object
-  setState: (state, type, texture, i, vertices) => {
+  setState: (state, type, texture, i, vertices = [], normal = [], A, B, C, Ai, Bi, Ci, AB, BC) => {
 
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
@@ -142,14 +150,45 @@ W = {
       W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].vertices), 35044 /*STATIC_DRAW*/); 
     }
     
-    // Build the model's uv buffer if it doesn't exist yet
+    // Build the model's uv buffer (if any) if it doesn't exist yet
     if(W.models[state.type]?.uv && !W.models[state.type].uvBuffer){
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].uvBuffer = W.gl.createBuffer());
       W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].uv), 35044 /*STATIC_DRAW*/); 
     }
     
-    // Compute the model's smooth normals if they don't exist yet
-    // TODO
+    // Build the model's index buffer (if any) and smooth normals if they don't exist yet
+    if(W.models[state.type]?.indices && !W.models[state.type].indicesBuffer){
+      W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[state.type].indicesBuffer = W.gl.createBuffer());
+      W.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(W.models[state.type].indices), 35044 /* STATIC_DRAW */);
+      
+      // COMPUTE SMOOTH NORMALS (optional)
+      // ---------------------------------
+      
+      // Prepare arrays
+      W.models[state.type].smoothNormals = [];
+      for(i = 0; i < W.models[state.type]?.vertices.length; i+=3){
+        vertices.push([W.models[state.type]?.vertices[i], W.models[state.type]?.vertices[i+1], W.models[state.type]?.vertices[i+2]]);
+        W.models[state.type].smoothNormals.push([0,0,0]);
+      }
+      
+      // Compute normals of each triangle and accumulate them for each vertex
+      for(i = 0; i < W.models[state.type]?.indices.length; i+=3){
+        A = vertices[Ai = W.models[state.type]?.indices[i]];
+        B = vertices[Bi = W.models[state.type]?.indices[i+1]];
+        C = vertices[Ci = W.models[state.type]?.indices[i+2]];
+        AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+        BC = [C[0] - B[0], C[1] - B[1], C[2] - B[2]];
+        normal = [AB[1] * BC[2] - AB[2] * BC[1], AB[2] * BC[0] - AB[0] * BC[2], AB[0] * BC[1] - AB[1] * BC[0]];
+        W.models[state.type].smoothNormals[Ai] = W.models[state.type].smoothNormals[Ai].map((a,i) => a + normal[i]);
+        W.models[state.type].smoothNormals[Bi] = W.models[state.type].smoothNormals[Bi].map((a,i) => a + normal[i]);
+        W.models[state.type].smoothNormals[Ci] = W.models[state.type].smoothNormals[Ci].map((a,i) => a + normal[i]);
+      }
+      
+      // Smooth normals buffer
+      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].smoothNormalsBuffer = W.gl.createBuffer());
+      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].smoothNormals.flat()), 35044 /*STATIC_DRAW*/); 
+      
+    }
     
     // Save new state
     W.next[state.n] = state;
@@ -279,14 +318,13 @@ W = {
         W.gl.enableVertexAttribArray(buffer);
       }
       
-      if(W.models[object.type].indices){
-        W.models[object.type].indicesBuffer = W.gl.createBuffer();
-        W.gl.bindBuffer(W.gl.ELEMENT_ARRAY_BUFFER, W.models[object.type].indicesBuffer);
-        W.gl.bufferData(W.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(W.models[object.type].indices), W.gl.STATIC_DRAW);
-      }
-      
       // Set the normals buffer
-      // TODO
+      if(object.s){
+        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].smoothNormalsBuffer);
+        W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'normal'), 3, 5126 /* FLOAT */, false, 0, 0);
+        W.gl.enableVertexAttribArray(buffer);
+      }
+      W.gl.uniform4f(W.gl.getUniformLocation(W.program, 's'), object.s == 1 ? 1 : 0, 0, 0, 0);
       
       // If the object is a billboard: send a specific uniform to the shaders:
       // [width, height, isBillboard = 1, 0]
@@ -297,6 +335,11 @@ W = {
         object.type == 'billboard',
         0
       );
+      
+      // Set up the indices (if any)
+      if(W.models[object.type].indicesBuffer){
+        W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[object.type].indicesBuffer);
+      }
 
       // Use a renderer (triangles by default)
       W.renderers[object.r || 'triangles'](object);
