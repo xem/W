@@ -60,7 +60,7 @@ W = {
         );
         v_col = col;                          // Set varyings 
         v_uv = uv;
-        v_normal = normal;
+        v_normal = transpose(inverse(m)) * normal;
       }`
     );
     
@@ -91,7 +91,7 @@ W = {
 
         // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
         if(s[0] == 1.){
-          c = vec4(c.rgb * (max(dot(light, normalize(vec3(v_normal.xy, -v_normal.z))), 0.0) + .2), c.a);
+          c = vec4(c.rgb * (max(dot(light, -normalize(vec3(v_normal.xyz))), 0.0) + .2), c.a);
         }
         else {
           c = vec4(c.rgb * (max(dot(light, -normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);
