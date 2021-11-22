@@ -16,7 +16,7 @@
 onload = () => {
   W.reset(canvas);
   W.camera({y:-5,z:85});
-  W.light({x:.2,y:-.5,z:.5});
+  W.light({x:0,y:0,z:-1});
   W.plane({n:'ground',w:50,h:80,z:-.5,b:'8d8'});
   W.group({n:'shapes'});
   W.cube({n:'cube',g:'shapes',x:-15,y:30,z:5,w:10,h:10,d:10,b:'68a'});
@@ -42,7 +42,7 @@ onload = () => {
   W.move({n:'yoshi1',y:-30,rx:0,t:1000}, 4000);
   //W.move({n:'mario1',b:mario2},6500);
   W.move({n:'shapes',rz:180,z:10,w:.5,h:.5,d:.5,t:3000}, 6500);
-  W.light({x:-.2,y:.5,z:.2,t:3000}, 6500);
+  //W.light({x:-.2,y:.5,z:.2,t:3000}, 6500);
   W.delete({n:'yoshi1'}, 6500);
 }
 
