@@ -1,6 +1,8 @@
 // WebGL framework
 // ===============
 
+debug = 1;
+
 W = {
   
   // List of 3D models that can be rendered by the framework
@@ -16,17 +18,12 @@ W = {
   reset: canvas => {
     
     // Globals
-    W.objs = 0;         // Object counter
-    W.current = {};     // Objects current states
-    W.next = {};        // Objects next states
-    W.textures = {};    // Textures list
-    W.perspective =     // Perspective matrix (fov: .5rad, aspect: width/height, near: 1, far: 1000)
-      new DOMMatrix([
-        1 / Math.tan(.5) / (canvas.width/canvas.height), 0, 0, 0, 
-        0, 1 / Math.tan(.5), 0, 0, 
-        0, 0, (900 + 1) * 1 / (1 - 900), -1,
-        0, 0, (2 * 1 * 900) * 1 / (1 - 900), 0
-      ]);
+    W.canvas = canvas;    // canvas element
+    W.objs = 0;           // Object counter
+    W.current = {};       // Objects current states
+    W.next = {};          // Objects next states
+    W.textures = {};      // Textures list
+    W.fov(.5);            // Set field of view angle (.5 rad)
 
     // WebGL context
     W.gl = canvas.getContext('webgl2');
@@ -49,7 +46,7 @@ W = {
       `#version 300 es
       precision highp float;                  // Set default float precision
       in vec4 pos, col, uv, normal;           // Vertex attributes: position, color, texture coordinates, normal (if any)
-      uniform mat4 pv, eye, m;                // Uniform transformation matrices: projection * view, eye, model
+      uniform mat4 pv, eye, m, im;            // Uniform transformation matrices: projection * view, eye, model, inverse model
       uniform vec4 bb;                        // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
       out vec4 v_pos, v_col, v_uv, v_normal;  // Varyings sent to the fragment shader: position, color, texture coordinates, normal (if any)
       void main() {
@@ -60,14 +57,14 @@ W = {
         );
         v_col = col;                          // Set varyings 
         v_uv = uv;
-        v_normal = transpose(inverse(m)) * normal;
+        v_normal = transpose(inverse(m)) * normal;               // recompute normals
       }`
     );
     
     // Compile the Vertex shader and attach it to the program
     W.gl.compileShader(t);
     W.gl.attachShader(W.program, t);
-    console.log('vertex shader:', W.gl.getShaderInfoLog(t) || 'OK');
+    if(debug) console.log('vertex shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
     // Create a Fragment shader
     // (This GLSL program is called for every fragment (pixel) of the scene)
@@ -102,12 +99,12 @@ W = {
     // Compile the Fragment shader and attach it to the program
     W.gl.compileShader(t);
     W.gl.attachShader(W.program, t);
-    console.log('fragment shader:', W.gl.getShaderInfoLog(t) || 'OK');
+    if(debug) console.log('fragment shader:', W.gl.getShaderInfoLog(t) || 'OK');
     
     // Compile the program
     W.gl.linkProgram(W.program);
     W.gl.useProgram(W.program);
-    console.log('program:', W.gl.getProgramInfoLog(W.program) || 'OK');
+    if(debug) console.log('program:', W.gl.getProgramInfoLog(W.program) || 'OK');
     
     // Set the scene's background color (RGBA)
     W.gl.clearColor(1, 1, 1, 1);
@@ -142,7 +139,9 @@ W = {
     // Save object's type,
     // merge previous state (or default state) with the new state passed in parameter,
     // and reset f (the transition timer)
-    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888'}), ...state, f:0};
+    console.log(state.mode);
+    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888', mode:4}), ...state, f:0};
+    console.log(state.mode);
     
     // Build the model's vertices buffer if it doesn't exist yet
     if(W.models[state.type]?.vertices && !W.models?.[state.type].verticesBuffer){
@@ -161,33 +160,8 @@ W = {
       W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[state.type].indicesBuffer = W.gl.createBuffer());
       W.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(W.models[state.type].indices), 35044 /* STATIC_DRAW */);
       
-      // COMPUTE SMOOTH NORMALS (optional)
-      // ---------------------------------
-      
-      // Prepare arrays
-      W.models[state.type].smoothNormals = [];
-      for(i = 0; i < W.models[state.type]?.vertices.length; i+=3){
-        vertices.push([W.models[state.type]?.vertices[i], W.models[state.type]?.vertices[i+1], W.models[state.type]?.vertices[i+2]]);
-        W.models[state.type].smoothNormals.push([0,0,0]);
-      }
-      
-      // Compute normals of each triangle and accumulate them for each vertex
-      for(i = 0; i < W.models[state.type]?.indices.length; i+=3){
-        A = vertices[Ai = W.models[state.type]?.indices[i]];
-        B = vertices[Bi = W.models[state.type]?.indices[i+1]];
-        C = vertices[Ci = W.models[state.type]?.indices[i+2]];
-        AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
-        BC = [C[0] - B[0], C[1] - B[1], C[2] - B[2]];
-        normal = [AB[1] * BC[2] - AB[2] * BC[1], AB[2] * BC[0] - AB[0] * BC[2], AB[0] * BC[1] - AB[1] * BC[0]];
-        W.models[state.type].smoothNormals[Ai] = W.models[state.type].smoothNormals[Ai].map((a,i) => a + normal[i]);
-        W.models[state.type].smoothNormals[Bi] = W.models[state.type].smoothNormals[Bi].map((a,i) => a + normal[i]);
-        W.models[state.type].smoothNormals[Ci] = W.models[state.type].smoothNormals[Ci].map((a,i) => a + normal[i]);
-      }
-      
-      // Smooth normals buffer
-      W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].smoothNormalsBuffer = W.gl.createBuffer());
-      W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].smoothNormals.flat()), 35044 /*STATIC_DRAW*/); 
-      
+      // Compute smooth normals (optional)
+      if(W.smooth) W.smooth(state, vertices);
     }
     
     // Save new state
@@ -303,6 +277,13 @@ W = {
       (W.next[object.n].M || W.next[object.n].m).toFloat32Array()
     );
     
+    // send the inverse of the model matrix to the vertex shader
+    W.gl.uniformMatrix4fv(
+      W.gl.getUniformLocation(W.program, 'im'),
+      false,
+      (new DOMMatrix(W.next[object.n].M || W.next[object.n].m)).invertSelf().toFloat32Array()
+    );
+    
     // Don't render invisible items (camera, light, groups)
     if(!['camera','light','group'].includes(object.type)){
       
@@ -319,12 +300,12 @@ W = {
       }
       
       // Set the normals buffer
-      if(object.s){
+      if(object.s && W.models[object.type].smoothNormalsBuffer){
         W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].smoothNormalsBuffer);
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'normal'), 3, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
-      W.gl.uniform4f(W.gl.getUniformLocation(W.program, 's'), object.s == 1 ? 1 : 0, 0, 0, 0);
+      W.gl.uniform4f(W.gl.getUniformLocation(W.program, 's'), object.s && W.models[object.type].smoothNormalsBuffer ? 1 : 0, 0, 0, 0);
       
       // If the object is a billboard: send a specific uniform to the shaders:
       // [width, height, isBillboard = 1, 0]
@@ -340,14 +321,45 @@ W = {
       if(W.models[object.type].indicesBuffer){
         W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[object.type].indicesBuffer);
       }
+      
+      //console.log(object.r);
+      
+      // Use a renderer (custom / default)
+      if(object.r){
+        W.renderers[object.r](object);
+      }
+      else {
+        // Set the color / texture
+        W.gl.vertexAttrib4fv(
+          W.gl.getAttribLocation(W.program, 'col'),
+          object.b.id ? [0,0,0,0] : [...[...object.b].map(a => ('0x' + a) / 16),
+          object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+        );
 
-      // Use a renderer (triangles by default)
-      W.renderers[object.r || 'triangles'](object);
+        // Draw (indexed / unindexed)
+        if(W.models[object.type].indicesBuffer){
+          W.gl.drawElements(+object.mode || W.gl[object.mode], W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
+        }
+        else {
+          W.gl.drawArrays(+object.mode || W.gl[object.mode], 0, W.models[object.type].vertices.length / 3);
+        }
+      }
     }
   },
   
   // Helpers
   // -------
+  
+  // Recompute perspective matrix (fov: custom, aspect: width/height, near: 1, far: 999)
+  fov: fov => {
+    W.perspective =     
+      new DOMMatrix([
+        1 / Math.tan(fov) / (W.canvas.width/W.canvas.height), 0, 0, 0, 
+        0, 1 / Math.tan(fov), 0, 0, 
+        0, 0, (999 + 1) * 1 / (1 - 999), -1,
+        0, 0, (2 * 1 * 999) * 1 / (1 - 999), 0
+      ]);
+  },
   
   // Interpolate a property between two values
   lerp: (item, property) => 
@@ -381,6 +393,34 @@ W = {
   light: (t, delay) => delay ? setTimeout(()=>{ W.setState(t, t.n = 'light') }, delay) : W.setState(t, t.n = 'light'),
 };
 
+// Smooth normals computation plug-in (optional)
+// =============================================
+
+W.smooth = (state, vertices) => {
+  // Prepare arrays
+  W.models[state.type].smoothNormals = [];
+  for(i = 0; i < W.models[state.type]?.vertices.length; i+=3){
+    vertices.push([W.models[state.type]?.vertices[i], W.models[state.type]?.vertices[i+1], W.models[state.type]?.vertices[i+2]]);
+    W.models[state.type].smoothNormals.push([0,0,0]);
+  }
+  
+  // Compute normals of each triangle and accumulate them for each vertex
+  for(i = 0; i < W.models[state.type]?.indices.length; i+=3){
+    A = vertices[Ai = W.models[state.type]?.indices[i]];
+    B = vertices[Bi = W.models[state.type]?.indices[i+1]];
+    C = vertices[Ci = W.models[state.type]?.indices[i+2]];
+    AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+    BC = [C[0] - B[0], C[1] - B[1], C[2] - B[2]];
+    normal = [AB[1] * BC[2] - AB[2] * BC[1], AB[2] * BC[0] - AB[0] * BC[2], AB[0] * BC[1] - AB[1] * BC[0]];
+    W.models[state.type].smoothNormals[Ai] = W.models[state.type].smoothNormals[Ai].map((a,i) => a + normal[i]);
+    W.models[state.type].smoothNormals[Bi] = W.models[state.type].smoothNormals[Bi].map((a,i) => a + normal[i]);
+    W.models[state.type].smoothNormals[Ci] = W.models[state.type].smoothNormals[Ci].map((a,i) => a + normal[i]);
+  }
+  
+  // Smooth normals buffer
+  W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].smoothNormalsBuffer = W.gl.createBuffer());
+  W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].smoothNormals.flat()), 35044 /*STATIC_DRAW*/); 
+}
 
 
 // 3D models
@@ -487,49 +527,3 @@ W.models.pyramid = {
   ]
 };
 W.pyramid = settings => W.setState(settings, 'pyramid');
-
-
-
-
-
-// Renderers
-// =========
-
-// Each rendered defines a way to draw a 3D model on the canvas
-// They support both indexed and unindexed draw calls
-
-// Default: TRIANGLES mode
-
-W.renderers.triangles = object => {
-  //console.log(object);
-  
-  // Set the color / texture
-  W.gl.vertexAttrib4fv(
-    W.gl.getAttribLocation(W.program, 'col'),
-    object.b.id ? [0,0,0,0] : [...[...object.b].map(a => ('0x' + a) / 16),
-    object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
-  );
-
-  // Draw
-  if(W.models[object.type].indicesBuffer){
-    W.gl.drawElements(4 /* TRIANGLES */, W.models[object.type].indices.length, W.gl.UNSIGNED_SHORT, 0);
-  }
-  else {
-    W.gl.drawArrays(4 /* TRIANGLES */, 0, W.models[object.type].vertices.length / 3);
-  }
-};
-
-
-// Optional: LINES mode
-
-W.renderers.lines = object => {
-  
-  // Set the color (blue)
-  W.gl.vertexAttrib4fv(
-    W.gl.getAttribLocation(W.program, 'col'),
-    [0,0,1,1]
-  );
-  
-  // Draw
-  W.gl.drawArrays(2 /* LINES */, 0, W.models[object.type].vertices.length / 3);
-}
