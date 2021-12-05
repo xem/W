@@ -1,8 +1,5 @@
 // WebGL framework
 // ===============
-
-debug = 1;
-
 W = {
   
   // List of 3D models that can be rendered by the framework
@@ -76,7 +73,7 @@ W = {
       precision highp float;                  // Set default float precision
       in vec4 v_pos, v_col, v_uv, v_normal;   // Varyings received from the vertex shader: position, color, texture coordinates, normal (if any)
       uniform vec3 light;                     // Uniform: light direction, smooth normals enabled
-      uniform vec4 s;                    
+      uniform vec4 s;                         // shading options
       uniform sampler2D sampler;              // Uniform: 2D texture
       out vec4 c;                             // Output: final fragment color
 
@@ -86,12 +83,14 @@ W = {
         // base color (rgba or texture)
         c = v_col.a > 0. ? v_col : texture(sampler, v_uv.xy);
 
-        // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
-        if(s[0] == 1.){
-          c = vec4(c.rgb * (max(dot(light, -normalize(vec3(v_normal.xyz))), 0.0) + .2), c.a);
-        }
-        else {
-          c = vec4(c.rgb * (max(dot(light, -normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);
+        if(s[1] > 0.){
+          // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
+          if(s[0] == 1.){
+            c = vec4(c.rgb * (max(dot(light, -normalize(vec3(v_normal.xyz))), 0.0) + .2), c.a);
+          }
+          else {
+            c = vec4(c.rgb * (max(dot(light, -normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + .2), c.a);
+          }
         }
       }`
     );
@@ -139,9 +138,7 @@ W = {
     // Save object's type,
     // merge previous state (or default state) with the new state passed in parameter,
     // and reset f (the transition timer)
-    console.log(state.mode);
     state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888', mode:4}), ...state, f:0};
-    console.log(state.mode);
     
     // Build the model's vertices buffer if it doesn't exist yet
     if(W.models[state.type]?.vertices && !W.models?.[state.type].verticesBuffer){
@@ -305,7 +302,20 @@ W = {
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'normal'), 3, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
-      W.gl.uniform4f(W.gl.getUniformLocation(W.program, 's'), object.s && W.models[object.type].smoothNormalsBuffer ? 1 : 0, 0, 0, 0);
+      
+      // Shading parameters: [smooth, disabled, 0, 0]
+      W.gl.uniform4f(
+
+        // Enable smooth shadibg if "s" is true
+        W.gl.getUniformLocation(W.program, 's'), object.s,
+        
+        // Enable shading if in TRIANGLES mode
+        object.mode > 3,
+        
+        // Reserved
+        0,
+        0
+      );
       
       // If the object is a billboard: send a specific uniform to the shaders:
       // [width, height, isBillboard = 1, 0]
@@ -322,8 +332,6 @@ W = {
         W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[object.type].indicesBuffer);
       }
       
-      //console.log(object.r);
-      
       // Use a renderer (custom / default)
       if(object.r){
         W.renderers[object.r](object);
@@ -336,7 +344,9 @@ W = {
           object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
         );
 
-        // Draw (indexed / unindexed)
+        // Draw
+        // Both indexed and unindexed models are supported.
+        // You can keep the "drawElements" only if all your models are indexed.
         if(W.models[object.type].indicesBuffer){
           W.gl.drawElements(+object.mode || W.gl[object.mode], W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
         }
@@ -397,6 +407,7 @@ W = {
 // =============================================
 
 W.smooth = (state, vertices) => {
+
   // Prepare arrays
   W.models[state.type].smoothNormals = [];
   for(i = 0; i < W.models[state.type]?.vertices.length; i+=3){
@@ -527,3 +538,10 @@ W.models.pyramid = {
   ]
 };
 W.pyramid = settings => W.setState(settings, 'pyramid');
+
+
+// Debug mode
+// ==========
+
+// Enable shader/program compilation logs (optional)
+debug = 1;

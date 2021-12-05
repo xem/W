@@ -16,7 +16,7 @@
 onload = () => {
   W.reset(canvas);
   W.camera({y:-5,z:85});
-  W.light({x:0,y:0,z:-1});
+  W.light({x:0.2,y:0,z:-1});
   W.plane({n:'ground',w:50,h:80,z:-.5,b:'8d8'});
   W.group({n:'shapes'});
   W.cube({n:'cube',g:'shapes',x:-15,y:30,z:5,w:10,h:10,d:10,b:'68a'});
@@ -28,9 +28,9 @@ onload = () => {
   W.cube({g:'shapes',x:-15,y:0,z:5,w:10,h:10,d:10,b:brick});
   W.plane({g:'shapes',x:15,y:0,z:5,w:10,h:10,rx:-90,b:brick});
   W.pyramid({g:'shapes',x:0,y:0,z:5,w:10,h:10,d:10,rx:90,b:brick});
-  W.cube({g:'shapes',x:-15,y:-15,z:5,w:10,h:10,d:10,b:brick,mode:'LINE_LOOP'});
-  W.plane({g:'shapes',x:15,y:-15,z:5,w:10,h:10,rx:-90,b:brick,mode:'LINE_LOOP'});
-  W.pyramid({g:'shapes',x:0,y:-15,z:5,w:10,h:10,d:10,rx:90,b:brick,mode:'LINE_LOOP'});
+  W.cube({g:'shapes',x:-15,y:-15,z:5,w:10,h:10,d:10,b:'f00',mode:"LINE_LOOP"});
+  W.plane({g:'shapes',x:15,y:-15,z:5,w:10,h:10,rx:-90,b:'0f0',mode:'LINE_LOOP'});
+  W.pyramid({g:'shapes',x:0,y:-15,z:5,w:10,h:10,d:10,rx:90,b:'00f',mode:'LINE_LOOP'});
   W.billboard({n:'billboard1',x:15,y:-30,z:6,w:12,h:12,b:tree});
   W.group({n:'mariogroup',x:-10,y:-30});
   W.mario({n:'mario1',g:'mariogroup',x:0,y:0,z:5,w:10,h:10,d:10,rx:0,rz:180,b:mario1,s:1});
