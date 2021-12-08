@@ -15,17 +15,17 @@
 <script style='display:block;width:810px;background:#555;color:#fff;font:15px/20px courier; padding:0 20px;white-space:pre'>
 onload = () => {
   W.reset(canvas);
-  W.camera({z:20});
+  W.camera({z:30});
   W.light({x:0,y:0,z:-1});
-  W.mario({n:'mario1',x:5,y:0,z:5,w:10,h:10,d:10,rx:-90,ry:0,b:mario1,s:1});
-  W.mario({n:'mario2',x:-5,y:0,z:5,w:10,h:10,d:10,rx:-90,ry:0,b:mario1,s:0});
-  W.move({n:'mario1',ry:360,t:3000},1000);
-  W.move({n:'mario2',ry:360,t:3000},1000);
-  W.light({x:1,y:0,z:0},5000);
-  W.move({n:'mario1',ry:720,t:3000},5500);
-  W.move({n:'mario2',ry:720,t:3000},5500);
-  W.move({n:'mario1',ry:1080,t:3000, mode:"LINE_LOOP"},9000);
-  W.move({n:'mario2',ry:1080,t:3000, mode:"LINES"},9000);
+  W.cube({n:'mario1',x:7,y:0,z:5,w:10,h:10,d:10,rx:-90,ry:0,b:mario1,s:1});
+  W.cube({n:'mario2',x:-7,y:0,z:5,w:10,h:10,d:10,rx:-90,ry:0,b:mario1,s:0});
+  W.move({n:'mario1',ry:360,t:5000},1000);
+  W.move({n:'mario2',ry:360,t:5000},1000);
+  W.light({x:1,y:0,z:0, t:500},7000);
+  W.move({n:'mario1',rx:360,t:5000},7500);
+  W.move({n:'mario2',rx:360,t:5000},7500);
+  //W.move({n:'mario1',ry:1080,t:3000, mode:"LINE_LOOP"},9000);
+  //W.move({n:'mario2',ry:1080,t:3000, mode:"LINES"},9000);
 }
 
 </script>

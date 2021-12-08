@@ -124,6 +124,9 @@ W = {
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
     
+    // Size sets w, h and d at once (optional)
+    if(state.size) state.w = state.h = state.d = state.size;
+    
     // If a new texture is provided, build it and save it in W.textures
     if(state.b && state.b.id && state.b.width && !W.textures[state.b.id]){
       texture = W.gl.createTexture();
@@ -538,6 +541,33 @@ W.models.pyramid = {
   ]
 };
 W.pyramid = settings => W.setState(settings, 'pyramid');
+
+
+// Sphere (no texture)
+//
+//      ---
+//    /     \
+//   |   x   |
+//    \     /
+//      ---
+
+((i, ai, j, aj, p1, p2, vertices = [], indices = [], uv = [], precision = 25) => {
+  for (j = 0; j <= precision; j++) {
+    aj = j * Math.PI / precision;
+    for (i = 0; i <= precision; i++) {
+      ai = i * 2 * Math.PI / precision;
+      vertices.push(Math.sin(ai) * Math.sin(aj), Math.cos(aj), Math.cos(ai) * Math.sin(aj));
+      uv.push(Math.sin(ai/2), Math.cos(aj/2))
+      if(i < precision && j < precision){
+        p1 = j * (precision+1) + i;
+        p2 = p1 + (precision+1);
+        indices.push(p1, p2, (p1 + 1), (p1 + 1), p2, (p2 + 1));
+      }
+    }
+  }
+  W.models.sphere = {vertices, uv, indices};
+})();
+W.sphere = settings => W.setState(settings, 'sphere');
 
 
 // Debug mode
