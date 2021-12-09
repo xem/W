@@ -14,20 +14,37 @@
 
 <center>
 <h1>W</h1>
-<h2>A micro WebGL framework</h2>
+<h2>A micro WebGL2 framework</h2>
+
+<h3>Features</h3>
+<br>
+
+<ul>
+<li>Built-in 3D models
+<li>Custom 3D models (OBJ)
+<li>Groups
+<li>Colors, textures, transparency
+<li>Animation
+<li>Custom rendering
+<li>Camera control
+<li>Light control
+<li>Flat, smooth shading
+<li>And more!
+</ul>
 </center>
 
-<h3>Download</h3>
+<h3>Download</h3> <span>(v.1.0)</span>
+<br>
 <div id=dl>
 <a href="webglgramework.js" download>Commented, full<br>(21kb)</a>
 <a href="w.min.js" download>Minified, full<br>(7.6kb, 2.38kb zipped)</a>
-<a href="w.lite.js" download>Minified, lite<br>(5.4kb, 1.87kb zipped)</a>
+<a href="w.lite.js" download>Minified, lite<br>(5.4kb, 1.87kb zipped)<br><sub>No built-in models/smooth shading</sub></a>
 <p>or load it in HTML:
 <pre class=language-html><code>&lt;script src=//xem.github.io/W/W.min.full.js>&lt;/script></code></pre>
 </div>
 
 <h3>API</h3>
-
+<br>
 <pre id=api class=language-js><code>// Start program
 W.reset(canvasElement);
 
@@ -43,20 +60,20 @@ W.light({x, y, z}, delay)
 // Create a group of objects (optional): name, position, rotation
 W.group({n, x, y, z, rx, ry, rz});
 
-// Add an object: group, name, size (or w/h/d), position, rotation, background (rgb/texture), smoothing (boolean)
-// The following shapes and smoothing method are only present in the full version
-W.plane({g, n, size, x, y, z, rx, ry, rz, b});
-W.billboard({g, n, size, x, y, z, b});
-W.cube({g, n, size, x, y, z, rx, ry, rz, b});
-W.pyramid({g, n, size, x, y, z, rx, ry, rz, b});
-W.sphere({g, n, size, x, y, z, rx, ry, rz, b, s});
+// Draw an object
+// Settings: {g, n, size (or w/h/d), x, y, z, rx, ry, rz, b, s, mode, ...}
+W.plane(settings);
+W.billboard(settings);
+W.cube(settings);
+W.pyramid(settings);
+W.sphere(settings);
 
 // Load and display a custom 3D model (see the OBJ file loader below)
 W.models["custom_name"] = { vertices, uv, indices };
 W["custom_name"] = settings => W.setState(settings, "custom_name");
 W.custom_name({g, n, size, x, y, z, rx, ry, rz, b, s});
 
-// Move/resize an object or a group: name, position, rotation, transition, delay
+// Move/resize an object: name, position, rotation, transition, delay
 W.move({n, x, y, z, rx, ry, rz, t}, delay);
 
 // Delete an element: name, delay
@@ -64,7 +81,8 @@ W.delete(n, delay);
 </code></pre>
 
 <h3>Examples</h3>
- 
+<br>
+
 <br>
 <br>
 <center>
@@ -107,13 +125,16 @@ onload = () => {
 
 <style>
 * { box-sizing: border-box }
-body { font-family: calibri, arial; }
-h1 { font-family: 'Zen Tokyo Zoo', cursive; font-weight: normal; font-size: 100px; line-height: 40px; margin: 80px 0 0; }
-h3 { text-align: center; text-decoration: underline; margin: 40px 0; }
-#dl { text-align: center; width: calc(3 * 185px); margin: auto; }
-#dl a { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 170px; height: 105px; display: inline-block; vertical-align: top; text-decoration: none; color: #000; padding: 25px 0 0; margin: 5px; background: #f8f8f8; }
-#dl pre { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: calc(3 * 180px); padding: 5px; margin: 15px auto 5px; text-align: center; }
-pre#api { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 900px; padding: 10px; margin: 15px auto 5px; font-size: 14px; }
+body { font-family: calibri, arial; text-align: center; }
+h1 { font-family: 'Zen Tokyo Zoo', cursive; font-weight: normal; font-size: 100px; line-height: 40px; margin: 80px 0 30px; }
+h2 { margin: 5px }
+h3 { text-align: center; text-decoration: underline; margin: 40px 0; display: inline-block; }
+#dl { text-align: center; width: 660px; margin: auto; }
+#dl a { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 205px; height: 105px; display: inline-block; vertical-align: top; text-decoration: none; color: #000; padding: 25px 0 0; margin: 5px; background: #f8f8f8; }
+#dl pre { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 650px; padding: 5px; margin: 15px auto 5px; text-align: center; }
+pre#api { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 650px; padding: 10px; margin: 15px auto 5px; font-size: 14px; }
+ul { width: 550px; columns: 2; text-align: left; margin: 30px auto; padding: 0 0 0 80px}
+sub { display: block; font-size: 12px; margin: 4px 0 0; }
 
 /* PrismJS 1.25.0
 https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript */
