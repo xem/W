@@ -1,0 +1,83 @@
+<!doctype html>
+<script src='../webglframework.js'></script>
+<table>
+<tr>
+<td>
+<canvas id=c width=500 height=380 style='border:1px solid'></canvas>
+<div style="font:25px arial;color:red;position:fixed;top:235px;left:380px">X</div>
+<div style="font:25px arial;color:green;position:fixed;top:25px;left:190px">Y</div>
+<div style="font:25px arial;color:blue;position:fixed;top:330px;left:75px">Z</div>
+<div style="font:25px arial;color:black;position:fixed;top:270px;left:200px">0</div>
+
+<td>
+<p><b>Camera</b>
+<p>
+x <input type=range id=cx min=-10 max=10 value=0>
+<br>
+y <input type=range id=cy min=-10 max=10 value=0>
+<br>
+z <input type=range id=cz min=-10 max=10 value=0>
+<br>
+rx <input type=range id=crx min=-90 max=90 value=0>
+<br>
+ry <input type=range id=cry min=-90 max=90 value=0>
+<br>
+rz <input type=range id=crz min=-90 max=90 value=0>
+<br>
+FoV <input type=range id=fov min=.1 max=.9 value=.5 step=.01>
+<p><b>Light direction</b>
+<p>
+x <input type=range id=lx min=-1 max=1 value=0 step=.01>
+<br>
+y <input type=range id=ly min=-1 max=1 value=-1 step=.01>
+<br>
+z <input type=range id=lz min=-1 max=1 value=0 step=.01>
+<br>
+<p><b>Clear color</b>
+<p><input type=color id=clear value="#ffffff">
+</table>
+
+
+<script>
+W.reset(c);
+W.camera({x:9,y:8,z:20,rx:-15,ry:15});
+W.cube({x:5,w:10,h:.5,d:.5,b:"f44"});
+W.cube({y:5,h:10,w:.5,d:.5,b:"4f4"});
+W.cube({z:5,d:10,w:.5,h:.5,b:"44f"});
+W.pyramid({size:1,x:10,rz:-90,b:"f44"});
+W.pyramid({size:1,y:10,b:"4f4"});
+W.pyramid({size:1,z:10,rx:90,b:"44f"});
+W.group({n:"cam"});
+W.cube({g:"cam",w:2,h:2,d:4});
+W.pyramid({g:"cam",w:3,h:2,d:3,z:-3,rx:90});
+W.models.pyramid2 = {
+  vertices: [
+    -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
+     .5, -.5, .5,    .5, -.5,-.5,  0, .5, 0,  // Right
+     .5, -.5,-.5,   -.5, -.5,-.5,  0, .5, 0,  // Back
+    -.5, -.5,-.5,   -.5, -.5, .5,  0, .5, 0,  // Left
+  ],
+  uv: [
+     0, 0,   1, 0,  .5, 1,  // Front
+     0, 0,   1, 0,  .5, 1,  // Right
+     0, 0,   1, 0,  .5, 1,  // Back
+     0, 0,   1, 0,  .5, 1,  // Left
+  ]
+};
+W.pyramid2 = settings => W.setState(settings, 'pyramid2');
+
+W.pyramid2({n:"frustum",g:"cam",w:20,h:40,d:15,z:-24,rx:90,mode:"LINE_LOOP"});
+
+onchange = oninput = () => {
+  W.gl.clearColor(('0x' + clear.value[1]) / 15,('0x' + clear.value[3]) / 15,('0x' + clear.value[5]) / 15, 1);
+  W.move({n:"cam",x:+cx.value,y:+cy.value,z:+cz.value,rx:+crx.value,ry:+cry.value,rz:+crz.value});
+  W.move({n:"frustum",w:40*(+fov.value),d:40*(+fov.value)});
+  W.light({x:+lx.value,y:+ly.value,z:+lz.value});
+}
+</script>
+
+<style>
+body { font-family: calibri; }
+input[type="range"] { width: 150px; position: absolute; left: 60px; }
+td+td { padding: 0 0 0 20px; vertical-align: top; position: relative;  }
+</style>

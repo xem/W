@@ -1,22 +1,21 @@
 <!doctype html>
 <script src="parse.js"></script>
 <h2>OBJ to WebGL buffer converter</h2>
-<b>OBJ file</b>: <button id=mario>Mario</button> <button id=yoshi>Yoshi</button> <button id=coin>Coin block (no texture)</button>  <button id=cube>Cube (no texture)</button> or <input type=file id=obj>
+<b>OBJ file</b>: <button id=mario>Mario</button> <button id=yoshi>Yoshi</button> <button id=coin>Coin block (no texture)</button>  <button id=cube>Cube (no uv)</button> <button id=wolf>Wolf</button> or <input type=file id=obj>
 <p><b>Options</b>: float range <input type=number value=10 id=scale onchange="convert()" oninput="convert()" min=1>, 
 max decimals (vertices): <input type=number value=2 id=round1 onchange="convert()" oninput="convert()" min=0 max=10>, 
 max decimals (textures): <input type=number value=2 id=round2 onchange="convert()" oninput="convert()" min=1 max=10>,
-Unicode precision: <input type=number value=127 id=unicode onchange="convert()" oninput="convert()" min=1>
+Unicode precision: <input type=number value=127 id=unicode onchange="convert()" oninput="convert()" min=1>, <input type=checkbox checked id=indexed onchange="convert()"> Indexed
+<input type=checkbox id=s onchange="convert()"> Smooth
 <img src="mario.png" id=texture hidden>
 <p>
 <table>
-<tr><th>Unindexed: original (<i id=outoriginali>0 bytes</i>)<th>floats (<i id=out1i>0 bytes</i>)<th>Unicode (<i id=out2i>0 bytes</i>)
-<tr><td><textarea id=outoriginal rows=20></textarea><td><textarea id=out1 rows=20></textarea><td><textarea id=out2 rows=20></textarea>
-<tr><th>Indexed: original (<i id=outoriginalindexedi>0 bytes</i>)<th>floats (<i id=out3i>0 bytes</i>)<th>Unicode (<i id=out4i>0 bytes</i>)
-<tr><td><textarea id=outoriginalindexed rows=20></textarea><td><textarea id=out3 rows=20></textarea><td><textarea id=out4 rows=20></textarea>
+<tr><th>Original (<i id=out1i>0 bytes</i>)<th>floats (<i id=out3i>0 bytes</i>)<th>Unicode (<i id=out4i>0 bytes</i>)
+<tr><td><textarea id=out1 rows=20></textarea><td><textarea id=out3 rows=20></textarea><td><textarea id=out4 rows=20></textarea>
 <tr><th colspan=3>Preview: original / floats / Unicode
 <tr><td colspan=3><center><canvas id=a width=900 height=350></canvas>
 </table>
-<center>Original = direct copy of the OBJ values. Floats / Unicode = centered vertices + lossy compression
+<center>Original: direct copy of the OBJ values. Floats / Unicode: vertices centered on the origin + lossy compression + model size = 1
 
 <script>
 gl = a.getContext("webgl2");
@@ -30,144 +29,101 @@ convert = () => {
     
     parseOBJ(file).then(x=>{
       size = x[1].size;
-      //console.log(z=x, +scale.value, size);
+      console.log(z=x);
+      console.log(z[0].groups[0]);
+      
+      if(!indexed.checked){
+      
+        s.checked = false;
       
       
       
-      // original unindexed
-      outoriginal.innerHTML = `W.models["${name}_original"] = {
+        // original unindexed
+        out1.innerHTML = `W.models["${name}_original"] = {
   vertices: [${x[0].groups[0].originalv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+x).join(",") + "]") : ""}
-};
-W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
-      outoriginal.innerHTML = outoriginal.innerHTML.replace(/(\D)0\./g,"$1.");
-      outoriginali.innerHTML = new Intl.NumberFormat("en-US").format(outoriginal.innerHTML.length) + " bytes";
+  };
+  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+        out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
+        out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
       
-      
-      
-      // same centered and resized (for the demo)
-      originalcentered = `W.models["${name}_original"] = {
+
+        // same centered and resized (for the demo)
+        originalcentered = `W.models["${name}_original"] = {
   vertices: [${x[0].groups[0].v.map(x=>+((x/size))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x))).join(",") + "]") : ""}
-};
-W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
-      
-      
+  };
+  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
       
       // float unindexed
-      out1.innerHTML = `W.models["${name}"] = {
-  vertices: [${x[0].groups[0].v.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""}
-};
-W["${name}"] = settings => W.setState(settings, "${name}");`;
-      out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
-      out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
-      
-      
-      
-      // unicode unindexed
-      out2.innerHTML = `W.models["${name}_txt"] = {
-  vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "]'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""}
-};
-W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
-      out2i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out2.innerHTML)).length) + " bytes";
-      
-     // TODO
-      
-      
-    // original indexed
-    outoriginalindexed.innerHTML = `W.models["${name}_original"] = {
-  vertices: [${x[0].groups[0].indexv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+x).join(",") + "]") : ""},
-  indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
-};
-W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
-      outoriginalindexed.innerHTML = outoriginalindexed.innerHTML.replace(/(\D)0\./g,"$1.");
-      outoriginalindexedi.innerHTML = new Intl.NumberFormat("en-US").format(outoriginalindexed.innerHTML.length) + " bytes";
-      
-      
-      // float indexed
       out3.innerHTML = `W.models["${name}"] = {
-  vertices: [${x[0].groups[0].indexv.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""},
-  indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
+  vertices: [${x[0].groups[0].v.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""}
 };
 W["${name}"] = settings => W.setState(settings, "${name}");`;
       out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
       out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
       
-      
-      
-      // unicode indexed
+      // unicode unindexed
       out4.innerHTML = `W.models["${name}_txt"] = {
+  vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "]'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""}
+};
+W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
+      out4i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out4.innerHTML)).length) + " bytes";
+    }
+    
+    else {
+      
+      // original indexed
+      out1.innerHTML = `W.models["${name}_original"] = {
+  vertices: [${x[0].groups[0].indexoriginalv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+x).join(",") + "]") : ""},
+  indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
+  };
+  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+        out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
+        out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
+        
+        // Original indexed centered  (for the demo)
+        originalindexedcentered = `W.models["${name}_original"] = {
+  vertices: [${x[0].groups[0].indexv.map(x=>+(x/size)).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+x).join(",") + "]") : ""},
+  indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
+  };
+  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+        originalindexedcentered = originalindexedcentered.replace(/(\D)0\./g,"$1.");
+        
+        
+        // float indexed
+        out3.innerHTML = `W.models["${name}"] = {
+  vertices: [${x[0].groups[0].indexv.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""},
+  indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
+  };
+  W["${name}"] = settings => W.setState(settings, "${name}");`;
+        out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
+        out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
+        
+        
+        
+        // unicode indexed
+        out4.innerHTML = `W.models["${name}_txt"] = {
   vertices: [...'${x[0].groups[0].indexv.map(x=>String.fromCharCode((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].indexvt.map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""},
-  indices: [...'${x[0].groups[0].indices.map(x=>String.fromCodePoint(x)).join("")}'].map(a=>(a.codePointAt())})
+  indices: [${x[0].groups[0].indices.join(",")}]
 };
 W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       out4.innerHTML = out4.innerHTML.replace(/(\D)0\./g,"$1.");
       out4i.innerHTML = new Intl.NumberFormat("en-US").format(out4.innerHTML.length) + " bytes";
-      
-     /* 
-      
-      
-      
-      
-      
-      out3.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      out3.innerHTML += x[0].groups[0].indexv.map(x=>+((x*scale.value/size).toFixed(round1.value))).join(",");
-      out3.innerHTML += `].map(x=>x/${scale.value}-.5)), 35044);`;
-      if(x[0].groups[0].indexvt.length){
-      out3.innerHTML += `
-  gl.bindBuffer(34962, W.texCoords["${name}"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([`;
-      out3.innerHTML += x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",");
-      out3.innerHTML += `]), 35044);`;
-      }
-      out3.innerHTML += `\nW["${name}"]=t=>{t.T="${name}";W.i(t)}
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, W.indices["${name}"] = gl.createBuffer());
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([`
-      out3.innerHTML += x[0].groups[0].indices.map(x=>+x).join(",");
-      out3.innerHTML += `]), gl.STATIC_DRAW);`;
-      out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
-      out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
-     
-     
-      out4.innerHTML = `gl.bindBuffer(34962, W.vertices["${name}_txt"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([...`;
-      out4.innerHTML += x[0].groups[0].indexv.map(x=>String.fromCharCode((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
-      out4.innerHTML += `'
-  ].map(a=>(a.codePointAt())/${unicode.value}-.5)
-  ), 35044);`;
-      if(x[0].groups[0].indexvt.length){
-      out4.innerHTML += `
-  gl.bindBuffer(34962, W.texCoords["${name}_txt"] = gl.createBuffer());
-  gl.bufferData(34962, new Float32Array([...`;
-      
-      out4.innerHTML += x[0].groups[0].indexvt.map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("");
-      
-      out4.innerHTML += `'
-  ].map(a=>(a.codePointAt())/${unicode.value})
-  ), 35044);`;
-      }
-      out4.innerHTML += `\nW["${name}_txt"]=t=>{t.T="${name}_txt";W.i(t)}
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, W.indices["${name}_txt"] = gl.createBuffer());
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([...`
-      
-      out4.innerHTML += x[0].groups[0].indices.map(x=>String.fromCodePoint(x)).join("");
-      
-      out4.innerHTML += `].map(a=>a.codePointAt())), gl.STATIC_DRAW);`;
-      out4.innerHTML = out4.innerHTML.replace(/(\D)0\./g,"$1.");
-      out4i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out4.innerHTML)).length) + " bytes";
-      */
+  }
+
       //console.log(out1.value);
-      eval(originalcentered);
-      eval(out1.value);
-      eval(out2.value);
+      //eval(originalcentered);
+      eval(originalindexedcentered);
+      eval(out3.value);
+      eval(out4.value);
       //console.log(W.mario);
       W.camera({x:0,z:60});
-      W.light({x:0,y:.8,z:.8});
+      W.light({x:0,y:.8,z:-.8});
       W.group({n:"g0", x:-45});
       W.group({n:"g1", x:0});
       W.group({n:"g2", x:45});
-      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
-      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
-      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture});
+      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
+      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
+      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
       //setTimeout(()=>{
         W.move({n:"g0",rx:3600,rz:3600,t:100000});
         W.move({n:"g1",rx:3600,rz:3600,t:100000});
@@ -203,6 +159,12 @@ cube.onclick = async () => {
   convert();
 }
 
+wolf.onclick = async () => {
+  name = "wolf";
+  file = await(await fetch("wolf.obj")).text();
+  convert();
+}
+
 obj.onload = obj.oninput = () => {
   if (obj.files && obj.files[0]) {
     var myFile = obj.files[0];
@@ -220,9 +182,10 @@ obj.onload = obj.oninput = () => {
 </script>
 <style>
 body { font-family: arial; font-size: 11px; }
-textarea { width: 31vw; height: calc((100vh - 390px - 17em)/2); font-size: 10px;line-height: 9px }
+textarea { width: 31vw; height: calc((100vh - 390px - 17em)); font-size: 10px;line-height: 9px }
 input, button { font-size: 11px; }
 #round1, #round2, #scale, #unicode { width: 35px }
-canvas { border: 1px solid }
+canvas { border: 1px solid; max-width: 98vw; }
+#indexed:not(:checked) ~ #s { cursor: not-allowed }
 </style>
 <script src="../webglframework.js"></script>

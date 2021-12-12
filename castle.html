@@ -31,7 +31,7 @@ map = [
 onload = () => {
   W.reset(canvas);
   W.gl.clearColor(0,0,0,1);
-  W.light({x:.5,y:1,z:.8});
+  W.light({x:.5,y:-.5,z:-.8});
   W.camera({x:9,y:20,rx:-35,z:25});
   W.group({n:'g1'});
   i = 0;
@@ -53,13 +53,14 @@ onload = () => {
     W.pyramid({g:'g1',x:[30,30,30.5,8,52,58,3][i]/4+1,z:[0,0,0,12,12,-6,-6][i]/4+2,y:[25,37,47,25,25,25,25][i]/4+2,w:[13,5,3,2,2,3,3][i],d:[8,4,3,2,2,3,3][i],h:2,b:'b31'});
   }
   
-  W.mario({g:'g1',x:8,z:10,w:2,h:2,d:2,y:2,rx:-90,ry:180,b:mario});
+  W.mario({g:'g1',x:8,z:10,w:2,h:2,d:2,y:3,rx:-90,ry:180,b:mario});
   W.yoshi({g:'g1',x:5,z:4,w:2,h:2,d:2,y:8,rx:0,ry:180,b:yoshi});
   
   t = 0;
   setInterval(()=>{
     t+=.1;
     W.move({n:'g1',ry:Math.cos(t/5)*25});
+    W.setPerspective(.5 + Math.sin(t/5)/10);
   },16);
 }
 
