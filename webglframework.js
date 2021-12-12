@@ -1,5 +1,8 @@
 // WebGL framework
 // ===============
+
+debug = 1; // Enable shader/program compilation logs (optional)
+
 W = {
   
   // List of 3D models that can be rendered by the framework
@@ -113,7 +116,7 @@ W = {
     W.gl.enable(2929 /* DEPTH_TEST */);
     
     // When everything is loaded: set default light / camera, and draw the scene
-    W.light({y: 1});
+    W.light({y: -1});
     W.camera({});
     W.draw();
   },
@@ -343,8 +346,9 @@ W = {
         // Set the color / texture
         W.gl.vertexAttrib4fv(
           W.gl.getAttribLocation(W.program, 'col'),
-          object.b.id ? [0,0,0,0] : [...[...object.b].map(a => ('0x' + a) / 16),
-          object.b.id ? 0 : 1] // convert rgb hex string into 3 values between 0 and 1, if a == 0, we use a texture instead
+          object.b.id ? 
+          [0,0,0,0] : // if the texture exists; send color [0 0 0 0]
+          [...[...object.b].map(a => ('0x' + a) / 15),  object.b.id ? 0 : 1] // else convert rgb(a) hex string into 3 or 4 values between 0 and 1
         );
 
         // Draw
@@ -464,8 +468,8 @@ W.models.plane = W.models.billboard = {
   ],
   
   uv: [
-    1, 0,     0, 0,    0, 1,
-    1, 0,     0, 1,    1, 1
+    0, 0,     1, 0,    1, 1,
+    0, 0,     1, 1,    0, 1
   ],
 };
 W.plane = settings => W.setState(settings, 'plane');
@@ -568,10 +572,3 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
   W.models.sphere = {vertices, uv, indices};
 })();
 W.sphere = settings => W.setState(settings, 'sphere');
-
-
-// Debug mode
-// ==========
-
-// Enable shader/program compilation logs (optional)
-debug = 1;
