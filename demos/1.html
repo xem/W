@@ -39,40 +39,42 @@ z <input type=range id=lz min=-1 max=1 value=0 step=.01>
 
 
 <script>
-W.reset(c);
-W.camera({x:9,y:8,z:20,rx:-15,ry:15});
-W.cube({x:5,w:10,h:.5,d:.5,b:"f44"});
-W.cube({y:5,h:10,w:.5,d:.5,b:"4f4"});
-W.cube({z:5,d:10,w:.5,h:.5,b:"44f"});
-W.pyramid({size:1,x:10,rz:-90,b:"f44"});
-W.pyramid({size:1,y:10,b:"4f4"});
-W.pyramid({size:1,z:10,rx:90,b:"44f"});
-W.group({n:"cam"});
-W.cube({g:"cam",w:2,h:2,d:4});
-W.pyramid({g:"cam",w:3,h:2,d:3,z:-3,rx:90});
-W.models.pyramid2 = {
-  vertices: [
-    -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
-     .5, -.5, .5,    .5, -.5,-.5,  0, .5, 0,  // Right
-     .5, -.5,-.5,   -.5, -.5,-.5,  0, .5, 0,  // Back
-    -.5, -.5,-.5,   -.5, -.5, .5,  0, .5, 0,  // Left
-  ],
-  uv: [
-     0, 0,   1, 0,  .5, 1,  // Front
-     0, 0,   1, 0,  .5, 1,  // Right
-     0, 0,   1, 0,  .5, 1,  // Back
-     0, 0,   1, 0,  .5, 1,  // Left
-  ]
-};
-W.pyramid2 = settings => W.setState(settings, 'pyramid2');
+onload = () => {
+  W.reset(c);
+  W.camera({x:9,y:8,z:20,rx:-15,ry:15});
+  W.cube({x:5,w:10,h:.5,d:.5,b:"f44"});
+  W.cube({y:5,h:10,w:.5,d:.5,b:"4f4"});
+  W.cube({z:5,d:10,w:.5,h:.5,b:"44f"});
+  W.pyramid({size:1,x:10,rz:-90,b:"f44"});
+  W.pyramid({size:1,y:10,b:"4f4"});
+  W.pyramid({size:1,z:10,rx:90,b:"44f"});
+  W.group({n:"cam"});
+  W.cube({g:"cam",w:2,h:2,d:4});
+  W.pyramid({g:"cam",w:3,h:2,d:3,z:-3,rx:90});
+  W.models.pyramid2 = {
+    vertices: [
+      -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
+       .5, -.5, .5,    .5, -.5,-.5,  0, .5, 0,  // Right
+       .5, -.5,-.5,   -.5, -.5,-.5,  0, .5, 0,  // Back
+      -.5, -.5,-.5,   -.5, -.5, .5,  0, .5, 0,  // Left
+    ],
+    uv: [
+       0, 0,   1, 0,  .5, 1,  // Front
+       0, 0,   1, 0,  .5, 1,  // Right
+       0, 0,   1, 0,  .5, 1,  // Back
+       0, 0,   1, 0,  .5, 1,  // Left
+    ]
+  };
+  W.pyramid2 = settings => W.setState(settings, 'pyramid2');
 
-W.pyramid2({n:"frustum",g:"cam",w:20,h:40,d:15,z:-24,rx:90,mode:"LINE_LOOP"});
+  W.pyramid2({n:"frustum",g:"cam",w:20,h:40,d:15,z:-24,rx:90,mode:"LINE_LOOP"});
 
-onchange = oninput = () => {
-  W.gl.clearColor(('0x' + clear.value[1]) / 15,('0x' + clear.value[3]) / 15,('0x' + clear.value[5]) / 15, 1);
-  W.move({n:"cam",x:+cx.value,y:+cy.value,z:+cz.value,rx:+crx.value,ry:+cry.value,rz:+crz.value});
-  W.move({n:"frustum",w:40*(+fov.value),d:40*(+fov.value)});
-  W.light({x:+lx.value,y:+ly.value,z:+lz.value});
+  onchange = oninput = () => {
+    W.gl.clearColor(('0x' + clear.value[1]) / 15,('0x' + clear.value[3]) / 15,('0x' + clear.value[5]) / 15, 1);
+    W.move({n:"cam",x:+cx.value,y:+cy.value,z:+cz.value,rx:+crx.value,ry:+cry.value,rz:+crz.value});
+    W.move({n:"frustum",w:40*(+fov.value),d:40*(+fov.value)});
+    W.light({x:+lx.value,y:+ly.value,z:+lz.value});
+  }
 }
 </script>
 

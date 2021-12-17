@@ -1,0 +1,38 @@
+<!doctype html>
+<script src='../w.js'></script>
+<table>
+<tr>
+<td>
+<canvas id=c2 width=500 height=380 style='border:1px solid'></canvas>
+
+<td>
+
+</table>
+
+
+<script>
+onload = () => {
+  W.reset(c2);
+  W.camera({x:-4,ry:-27,z:5});
+  W.light({z:-1});
+  W.plane({n:"a",x:-4});
+  W.billboard({n:"b",x:-2});
+  W.cube({n:"c",x:-0});
+  W.pyramid({n:"d",x:2});
+  W.sphere({n:"e",x:4});
+  console.log(W);
+
+/*onchange = oninput = () => {
+  W.gl.clearColor(('0x' + clear.value[1]) / 15,('0x' + clear.value[3]) / 15,('0x' + clear.value[5]) / 15, 1);
+  W.move({n:"cam",x:+cx.value,y:+cy.value,z:+cz.value,rx:+crx.value,ry:+cry.value,rz:+crz.value});
+  W.move({n:"frustum",w:40*(+fov.value),d:40*(+fov.value)});
+  W.light({x:+lx.value,y:+ly.value,z:+lz.value});
+}*/
+};
+</script>
+
+<style>
+body { font-family: calibri; }
+input[type="range"] { width: 150px; position: absolute; left: 60px; }
+td+td { padding: 0 0 0 20px; vertical-align: top; position: relative;  }
+</style>
