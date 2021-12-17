@@ -117,7 +117,18 @@ W.delete(n, delay);
 
 <br><nr><b>2) Draw 3D models</b>
 
-<br>...
+<br>The full version of the framework includes 5 built-in shapes: <pre class="inline language-js" tabindex="0"><code class="language-js">W.plane</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.billboard</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.cube</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.pyramid</code></pre> and <pre class="inline language-js" tabindex="0"><code class="language-js">W.sphere</code></pre>.
+<br>Billboards are planes that always face the camera, and can be used to show sprites or particles.
+<br>Each shape accepts up to 15 parameters: <pre class="inline language-js" tabindex="0"><code class="language-js">{g, n, size, w, h, d, x, y, z, rx, ry, rz, b, s, mode}</code></pre>
+<br>- <b>n</b>: name. (required if you want to transform the object after it's been drawn)
+<br>- <b>g</b>: parent group. (if a group is set, the model will be transformed relatively to this group)
+<br>- <b>w, h, d</b> or <b>size</b> (size sets w, h and d to the same value. Otherwise, w, h and d can be set individually. Default: 1)
+<br>- <b>x, y, z</b>: position. (default: 0, 0, 0)
+<br>- <b>rx, ry, rz</b>: rotation. (default: 0, 0, 0)
+<br>- <b>b</b>: background. (background can be either a "rgb" color, a "rgba" color, or a texture image already loaded. Default: "888")
+<br>- <b>s</b>: smoothing. (compute the model's normals to make the faces look less polygonal. Default: false)
+<br>- <b>mode</b>: drawing mode (possible values: "POINTS", "LINES", "LINE_LOOP", "TRIANGLES", etc. Default: "TRIANGLES")
+<br>
 
 <iframe src=demos/2.html width=850 height=420 frameBorder="0"></iframe>
 
