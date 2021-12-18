@@ -118,17 +118,17 @@ W.delete(n, delay);
 <br><b>2) Draw 3D models</b>
 
 <br>The full version of the framework includes 5 built-in shapes: <pre class="inline language-js" tabindex="0"><code class="language-js">W.plane</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.billboard</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.cube</code></pre>, <pre class="inline language-js" tabindex="0"><code class="language-js">W.pyramid</code></pre> and <pre class="inline language-js" tabindex="0"><code class="language-js">W.sphere</code></pre>.
-<br>Billboards are planes that always face the camera, and can be used to show sprites or particles.
+<br>(Billboards are planes that always face the camera, and can be used to show sprites or particles for example.)
 <br>Each shape accepts up to 15 parameters: <pre class="inline language-js" tabindex="0"><code class="language-js">{g, n, size, w, h, d, x, y, z, rx, ry, rz, b, s, mode}</code></pre>
 <ul style="columns:1">
-<li><b>n</b>: name. (required if you want to transform the object after it's been drawn)
-<li><b>g</b>: parent group. (if a group is set, the model will be transformed relatively to this group)
+<li><b>n</b>: name (required if you want to transform the object after it's been drawn)
+<li><b>g</b>: parent group (if a group is set, the model will be transformed relatively to this group)
 <li><b>w, h, d</b> or <b>size</b> (size sets w, h and d to the same value. Otherwise, w, h and d can be set individually. Default: 1)
-<li><b>x, y, z</b>: position. (default: 0, 0, 0)
-<li><b>rx, ry, rz</b>: rotation. (default: 0, 0, 0)
-<li><b>b</b>: background. (background can be either a "rgb" color, a "rgba" color, or an image already loaded. Default: "888")
-<li><b>s</b>: smoothing. (compute the model's normals to make the faces look less polygonal. Default: false)
-<li><b>mode</b>: drawing mode (possible values: "LINES", "LINE_LOOP", "TRIANGLES", etc. Default: "TRIANGLES")
+<li><b>x, y, z</b>: position (default: 0, 0, 0)
+<li><b>rx, ry, rz</b>: rotation (default: 0, 0, 0)
+<li><b>b</b>: background (can be either a "rgb" or "rgba" color, or an image already loaded, including transparent PNG's. Default: "888")
+<li><b>s</b>: enable smooth shading (requires the full version of the framework. Default: false)
+<li><b>mode</b>: drawing mode ("LINE_LOOP", "TRIANGLES", etc. Default: "TRIANGLES")
 </ul>
 <br>
 

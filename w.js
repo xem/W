@@ -91,7 +91,7 @@ W = {
 
         if(s[1] > 0.){
           // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
-          if(s[0] == 1.){
+          if(s[0] > 0.){
             c = vec4(c.rgb * (max(dot(light, -normalize(vec3(v_normal.xyz))), 0.0) + .2), c.a);
           }
           else {
@@ -125,7 +125,7 @@ W = {
   },
 
   // Set a state to an object
-  setState: (state, type, texture, i, vertices = [], normal = [], A, B, C, Ai, Bi, Ci, AB, BC) => {
+  setState: (state, type, texture, i, normal = [], A, B, C, Ai, Bi, Ci, AB, BC) => {
 
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
@@ -167,7 +167,7 @@ W = {
       W.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(W.models[state.type].indices), 35044 /* STATIC_DRAW */);
       
       // Compute smooth normals (optional)
-      if(W.smooth) W.smooth(state, vertices);
+      if(W.smooth) W.smooth(state);
     }
     
     // Save new state
@@ -416,27 +416,48 @@ W = {
 // Smooth normals computation plug-in (optional)
 // =============================================
 
-W.smooth = (state, vertices) => {
+W.smooth = (state, dict = {}, vertices = []) => {
 
+  //console.log(state, vertices, W.models[state.type]);
+  
   // Prepare arrays
   W.models[state.type].smoothNormals = [];
-  for(i = 0; i < W.models[state.type]?.vertices.length; i+=3){
-    vertices.push([W.models[state.type]?.vertices[i], W.models[state.type]?.vertices[i+1], W.models[state.type]?.vertices[i+2]]);
+  
+  for(i = 0; i < W.models[state.type].vertices.length; i+=3){
+    vertices.push([W.models[state.type].vertices[i], W.models[state.type].vertices[i+1], W.models[state.type].vertices[i+2]]);
     W.models[state.type].smoothNormals.push([0,0,0]);
+    dict[W.models[state.type].vertices[i]+"_"+W.models[state.type].vertices[i+1]+"_"+W.models[state.type].vertices[i+2]] = [0,0,0]
   }
   
-  // Compute normals of each triangle and accumulate them for each vertex
-  for(i = 0; i < W.models[state.type]?.indices.length; i+=3){
-    A = vertices[Ai = W.models[state.type]?.indices[i]];
-    B = vertices[Bi = W.models[state.type]?.indices[i+1]];
-    C = vertices[Ci = W.models[state.type]?.indices[i+2]];
-    AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
-    BC = [C[0] - B[0], C[1] - B[1], C[2] - B[2]];
-    normal = [AB[1] * BC[2] - AB[2] * BC[1], AB[2] * BC[0] - AB[0] * BC[2], AB[0] * BC[1] - AB[1] * BC[0]];
-    W.models[state.type].smoothNormals[Ai] = W.models[state.type].smoothNormals[Ai].map((a,i) => a + normal[i]);
-    W.models[state.type].smoothNormals[Bi] = W.models[state.type].smoothNormals[Bi].map((a,i) => a + normal[i]);
-    W.models[state.type].smoothNormals[Ci] = W.models[state.type].smoothNormals[Ci].map((a,i) => a + normal[i]);
+  //console.log(dict);
+  
+  // Indexed model
+  if(W.models[state.type].indices){
+    
+    // Compute normals of each triangle and accumulate them for each vertex
+    for(i = 0; i < W.models[state.type].indices.length; i+=3){
+      A = vertices[Ai = W.models[state.type].indices[i]];
+      B = vertices[Bi = W.models[state.type].indices[i+1]];
+      C = vertices[Ci = W.models[state.type].indices[i+2]];
+      AB = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+      BC = [C[0] - B[0], C[1] - B[1], C[2] - B[2]];
+      normal = [AB[1] * BC[2] - AB[2] * BC[1], AB[2] * BC[0] - AB[0] * BC[2], AB[0] * BC[1] - AB[1] * BC[0]];
+      dict[A[0]+"_"+A[1]+"_"+A[2]] = dict[A[0]+"_"+A[1]+"_"+A[2]].map((a,i) => a + normal[i]);
+      dict[B[0]+"_"+B[1]+"_"+B[2]] = dict[B[0]+"_"+B[1]+"_"+B[2]].map((a,i) => a + normal[i]);
+      dict[C[0]+"_"+C[1]+"_"+C[2]] = dict[C[0]+"_"+C[1]+"_"+C[2]].map((a,i) => a + normal[i]);
+    }
+    
+    for(i = 0; i < W.models[state.type].indices.length; i+=3){
+      A = vertices[Ai = W.models[state.type].indices[i]];
+      B = vertices[Bi = W.models[state.type].indices[i+1]];
+      C = vertices[Ci = W.models[state.type].indices[i+2]];
+      W.models[state.type].smoothNormals[Ai] = dict[A[0]+"_"+A[1]+"_"+A[2]];
+      W.models[state.type].smoothNormals[Bi] = dict[B[0]+"_"+B[1]+"_"+B[2]];
+      W.models[state.type].smoothNormals[Ci] = dict[C[0]+"_"+C[1]+"_"+C[2]];
+    }
   }
+  
+  //console.log(JSON.stringify(W.models[state.type].smoothNormals));
   
   // Smooth normals buffer
   W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].smoothNormalsBuffer = W.gl.createBuffer());
@@ -563,8 +584,8 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
     aj = j * Math.PI / precision;
     for (i = 0; i <= precision; i++) {
       ai = i * 2 * Math.PI / precision;
-      vertices.push(Math.sin(ai) * Math.sin(aj)/2, Math.cos(aj)/2, Math.cos(ai) * Math.sin(aj)/2);
-      uv.push(Math.sin(ai/2), Math.cos(aj/2))
+      vertices.push(+(Math.sin(ai) * Math.sin(aj)/2).toFixed(6), +(Math.cos(aj)/2).toFixed(6), +(Math.cos(ai) * Math.sin(aj)/2).toFixed(6));
+      uv.push((Math.sin((i/precision)))*3.5, -Math.sin(j/precision))
       if(i < precision && j < precision){
         p1 = j * (precision+1) + i;
         p2 = p1 + (precision+1);
