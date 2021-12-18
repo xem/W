@@ -1,38 +1,80 @@
 <!doctype html>
+<img src='../brick.png' id=brick hidden>
+<img src='../tree.png' id=tree hidden>
 <script src='../w.js'></script>
 <table>
 <tr>
 <td>
-<canvas id=c2 width=500 height=380 style='border:1px solid'></canvas>
+<canvas id=c2 width=400 height=380 style='border:1px solid'></canvas>
 
 <td>
 
-</table>
+<pre class=language-js><code id=code>W.plane({x:-1,y:1});
+W.billboard({x:1,y:1});
+W.cube({x:-1.5,y:-1});
+W.pyramid({x:0,y:-1});
+W.sphere({x:1.5,y:-1});</code></pre>
 
+Size: <input type=range id=size min=.1 max=2 value=1 step=".01">
+<p>
+rx: <input type=range id=rx min=-180 max=180 value=0 step="1">
+<p>
+Background:
+<p>
+<label><input type=radio checked id=co name=b> Color (rgb or rgba) <input type=text size=2 id=c value="888" pattern="[a-fA-F0-9]{3,4}" maxlength=4></label>
+<br><label><input type=radio id=t1 name=b> Brick texture</label>
+<br><label><input type=radio id=t2 name=b> Tree texture</label>
+<p>
+Drawing mode: <label><input type=radio id=tri name=mode checked> TRIANGLES</label> <label><input type=radio id=line name=mode> LINE_LOOP</label>
+<p>
+<label>Enable smooth shading on the sphere: <input type=checkbox id=sm></label>
+
+
+</table>
 
 <script>
 onload = () => {
   W.reset(c2);
-  W.camera({x:-4,ry:-27,z:5});
+  W.group({n:"g"});
+  W.camera({z:5});
   W.light({z:-1});
-  W.plane({n:"a",x:-4});
-  W.billboard({n:"b",x:-2});
-  W.cube({n:"c",x:-0});
-  W.pyramid({n:"d",x:2});
-  W.sphere({n:"e",x:4});
-  console.log(W);
+  W.plane({g:"g",n:"a",x:-1,y:1});
+  W.billboard({g:"g",n:"b",x:1,y:1});
+  W.cube({g:"g",n:"c",x:-1.5,y:-1});
+  W.pyramid({g:"g",n:"d",x:0,y:-1});
+  W.sphere({g:"g",n:"e",x:1.5,y:-1});
+  
+  t=0;
+  setInterval(()=>{
+    W.move({n:"g",ry:Math.sin(t/100)*50});
+    t++;
+  },16);
 
-/*onchange = oninput = () => {
-  W.gl.clearColor(('0x' + clear.value[1]) / 15,('0x' + clear.value[3]) / 15,('0x' + clear.value[5]) / 15, 1);
-  W.move({n:"cam",x:+cx.value,y:+cy.value,z:+cz.value,rx:+crx.value,ry:+cry.value,rz:+crz.value});
-  W.move({n:"frustum",w:40*(+fov.value),d:40*(+fov.value)});
-  W.light({x:+lx.value,y:+ly.value,z:+lz.value});
-}*/
+  onchange = oninput = () => {
+  
+    html = `W.plane({x:-1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${co.checked && c.value != "888" ? (",b:"+c.value):""}${t1.checked ? (",b:brick") : ""}${t2.checked ? (",b:tree") : ""}${tri.checked ? "" : ",mode:2"}});
+W.billboard({x:1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${co.checked && c.value != "888" ? (",b:"+c.value):""}${t1.checked ? (",b:brick") : ""}${t2.checked ? (",b:tree") : ""}${tri.checked ? "" : ",mode:2"}});
+W.cube({x:-1.5,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${co.checked && c.value != "888" ? (",b:"+c.value):""}${t1.checked ? (",b:brick") : ""}${t2.checked ? (",b:tree") : ""}${tri.checked ? "" : ",mode:2"}});
+W.pyramid({x:0,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${co.checked && c.value != "888" ? (",b:"+c.value):""}${t1.checked ? (",b:brick") : ""}${t2.checked ? (",b:tree") : ""}${tri.checked ? "" : ",mode:2"}});
+W.sphere({x:1.5,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${co.checked && c.value != "888" ? (",b:"+c.value):""}${t1.checked ? (",b:brick") : ""}${t2.checked ? (",b:tree") : ""}${tri.checked ? "" : ",mode:2"}${sm.checked ? (",s:1") : ""}});`;
+
+    if(line.checked) co.checked = true, t1.disabled = true, t2.disabled = true;
+    else t1.disabled = false, t2.disabled = false;
+    code.innerHTML = html;
+    W.move({n:"a",size:+size.value,rx:+rx.value,b:(co.checked?c.value:t1.checked?brick:tree),mode:(tri.checked?"TRIANGLES":2)});
+    W.move({n:"b",size:+size.value,rx:+rx.value,b:(co.checked?c.value:t1.checked?brick:tree),mode:(tri.checked?"TRIANGLES":2)});
+    W.move({n:"c",size:+size.value,rx:+rx.value,b:(co.checked?c.value:t1.checked?brick:tree),mode:(tri.checked?"TRIANGLES":2)});
+    W.move({n:"d",size:+size.value,rx:+rx.value,b:(co.checked?c.value:t1.checked?brick:tree),mode:(tri.checked?"TRIANGLES":2)});
+    W.move({n:"e",size:+size.value,rx:+rx.value,b:(co.checked?c.value:t1.checked?brick:tree),mode:(tri.checked?"TRIANGLES":2),s:sm.checked?1:0});
+    
+  }
 };
 </script>
 
 <style>
 body { font-family: calibri; }
-input[type="range"] { width: 150px; position: absolute; left: 60px; }
-td+td { padding: 0 0 0 20px; vertical-align: top; position: relative;  }
+pre { background: #eee; padding: 15px; display: block; width:355px; }
+td+td { padding: 0 0 0 20px; vertical-align: top; position: relative; }
+input[type="range"] { width: 150px; position: absolute; left: 70px; }
+br { line-height: 20px }
 </style>

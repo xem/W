@@ -37,6 +37,9 @@ W = {
     // Create a WebGL program
     W.program = W.gl.createProgram();
     
+    // Hide polygons back-faces (optional)
+    //W.gl.enable(2884 /* CULL_FACE */);
+    
     // Create a Vertex shader
     // (this GLSL program is called for every vertex of the scene)
     W.gl.shaderSource(
@@ -52,12 +55,12 @@ W = {
       void main() {
         gl_Position = pv * (                  // Set vertex position: p * v * v_pos
           v_pos = bb.z > 0.                   // Set v_pos varying:
-          ? m[3] - eye * (pos * bb)           // Billboards always face the camera:  p * v * distance - eye * (position * [w, h, 1.0, 0.0])
+          ? m[3] + eye * (pos * bb)           // Billboards always face the camera:  p * v * distance + eye * (position * [w, h, 1.0, 0.0])
           : m * pos                           // Other objects rotate normally:      p * v * m * position
         );
         v_col = col;                          // Set varyings 
         v_uv = uv;
-        v_normal = transpose(inverse(m)) * normal;               // recompute normals
+        v_normal = transpose(inverse(m)) * normal;  // recompute normals
       }`
     );
     
@@ -76,7 +79,7 @@ W = {
       precision highp float;                  // Set default float precision
       in vec4 v_pos, v_col, v_uv, v_normal;   // Varyings received from the vertex shader: position, color, texture coordinates, normal (if any)
       uniform vec3 light;                     // Uniform: light direction, smooth normals enabled
-      uniform vec4 s;                         // shading options
+      uniform vec4 s;                         // shading options [smooth, shading enabled, 0, 0]
       uniform sampler2D sampler;              // Uniform: 2D texture
       out vec4 c;                             // Output: final fragment color
 
@@ -246,8 +249,6 @@ W = {
   
   // Render an object
   render: (object, dt, buffer) => {
-    
-    //console.log('render', location);
 
     // If the object has a texture
     if (object.b.id) {
@@ -311,14 +312,14 @@ W = {
         W.gl.enableVertexAttribArray(buffer);
       }
       
-      // Shading parameters: [smooth, disabled, 0, 0]
+      // Shading parameters: [smooth, shading enabled, 0, 0]
       W.gl.uniform4f(
 
-        // Enable smooth shadibg if "s" is true
+        // Enable smooth shading if "s" is true
         W.gl.getUniformLocation(W.program, 's'), object.s,
         
-        // Enable shading if in TRIANGLES mode
-        object.mode > 3,
+        // Enable shading if in TRIANGLE* mode
+        ((object.mode > 3) || (W.gl[object.mode] > 3)) && !object.ns ? 1 : 0,
         
         // Reserved
         0,
@@ -470,8 +471,8 @@ W.models.plane = W.models.billboard = {
   ],
   
   uv: [
-    0, 0,     1, 0,    1, 1,
-    0, 0,     1, 1,    0, 1
+    1, 1,     0, 1,    0, 0,
+    1, 1,     0, 0,    1, 0
   ],
 };
 W.plane = settings => W.setState(settings, 'plane');
@@ -491,16 +492,16 @@ W.models.cube = {
   vertices: [
     .5, .5, .5,  -.5, .5, .5,  -.5,-.5, .5, // front
     .5, .5, .5,  -.5,-.5, .5,   .5,-.5, .5,
-    .5, .5, .5,   .5,-.5, .5,   .5,-.5,-.5, // right
-    .5, .5, .5,   .5,-.5,-.5,   .5, .5,-.5,
-    .5, .5, .5,   .5, .5,-.5,  -.5, .5,-.5, // up
-    .5, .5, .5,  -.5, .5,-.5,  -.5, .5, .5,
+    .5, .5,-.5,   .5, .5, .5,   .5,-.5, .5, // right
+    .5, .5,-.5,   .5,-.5, .5,   .5,-.5,-.5,
+    .5, .5,-.5,  -.5, .5,-.5,  -.5, .5, .5, // up
+    .5, .5,-.5,  -.5, .5, .5,   .5, .5, .5,
    -.5, .5, .5,  -.5, .5,-.5,  -.5,-.5,-.5, // left
    -.5, .5, .5,  -.5,-.5,-.5,  -.5,-.5, .5,
-   -.5,-.5, .5,   .5,-.5 ,.5,   .5,-.5,-.5, // down
-   -.5,-.5, .5,   .5,-.5,-.5,  -.5,-.5,-.5,
-    .5,-.5,-.5,  -.5,-.5,-.5,  -.5, .5,-.5, // back
-    .5,-.5,-.5,  -.5, .5,-.5,   .5, .5,-.5
+   -.5, .5,-.5,   .5, .5,-.5,   .5,-.5,-.5, // back
+   -.5, .5,-.5,   .5,-.5,-.5,  -.5,-.5,-.5,
+    .5,-.5, .5,  -.5,-.5, .5,  -.5,-.5,-.5, // down
+    .5,-.5, .5,  -.5,-.5,-.5,   .5,-.5,-.5
   ],
   uv: [
     1, 1,   0, 1,   0, 0, // front
@@ -511,10 +512,10 @@ W.models.cube = {
     1, 1,   0, 0,   1, 0,
     1, 1,   0, 1,   0, 0, // left
     1, 1,   0, 0,   1, 0,
-    1, 1,   0, 1,   0, 0, // down
-    1, 1,   0, 0,   1, 0,
     1, 1,   0, 1,   0, 0, // back
     1, 1,   0, 0,   1, 0,
+    1, 1,   0, 1,   0, 0, // down
+    1, 1,   0, 0,   1, 0
   ]
 };
 W.cube = settings => W.setState(settings, 'cube');
@@ -530,20 +531,20 @@ W.cube = settings => W.setState(settings, 'cube');
 
 W.models.pyramid = {
   vertices: [
-    -.5, -.5, .5,    .5, -.5, .5,  0, .5, 0,  // Front
-     .5, -.5, .5,    .5, -.5,-.5,  0, .5, 0,  // Right
-     .5, -.5,-.5,   -.5, -.5,-.5,  0, .5, 0,  // Back
-    -.5, -.5,-.5,   -.5, -.5, .5,  0, .5, 0,  // Left
-    -.5, -.5, .5,   -.5, -.5,-.5, .5,-.5, .5, // Base
-    -.5, -.5,-.5,    .5, -.5,-.5, .5,-.5, .5
+    -.5,-.5, .5,   .5,-.5, .5,    0, .5,  0,  // Front
+     .5,-.5, .5,   .5,-.5,-.5,    0, .5,  0,  // Right
+     .5,-.5,-.5,  -.5,-.5,-.5,    0, .5,  0,  // Back
+    -.5,-.5,-.5,  -.5,-.5, .5,    0, .5,  0,  // Left
+     .5,-.5, .5,  -.5,-.5, .5,  -.5,-.5,-.5, // down
+     .5,-.5, .5,  -.5,-.5,-.5,   .5,-.5,-.5
   ],
   uv: [
-     0, 0,   1, 0,  .5, 1,  // Front
-     0, 0,   1, 0,  .5, 1,  // Right
-     0, 0,   1, 0,  .5, 1,  // Back
-     0, 0,   1, 0,  .5, 1,  // Left
-     1, 0,   0, 0,   0, 1,  // base
-     1, 0,   0, 1,   1, 1,
+    0, 0,   1, 0,  .5, 1,  // Front
+    0, 0,   1, 0,  .5, 1,  // Right
+    0, 0,   1, 0,  .5, 1,  // Back
+    0, 0,   1, 0,  .5, 1,  // Left
+    1, 1,   0, 1,   0, 0,  // down
+    1, 1,   0, 0,   1, 0
   ]
 };
 W.pyramid = settings => W.setState(settings, 'pyramid');
