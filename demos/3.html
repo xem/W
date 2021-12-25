@@ -1,98 +1,32 @@
 <!doctype html>
-<img src='brick.png' id=brick hidden>
-<img src='tree.png' id=tree hidden>
+<img src='mario.png' id=mario hidden>
 <script src='../w.js'></script>
+<script src='mario.js'></script>
 <script src="jscolor.js"></script>
 <table>
 <tr>
 <td>
-<canvas id=c2 width=360 height=410></canvas>
+<canvas id=c3 width=360 height=410></canvas>
 
 <td>
-
-<pre class=language-js><code id=code>W.group({n:"G")};
-W.plane({g:"G",x:-1,y:1});
-W.billboard({g:"G",x:1,y:1});
-W.cube({g:"G",x:-1.5,y:-1});
-W.pyramid({g:"G",x:0,y:-1});
-W.sphere({g:"G",x:1.5,y:-1});</code></pre>
+<p><b>Settings</b>
 <p>
-<div hidden>
-<b>Group settings</b>
+<label>smooth &nbsp; <input type=checkbox id=s></label>
 <p>
-ry: <input type=range id=gry min=-90 max=90 value=0 step="1" readonly>
-</div>
-<p>
-<b>Shapes</b>
-<p>
-Size: <input type=range id=size min=.1 max=2 value=1 step=".01">
-<p>
-rx: <input type=range id=rx min=-180 max=180 value=0 step="1">
-<p>
-<b>Background</b>
-<p>
-<input type=checkbox id=cbb> <label>Color: &nbsp; <input size=2 id=c value="#113366ff" data-jscolor="{}"></label>
-<p><input type=checkbox id=cbt> Texture: <label><input type=radio id=t1 name=b checked>brick</label> <label><input type=radio id=t2 name=b>tree</label>
-<p>Mix: <input type=range id=mix min=0 max=1 value=1 step=".01" disabled>
-<p>
-<b>Rendering</b>
-<p> 
-Draw mode: <label><input type=radio id=tri name=mode checked> TRIANGLES</label> <label><input type=radio id=line name=mode> LINE_LOOP</label>
-<p>
-Shading: <label><input type=radio name=shading id=auto checked>Auto (flat)</label>
-<label><input type=radio name=shading id=sm>Smooth</label>
-<label><input type=radio name=shading id=ns>No shading</label>
+<input type=range id=m min=0 max=1 value=0 step=".01"> mix
 
 
 </table>
 
 <script>
 onload = () => {
-  W.reset(c2);
-  W.group({n:"g"});
-  W.camera({z:5});
-  W.light({z:-1});
-  W.plane({g:"g",n:"a",x:-1,y:1});
-  W.billboard({g:"g",n:"b",x:1,y:1});
-  W.cube({g:"g",n:"c",x:-1.5,y:-1});
-  W.pyramid({g:"g",n:"d",x:0,y:-1});
-  W.sphere({g:"g",n:"e",x:1.5,y:-1});
+  W.reset(c3);
+  W.light({x:.5,y:0,z:-.5});
+  W.camera({z:4});
+  W.mario({n:"mario",size:3,x:0,y:0,z:0,rx:-90,ry:180,t:mario});
   
-  t=0;
-  setInterval(()=>{
-    W.move({n:"g",ry:gry.value=Math.sin(t/100)*50});
-    
-     html = `\
-W.group({n:"G",ry:${gry.value})};
-W.plane({g:"G",x:-1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",b:brick") : ""}${cbt.checked && t2.checked ? (",b:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
-W.billboard({g:"G",x:1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
-W.cube({g:"G",x:-1.5,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
-W.pyramid({g:"G",x:0,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
-W.sphere({g:"G",x:1.5,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});`;
-
-
-    code.innerHTML = html;
-    Prism.highlightAll();
-    
-    W.move({n:"a",size:+size.value,rx:+rx.value,b:cbb.checked?c.value:"888",t:t1.checked?brick:tree,mix:+mix.value,mode:(tri.checked?"TRIANGLES":2),s:sm.checked?0:0,ns:ns.checked});
-    W.move({n:"b",size:+size.value,rx:+rx.value,b:cbb.checked?c.value:"888",t:t1.checked?brick:tree,mix:+mix.value,mode:(tri.checked?"TRIANGLES":2),s:sm.checked?0:0,ns:ns.checked});
-    W.move({n:"c",size:+size.value,rx:+rx.value,b:cbb.checked?c.value:"888",t:t1.checked?brick:tree,mix:+mix.value,mode:(tri.checked?"TRIANGLES":2),s:sm.checked?0:0,ns:ns.checked});
-    W.move({n:"d",size:+size.value,rx:+rx.value,b:cbb.checked?c.value:"888",t:t1.checked?brick:tree,mix:+mix.value,mode:(tri.checked?"TRIANGLES":2),s:sm.checked?0:0,ns:ns.checked});
-    W.move({n:"e",size:+size.value,rx:+rx.value,b:cbb.checked?c.value:"888",t:t1.checked?brick:tree,mix:+mix.value,mode:(tri.checked?"TRIANGLES":2),s:sm.checked?1:0,ns:ns.checked});
-    
-    
-    
-    t++;
-  },16);
-
   onchange = oninput = () => {
-  
-    mix.disabled = !cbb.checked || !cbt.checked;
-    sm.disabled = !tri.checked;
-    if(!cbb.checked && cbt.checked) mix.value = 0;
-    if(!cbt.checked && cbb.checked) mix.value = 1;
-  
-   
+    W.move({n:"mario",s:s.checked,mix:+m.value});
   }
 };
 </script>
