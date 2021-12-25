@@ -502,7 +502,6 @@ W.smooth = (state, dict = {}, vertices = []) => {
   // Unindexed model
   else {
     
-    console.log(vertices);
     // Compute normals of each triangle and accumulate them for each vertex
     for(i = 0; i < vertices.length; i+=3){
       A = vertices[i];
@@ -516,8 +515,6 @@ W.smooth = (state, dict = {}, vertices = []) => {
       dict[C[0]+"_"+C[1]+"_"+C[2]] = dict[C[0]+"_"+C[1]+"_"+C[2]].map((a,i) => a + normal[i]);
     }
     
-    console.log(dict);
-    
     for(i = 0; i < vertices.length; i+=3){
       A = vertices[i];
       B = vertices[i+1];
@@ -525,11 +522,7 @@ W.smooth = (state, dict = {}, vertices = []) => {
       W.models[state.type].smoothNormals[Ai] = dict[A[0]+"_"+A[1]+"_"+A[2]];
       W.models[state.type].smoothNormals[Bi] = dict[B[0]+"_"+B[1]+"_"+B[2]];
       W.models[state.type].smoothNormals[Ci] = dict[C[0]+"_"+C[1]+"_"+C[2]];
-      
     }
-
-    console.log(W.models[state.type].smoothNormals);
-
   }
 }
 
