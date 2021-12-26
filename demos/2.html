@@ -10,7 +10,7 @@
 
 <td>
 
-<pre class=language-js><code id=code>W.group({n:"G")};
+<pre class=language-js><code id=code>W.group({n:"G"});
 W.plane({g:"G",x:-1,y:1});
 W.billboard({g:"G",x:1,y:1});
 W.cube({g:"G",x:-1.5,y:-1});
@@ -63,7 +63,7 @@ onload = () => {
     W.move({n:"g",ry:gry.value=Math.sin(t/100)*50});
     
      html = `\
-W.group({n:"G",ry:${gry.value})};
+W.group({n:"G",ry:${gry.value}});
 W.plane({g:"G",x:-1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",b:brick") : ""}${cbt.checked && t2.checked ? (",b:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
 W.billboard({g:"G",x:1,y:1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
 W.cube({g:"G",x:-1.5,y:-1${size.value != 1 ? (",size:"+ (+size.value).toFixed(2)):""}${rx.value != 0 ? (",rx:"+rx.value):""}${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked && t1.checked ? (",t:brick") : ""}${cbt.checked && t2.checked ? (",t:tree") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${tri.checked ? "" : ",mode:2"}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});
