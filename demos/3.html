@@ -6,14 +6,36 @@
 <table>
 <tr>
 <td>
-<canvas id=c3 width=360 height=410></canvas>
+<canvas id=c3 width=340 height=410></canvas>
 
 <td>
-<p><b>Settings</b>
+
+<b>HTML</b>
+<pre class=language-html><code>&lt;img src='mario.png' id=mario hidden></code></pre>
+
 <p>
-<label>smooth &nbsp; <input type=checkbox id=s></label>
+<b>JS</b>
+
+<pre class=language-js><code id=code>W.add("mario", {vertices: [...], uv: [...], indices: [...]});
+W.camera({z:4});
+W.light({x:.5,y:0,z:-.5});
+W.mario({n:"M",size:3,t:mario});</code></pre>
+
 <p>
-<input type=range id=m min=0 max=1 value=0 step=".01"> mix
+
+<b>Background</b>
+<p>
+<label><input type=checkbox id=cbb> Color: &nbsp; </label><input size=2 id=c value="#113366ff" data-jscolor="{}">
+<p><label><input type=checkbox id=cbt checked> Texture</label>
+<p>Mix: <input type=range id=mix min=0 max=1 value=0 step=".01" disabled>
+
+
+<p>
+<b>Shading</b>
+<p>
+<label><input type=radio name=shading id=auto checked>Auto (flat)</label>
+<label><input type=radio name=shading id=sm>Smooth</label>
+<label><input type=radio name=shading id=ns>None</label>
 
 
 </table>
@@ -24,16 +46,34 @@ onload = () => {
   W.light({x:.5,y:0,z:-.5});
   W.camera({z:4});
   W.mario({n:"mario",size:3,x:0,y:0,z:0,rx:-90,ry:180,t:mario});
-  
+
   onchange = oninput = () => {
-    W.move({n:"mario",s:s.checked,mix:+m.value});
+  
+    mix.disabled = !cbb.checked || !cbt.checked;
+    if(!cbb.checked && cbt.checked) mix.value = 0;
+    if(!cbt.checked && cbb.checked) mix.value = 1;
+    
+    W.move({n:"mario",b:c.value,t:mario,mix:+mix.value,s:sm.checked,ns:ns.checked});
+  
+    
+    html = `\
+W.add("mario", {vertices: [...], uv: [...], indices: [...]});
+W.camera({z:4});
+W.light({x:.5,y:0,z:-.5});
+W.mario({n:"M",size:3,t:mario${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked ? (",t:mario") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});`;
+
+
+    code.innerHTML = html;
+    Prism.highlightAll();
   }
 };
+
+
 </script>
 
 <style>
 body { font-family: calibri; font-size: 12px; margin: 0; }
-pre { background: #eee; padding: 8px !important; display: block; width:395px; overflow-x: auto; margin: 0 !important;  border: 2px solid #000; border-right-width: 4px; }
+pre { background: #eee; padding: 8px !important; display: block; width:415px; overflow-x: auto; margin: 0 !important;  border: 2px solid #000; border-right-width: 4px; }
 td+td { padding: 0 0 0 20px; vertical-align: top; position: relative; }
 input[type="range"] { width: 150px; position: absolute; left: 70px; }
 br { line-height: 20px }

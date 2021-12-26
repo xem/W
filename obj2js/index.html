@@ -121,13 +121,13 @@ W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       W.group({n:"g0", x:-45});
       W.group({n:"g1", x:0});
       W.group({n:"g2", x:45});
-      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
-      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
-      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:e.type == "error" ? "777" : texture, s: +!!s.checked});
+      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
+      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
+      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
       //setTimeout(()=>{
-        W.move({n:"g0",rx:3600,rz:3600,t:100000});
-        W.move({n:"g1",rx:3600,rz:3600,t:100000});
-        W.move({n:"g2",rx:3600,rz:3600,t:100000});
+        W.move({n:"g0",rx:3600,rz:3600,a:100000});
+        W.move({n:"g1",rx:3600,rz:3600,a:100000});
+        W.move({n:"g2",rx:3600,rz:3600,a:100000});
       //},100);
     })
 
