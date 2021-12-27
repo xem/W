@@ -193,14 +193,14 @@ W = {
     // Save new state
     W.next[state.n] = state;
     
-    // (Re)compute the perspective matrix if fov is set (near: 1, far: 999, ratio: canvas ratio)
+    // (Re)compute the perspective matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
     if(state.fov){
       W.perspective =     
         new DOMMatrix([
-          1 / Math.tan(state.fov * Math.PI/180) * W.canvas.height / W.canvas.width, 0, 0, 0, 
-          0, 1 / Math.tan(state.fov * Math.PI/180), 0, 0, 
-          0, 0, -1, -1,
-          0, 0, -2, 0
+          (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
+          0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
+          0, 0, -1001 / 999, -1,
+          0, 0, -2000 / 999, 0
         ]);
     }
   },
