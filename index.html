@@ -150,7 +150,7 @@ Groups can be created using <pre class="inline language-js"><code class="languag
 <li>An array of uv texture coordinates: [u, v, u, v, ...] (if the model is textured),
 <li>And an array of indices (only if the model uses indexed buffers). W.js supports both indexed and unindexed models!
 </ul>
-Add the new model using <pre class="inline language-js"><code class="language-js">W.add("cusrom_shape", {vertices, uv, indices})</code></pre> and draw it using <pre class="inline language-js"><code class="language-js">W.custom_shape(settings)</code></pre>.
+Add the new model using <pre class="inline language-js"><code class="language-js">W.add("custom_shape", {vertices, uv, indices})</code></pre> and draw it using <pre class="inline language-js"><code class="language-js">W.custom_shape(settings)</code></pre>.
 <br>
 Custom models can be drawn with the same settings as the built-in ones (group, size, position, rotation, background, shading...).
 <br>Flat shading is applied by default, smooth shading is only available in the full version of the framework.
@@ -168,7 +168,7 @@ Custom models can be drawn with the same settings as the built-in ones (group, s
 
 
 <br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({w, h, d, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
-<br>If a delay is provided, the transformation will be done after that delay in millisedonds. (0 by default)
+<br>If a delay is provided, the transformation will be done after that delay in milliseconds. (0 by default)
 <br>If an "a" parameter is provided, the transformation will be animated. The animation will last for "a" milliseconds. (0 by default)
 <br>
 <br>The camera can be moved and animated using <pre class="inline language-js"><code class="language-js">W.camera({x, y, z, rx, ry, rz, a}, delay)</code></pre>.
