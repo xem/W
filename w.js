@@ -450,7 +450,7 @@ W = {
   
   move: (t, delay) => setTimeout(()=>{ W.setState(t) }, delay || 1),
   
-  delete: (t, delay) => setTimeout(()=>{ delete W.next[t.n] }, delay || 1),
+  delete: (t, delay) => setTimeout(()=>{ delete W.next[t] }, delay || 1),
   
   camera: (t, delay) => setTimeout(()=>{ W.setState(t, t.n = 'camera') }, delay || 1),
     

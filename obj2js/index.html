@@ -6,7 +6,7 @@
 max decimals (vertices): <input type=number value=2 id=round1 onchange="convert()" oninput="convert()" min=0 max=10>, 
 max decimals (textures): <input type=number value=2 id=round2 onchange="convert()" oninput="convert()" min=1 max=10>,
 Unicode precision: <input type=number value=127 id=unicode onchange="convert()" oninput="convert()" min=1>, <input type=checkbox checked id=indexed onchange="convert()"> Indexed
-<input type=checkbox id=s onchange="convert()"> Smooth
+<input type=checkbox id=s onchange="convert()"> Smooth <input type=checkbox id=an onchange=convert()>Animated
 <img src="mario.png" id=texture hidden>
 <p>
 <table>
@@ -19,7 +19,11 @@ Unicode precision: <input type=number value=127 id=unicode onchange="convert()" 
 
 <script>
 gl = a.getContext("webgl2");
+converting = 0;
 convert = () => {
+  if(converting) return;
+  converting = 1;
+  setTimeout(()=>{converting=0},300);
   W.reset(a);
 
   texture.src=name + ".png";
@@ -29,8 +33,8 @@ convert = () => {
     
     parseOBJ(file).then(x=>{
       size = x[1].size;
-      console.log(z=x);
-      console.log(z[0].groups[0]);
+      //console.log(z=x);
+      //console.log(z[0].groups[0]);
       
       if(!indexed.checked){
       
@@ -39,73 +43,65 @@ convert = () => {
       
       
         // original unindexed
-        out1.innerHTML = `W.models["${name}_original"] = {
+        out1.innerHTML = `W.add("${name}_original", {
   vertices: [${x[0].groups[0].originalv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+x).join(",") + "]") : ""}
-  };
-  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+});`;
         out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
         out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
       
 
         // same centered and resized (for the demo)
-        originalcentered = `W.models["${name}_original"] = {
+        originalcentered = `W.add("${name}_original"; {
   vertices: [${x[0].groups[0].v.map(x=>+((x/size))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x))).join(",") + "]") : ""}
-  };
-  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+});`;
       
       // float unindexed
-      out3.innerHTML = `W.models["${name}"] = {
-  vertices: [${x[0].groups[0].v.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""}
-};
-W["${name}"] = settings => W.setState(settings, "${name}");`;
+      out3.innerHTML = `W.add("${name}", {
+  vertices: [${x[0].groups[0].v.map(x=>+(((x/size)*(+scale.value)).toFixed(round1.value))).join(",")}]${scale.value!=1?(".map(x=>x/"+scale.value+")"):""}${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].vt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""}
+});`;
       out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
       out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
       
       // unicode unindexed
-      out4.innerHTML = `W.models["${name}_txt"] = {
+      out4.innerHTML = `W.add("${name}_txt", {
   vertices: [...'${x[0].groups[0].v.flat().map(x=>String.fromCodePoint((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].vt.flat().map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "]'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""}
-};
-W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
+});`;
       out4i.innerHTML = new Intl.NumberFormat("en-US").format((new TextEncoder().encode(out4.innerHTML)).length) + " bytes";
     }
     
     else {
       
       // original indexed
-      out1.innerHTML = `W.models["${name}_original"] = {
+      out1.innerHTML = `W.add("${name}_original", {
   vertices: [${x[0].groups[0].indexoriginalv.map(x=>+x).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+x).join(",") + "]") : ""},
   indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
-  };
-  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+});`;
         out1.innerHTML = out1.innerHTML.replace(/(\D)0\./g,"$1.");
         out1i.innerHTML = new Intl.NumberFormat("en-US").format(out1.innerHTML.length) + " bytes";
         
         // Original indexed centered  (for the demo)
-        originalindexedcentered = `W.models["${name}_original"] = {
+        originalindexedcentered = `W.add("${name}_original", {
   vertices: [${x[0].groups[0].indexv.map(x=>+(x/size)).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+x).join(",") + "]") : ""},
   indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
-  };
-  W["${name}_original"] = settings => W.setState(settings, "${name}_original");`;
+});`;
         originalindexedcentered = originalindexedcentered.replace(/(\D)0\./g,"$1.");
         
         
         // float indexed
-        out3.innerHTML = `W.models["${name}"] = {
-  vertices: [${x[0].groups[0].indexv.map(x=>+((x/size).toFixed(round1.value))).join(",")}]${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""},
+        out3.innerHTML = `W.add("${name}", {
+  vertices: [${x[0].groups[0].indexv.map(x=>+(((x/size)*(+scale.value)).toFixed(round1.value))).join(",")}]${scale.value!=1?(".map(x=>x/"+scale.value+")"):""}${x[0].groups[0].vt.length ? (",\n  uv: [" + x[0].groups[0].indexvt.map(x=>+((x).toFixed(round2.value))).join(",") + "]") : ""},
   indices: [${x[0].groups[0].indices.map(x=>+x).join(",")}]
-  };
-  W["${name}"] = settings => W.setState(settings, "${name}");`;
+});`;
         out3.innerHTML = out3.innerHTML.replace(/(\D)0\./g,"$1.");
         out3i.innerHTML = new Intl.NumberFormat("en-US").format(out3.innerHTML.length) + " bytes";
         
         
         
         // unicode indexed
-        out4.innerHTML = `W.models["${name}_txt"] = {
+        out4.innerHTML = `W.add("${name}_txt", {
   vertices: [...'${x[0].groups[0].indexv.map(x=>String.fromCharCode((x*unicode.value/size).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("")}'].map(a=>(a.codePointAt())/${unicode.value})${x[0].groups[0].vt.length ? (",\n  uv: [...'" + x[0].groups[0].indexvt.map(x=>String.fromCharCode((x*unicode.value).toFixed(0)).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\0/g,"\u0001")).join("") + "'].map(a=>(a.codePointAt())/"+unicode.value+")") : ""},
   indices: [${x[0].groups[0].indices.join(",")}]
-};
-W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
+});`;
       out4.innerHTML = out4.innerHTML.replace(/(\D)0\./g,"$1.");
       out4i.innerHTML = new Intl.NumberFormat("en-US").format(out4.innerHTML.length) + " bytes";
   }
@@ -116,19 +112,23 @@ W["${name}_txt"] = settings => W.setState(settings, "${name}_txt");`;
       eval(out3.value);
       eval(out4.value);
       //console.log(W.mario);
-      W.camera({x:0,z:60});
+      W.camera({x:0,z:100,fov:13});
       W.light({x:0,y:.8,z:-.8});
-      W.group({n:"g0", x:-45});
-      W.group({n:"g1", x:0});
-      W.group({n:"g2", x:45});
-      W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
-      W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
-      W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
-      //setTimeout(()=>{
-        W.move({n:"g0",rx:3600,rz:3600,a:100000});
-        W.move({n:"g1",rx:3600,rz:3600,a:100000});
-        W.move({n:"g2",rx:3600,rz:3600,a:100000});
-      //},100);
+      W.group({n:"g0", x:-35,rx:name=="mario"?-90:0,ry:name=="mario"||name=="yoshi"?180:0});
+      W.group({n:"g1", x:-1,rx:name=="mario"?-90:0,ry:name=="mario"||name=="yoshi"?180:0});
+      W.group({n:"g2", x:33,rx:name=="mario"?-90:0,ry:name=="mario"||name=="yoshi"?180:0});
+      setTimeout(()=>{
+      
+        W[name+"_original"]({n:"obj0",g:"g0",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
+        W[name]({n:"obj1",g:"g1",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
+        W[name+"_txt"]({n:"obj2",g:"g2",x:-15,y:-15,z:-15,w:30,h:30,d:30,b:"777",t: texture, mix: e.type==="error"?1:0, s: +!!s.checked});
+        //setTimeout(()=>{
+        if(an.checked){
+          W.move({n:"g0",rx:3600,rz:3600,a:100000},100);
+          W.move({n:"g1",rx:3600,rz:3600,a:100000},100);
+          W.move({n:"g2",rx:3600,rz:3600,a:100000},100);
+        }
+      },100);
     })
 
   }

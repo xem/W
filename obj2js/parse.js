@@ -62,7 +62,7 @@ parseOBJ = async (file) => {
   // todo: save ucurrentusemtl too
   endGroup = x => {
     
-    console.log("save group");
+    //console.log("save group");
     //console.log(v, vt, vi);
     
     currentgroup.originalv = [];
@@ -184,7 +184,7 @@ parseOBJ = async (file) => {
     // Reset group
     currentgroup = {};
     
-    console.log({indexDict});
+    //console.log({indexDict});
     
     
     // Reset indices arrays
@@ -218,7 +218,7 @@ parseOBJ = async (file) => {
       // Set material
       case 'usemtl':
       
-        console.log("mtl", objparam);
+        //console.log("mtl", objparam);
       
         // If the current group is not empty and already has a material different than this one, save it and create a new one
         if(vi.length && currentgroup.usemtl != objparam){
@@ -233,7 +233,7 @@ parseOBJ = async (file) => {
       // New object
       case 'o':
       
-        console.log("o");
+        //console.log("o");
       
         // Save current group and current object and create new ones (if current object is not empty)
         if(currentobj.groups.length){
@@ -256,7 +256,7 @@ parseOBJ = async (file) => {
       // New group
       case 'g':
       
-        console.log("g");
+        //console.log("g");
       
         // Save current group and create a new one (if it's not empty)
         if(vi.length){
@@ -274,7 +274,7 @@ parseOBJ = async (file) => {
       // Vertex (x, y, z, w*, r*, g*, b*)
       case 'v':
       
-        console.log("v");
+        //console.log("v");
         
         // Push x, y, z into v
         v.push(+objlist[0], +objlist[1], +objlist[2]);
@@ -291,7 +291,7 @@ parseOBJ = async (file) => {
       // Texture coordinates (u, v, w*)
       case 'vt':
       
-        console.log("vt");
+        //console.log("vt");
       
         // Push u, v into vt (w ignored)
         vt.push(+objlist[0], +objlist[1]);
@@ -305,7 +305,7 @@ parseOBJ = async (file) => {
       // Polygons with 4+ faces are converted into consecutive triangles
       case 'f':
       
-        console.log("f");
+        //console.log("f");
       
         // For all possible triangles
         for(i = 1; i < objlist.length - 1; i++){
