@@ -69,15 +69,16 @@ W.ambient(f);
 // Create a group of objects: name, position, rotation
 W.group({n, x, y, z, rx, ry, rz});
 
-// Draw an object
-// Settings: {g, n, size, x, y, z, rx, ry, rz, b, t, mix, s, ns, mode, ...}
+// Draw a built-in 3D object
+// Settings: group, name, size, position, rotation, background, texture, smooth...
+let settings = {g, n, size, x, y, z, rx, ry, rz, b, t, mix, s, ns, mode};
 W.plane(settings);
 W.billboard(settings);
 W.cube(settings);
 W.pyramid(settings);
 W.sphere(settings);
 
-// Add and display a custom 3D model (see the OBJ file loader below)
+// Add and draw a custom 3D model (see the OBJ file loader below)
 W.add("custom_model", { vertices, uv, indices });
 W.custom_model(settings);
 

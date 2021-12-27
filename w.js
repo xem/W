@@ -193,14 +193,14 @@ W = {
     // Save new state
     W.next[state.n] = state;
     
-    // Set fov if the camera's state contains it
+    // (Re)compute the perspective matrix if fov is set (near: 1, far: 999, ratio: canvas ratio)
     if(state.fov){
       W.perspective =     
         new DOMMatrix([
-          1 / Math.tan(state.fov * .0175) / (W.canvas.width/W.canvas.height), 0, 0, 0, 
-          0, 1 / Math.tan(state.fov * .0175), 0, 0, 
-          0, 0, (999 + 1) * 1 / (1 - 999), -1,
-          0, 0, (2 * 1 * 999) * 1 / (1 - 999), 0
+          1 / Math.tan(state.fov * Math.PI/180) * W.canvas.height / W.canvas.width, 0, 0, 0, 
+          0, 1 / Math.tan(state.fov * Math.PI/180), 0, 0, 
+          0, 0, -1, -1,
+          0, 0, -2, 0
         ]);
     }
   },
@@ -547,7 +547,7 @@ W.smooth = (state, dict = {}, vertices = []) => {
 //  |       |
 //  v2------v3
 
-W.models.plane = W.models.billboard = {
+W.add("plane", {
   vertices: [
     .5, .5, 0,    -.5, .5, 0,   -.5,-.5, 0,
     .5, .5, 0,    -.5,-.5, 0,    .5,-.5, 0
@@ -557,9 +557,8 @@ W.models.plane = W.models.billboard = {
     1, 1,     0, 1,    0, 0,
     1, 1,     0, 0,    1, 0
   ],
-};
-W.plane = settings => W.setState(settings, 'plane');
-W.billboard = settings => W.setState(settings, 'billboard');
+});
+W.add("billboard", W.models.plane);
 
 // Cube
 //
@@ -571,7 +570,7 @@ W.billboard = settings => W.setState(settings, 'billboard');
 //  |/      |/
 //  v2------v3
 
-W.models.cube = {
+W.add("cube", {
   vertices: [
     .5, .5, .5,  -.5, .5, .5,  -.5,-.5, .5, // front
     .5, .5, .5,  -.5,-.5, .5,   .5,-.5, .5,
@@ -600,7 +599,7 @@ W.models.cube = {
     1, 1,   0, 1,   0, 0, // down
     1, 1,   0, 0,   1, 0
   ]
-};
+});
 W.cube = settings => W.setState(settings, 'cube');
 
 // Pyramid
@@ -612,7 +611,7 @@ W.cube = settings => W.setState(settings, 'cube');
 //  //     \/
 //  +------+
 
-W.models.pyramid = {
+W.add("pyramid", {
   vertices: [
     -.5,-.5, .5,   .5,-.5, .5,    0, .5,  0,  // Front
      .5,-.5, .5,   .5,-.5,-.5,    0, .5,  0,  // Right
@@ -629,9 +628,7 @@ W.models.pyramid = {
     1, 1,   0, 1,   0, 0,  // down
     1, 1,   0, 0,   1, 0
   ]
-};
-W.pyramid = settings => W.setState(settings, 'pyramid');
-
+});
 
 // Sphere
 //
@@ -644,19 +641,16 @@ W.pyramid = settings => W.setState(settings, 'pyramid');
 //          =   =
 
 ((i, ai, j, aj, p1, p2, vertices = [], indices = [], uv = [], precision = 15) => {
-  for (j = 0; j <= precision; j++) {
+  for(j = 0; j <= precision; j++){
     aj = j * Math.PI / precision;
-    for (i = 0; i <= precision; i++) {
+    for(i = 0; i <= precision; i++){
       ai = i * 2 * Math.PI / precision;
       vertices.push(+(Math.sin(ai) * Math.sin(aj)/2).toFixed(6), +(Math.cos(aj)/2).toFixed(6), +(Math.cos(ai) * Math.sin(aj)/2).toFixed(6));
-      uv.push((Math.sin((i/precision)))*3.5, -Math.sin(j/precision))
+      uv.push((Math.sin((i/precision))) * 3.5, -Math.sin(j/precision))
       if(i < precision && j < precision){
-        p1 = j * (precision+1) + i;
-        p2 = p1 + (precision+1);
-        indices.push(p1, p2, (p1 + 1), (p1 + 1), p2, (p2 + 1));
+        indices.push(p1 = j * (precision + 1) + i, p2 = p1 + (precision + 1), (p1 + 1), (p1 + 1), p2, (p2 + 1));
       }
     }
   }
-  W.models.sphere = {vertices, uv, indices};
+  W.add("sphere", {vertices, uv, indices});
 })();
-W.sphere = settings => W.setState(settings, 'sphere');
