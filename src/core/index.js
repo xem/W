@@ -3,7 +3,7 @@
 import baseVertex from '../shaders/baseVertex.glsl'
 import baseFragment from '../shaders/baseFragment.glsl'
 
-export default class W {
+export default class Renderer {
 
   constructor(options) {
     this.debug = options.debug; // Enable shader/program compilation logs (optional)
@@ -247,6 +247,11 @@ export default class W {
 
     window.requestAnimationFrame(() => this.draw());
   };
+
+  addModel(state, type, buffer) {
+    this.model[type] = buffer
+    this.setState(state, type)
+  }
   
   // Render an object
   render(object, dt, buffer) {

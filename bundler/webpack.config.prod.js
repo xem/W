@@ -1,6 +1,7 @@
 const path = require("path/posix");
 const TerserPlugin = require("terser-webpack-plugin");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+var ZipPlugin = require('zip-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
@@ -31,6 +32,7 @@ module.exports = {
     },
     plugins: [
         new webpack.ProgressPlugin(),
-        new CleanWebpackPlugin()
+        new CleanWebpackPlugin(),
+        new ZipPlugin()
     ]
 }

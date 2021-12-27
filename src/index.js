@@ -1,2 +1,7 @@
-const W = require("./core").default;
-module.exports = W;
+import * as Models from './models/index'
+import {default as W} from './core'
+
+export {
+    Models,
+    W
+}

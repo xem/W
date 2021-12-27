@@ -7,7 +7,7 @@
 //  //     \/
 //  +------+
 
-W.models.pyramid = {
+module.exports = {
     vertices: [
       -.5,-.5, .5,   .5,-.5, .5,    0, .5,  0,  // Front
        .5,-.5, .5,   .5,-.5,-.5,    0, .5,  0,  // Right
@@ -25,4 +25,3 @@ W.models.pyramid = {
       1, 1,   0, 0,   1, 0
     ]
 };
-W.pyramid = settings => W.setState(settings, 'pyramid');

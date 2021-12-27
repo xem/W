@@ -4,7 +4,7 @@ const webpack = require('webpack');
 
 module.exports = {
     entry: './src/index.js',
-    mode: 'production',
+    mode: 'development',
     target: 'web',
     watch: true,
     devtool: 'eval-source-map',
@@ -12,7 +12,7 @@ module.exports = {
         path: path.resolve(__dirname, '../dist'),
         filename: 'W.js',
         library: {
-            type: 'var',
+            type: 'module',
             name: 'W',
         }
     },
@@ -25,6 +25,9 @@ module.exports = {
     optimization: {
         usedExports: true,
         minimize: true,
+        usedExports: true,
+        innerGraph: true,
+        sideEffects: true, 
     },
     plugins: [
         new webpack.ProgressPlugin(),

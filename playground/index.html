@@ -12,8 +12,10 @@
     <script src="../dist/W.js"></script>
     <script>
         const webgl = document.getElementById('webgl')
-        const w = new W({canvas: webgl, debug: true})
-        w.clearColor('#000000')
+        const w = new W.Renderer({canvas: webgl, debug: true})
+        w.clearColor('#808080')
+        w.camera({x: 1, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 30})
+        console.log(w);
     </script>
 </body>
 </html>
