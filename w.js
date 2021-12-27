@@ -115,7 +115,7 @@ W = {
     
     // Shortcut to set the clear color
     W.clearColor = c => W.gl.clearColor(...W.col(c));
-    W.clearColor("ffff");
+    W.clearColor("fff");
     
     // Enable fragments depth sorting
     // (the fragments of close objects will automatically overlap the fragments of further objects)
@@ -431,11 +431,7 @@ W = {
   ambient: a => W.ambientLight = a,
   
   // Convert an rgb/rgba hex string into a vec4
-  col: c => {
-    c = c.replace("#","");
-    if(c.length < 5) return [...[...c].map(a => ('0x' + a) / 15), 1]; // rgb / rgba
-    else return [...c.match(/../g).map(a => ('0x' + a) / 255), 1]; // rrggbb / rrggbbaa
-  },
+  col: c => [...c.replace("#","").match(c.length < 5 ? /./g : /../g).map(a => ('0x' + a) / (c.length < 5 ? 15 : 255)), 1], // rgb / rgba / rrggbb / rrggbbaa
   
   // Add a new 3D model
   add: (name, objects) => {
