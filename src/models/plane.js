@@ -6,7 +6,7 @@
 //  |       |
 //  v2------v3
 
-module.exports = {
+export const Plane = {
     vertices: [
       .5, .5, 0,    -.5, .5, 0,   -.5,-.5, 0,
       .5, .5, 0,    -.5,-.5, 0,    .5,-.5, 0

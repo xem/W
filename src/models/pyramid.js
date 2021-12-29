@@ -7,7 +7,7 @@
 //  //     \/
 //  +------+
 
-module.exports = {
+export const Pyramid = {
     vertices: [
       -.5,-.5, .5,   .5,-.5, .5,    0, .5,  0,  // Front
        .5,-.5, .5,   .5,-.5,-.5,    0, .5,  0,  // Right

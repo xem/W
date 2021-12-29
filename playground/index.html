@@ -9,8 +9,12 @@
 </head>
 <body>
     <canvas id="webgl"></canvas>
-    <script src="../dist/W.min.js"></script>
+    <script src="../devDist/W.js"></script>
     <script>
+        console.log('Cube', W.Cube)
+        console.log('Plane', W.Plane)
+        console.log('Pyramid', W.Pyramid)
+        console.log('Sphere', W.Sphere)
         const webgl = document.getElementById('webgl')
         const w = new W.Renderer({canvas: webgl, debug: true})
         w.clearColor('#808080')
