@@ -1,7 +1,4 @@
-import * as Models from './models/index'
-import {default as W} from './core'
+// import * as Models from './models/index'
+import * as Renderer from './core/index.js'
 
-export {
-    Models,
-    W
-}
+export default {Renderer: Renderer.default}

@@ -6,8 +6,10 @@
   "sideEffects": false,
   "module": "dist/W.module.js",
   "scripts": {
-    "dev": "node --experimental-json-modules ./node_modules/.bin/rollup -c rollup.config.js -w",
-    "build": "rollup -c rollup.config.js --environment INCLUDE_DEPS,BUILD:production",
+    "dev": "node --experimental-json-modules ./node_modules/.bin/rollup -c rollup.config.dev.js -w",
+    "build": "npm run bundle && npm run zip",
+    "bundle": "rollup -c rollup.config.prod.js --environment INCLUDE_DEPS,BUILD:production",
+    "zip": "rollup -c rollup.config.zip.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,6 +31,7 @@
     "@babel/preset-env": "^7.16.5",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-node-resolve": "^13.1.1",
+    "filemanager-plugin": "^2.7.2",
     "rollup": "^2.62.0",
     "rollup-plugin-babel-minify": "^10.0.0",
     "rollup-plugin-delete": "^2.0.0",

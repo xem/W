@@ -1,9 +1,9 @@
 import glslify from 'rollup-plugin-glslify';
 import babel from '@rollup/plugin-babel';
 import babelrc from './.babelrc.json';
-import del from 'rollup-plugin-delete'
 import minify from 'rollup-plugin-babel-minify';
 import { terser } from 'rollup-plugin-terser';
+const rollupFilemanager = require('filemanager-plugin').RollupFilemanager;
 
 export function glsl() {
 	return {
@@ -30,17 +30,15 @@ export function glsl() {
 export default {
 	input: 'src/index.js',
 	output: [{
-	  file: 'dist/W.js',
-	  format: 'umd',
-	  name: 'W',
-	  sourcemap: true
+		file: 'dist/W.min.js',
+		format: 'umd',
+		name: 'W',
 	},
 	{
 		format: 'esm',
 		file: 'dist/W.module.js'
 	}],
 	plugins: [
-		del({ targets: ['dist/*'] }),
 		minify({
 			comments: false,
 		}),
@@ -52,6 +50,15 @@ export default {
 			babelrc: false,
 			...babelrc
 		} ),
-		terser()
+		terser(),
+		rollupFilemanager({
+			events: {
+				start: {
+					del: {
+					  items: ['./dist']
+					}
+				}
+			}
+		}),
     ]
   };
