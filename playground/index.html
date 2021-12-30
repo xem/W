@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <canvas id="webgl"></canvas>
+    <canvas id="webgl" width="1200" height="1000"></canvas>
     <script src="../devDist/W.js"></script>
     <script>
         console.log('Cube', W.Cube)
@@ -17,8 +17,13 @@
         console.log('Sphere', W.Sphere)
         const webgl = document.getElementById('webgl')
         const w = new W.Renderer({canvas: webgl, debug: true})
+        w.light({x: 0, y: 0, z: 0});
         w.clearColor('#808080')
-        w.camera({x: 1, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 30})
+        w.camera({x: 0, y: 0, z: 5, rx: 0, ry: 0, rz: 0, fov: 30})
+        //w.add('cube', W.Cube, {b: 'fff'})
+        //w.add('plane', W.Plane, {b: 'fff'})
+        //w.add('pyramid', W.Pyramid, {b: 'fff'})
+        w.add('sphere', W.Sphere, {b: 'fff'})
         console.log(w);
     </script>
 </body>

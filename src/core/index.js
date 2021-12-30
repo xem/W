@@ -7,19 +7,17 @@ export default class Renderer {
 
   constructor(options) {
     this.debug = options.debug; // Enable shader/program compilation logs (optional)
-    this.reset(options.canvas)
     // List of 3D models that can be rendered by the framework
     // (See the end of the file for built-in models: plane, billboard, cube, pyramid...)
     this.models = {};
     // List of renderers
     // (see the end of the file for built-in renderers: triangles, lines...)
     this.renderers = {};
-  }
-  // Reset the framework
-  // param: a <canvas> element
-  reset(canvas){
+
+    this.transparent = []
+
     // Globals
-    this.canvas = canvas;    // canvas element
+    this.canvas = options.canvas;    // canvas element
     this.objs = 0;           // Object counter
     this.current = {};       // Objects current states
     this.next = {};          // Objects next states
@@ -27,12 +25,18 @@ export default class Renderer {
 
     // WebGL context
     this.gl = this.canvas.getContext('webgl2');
-    
     // Default blending method for transparent objects
     this.gl.blendFunc(770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */);
     
     // Enable texture 0
     this.gl.activeTexture(33984 /* TEXTURE0 */);
+
+    this.start()
+  }
+
+  // Start the framework
+  // param: a <canvas> element
+  start(){
 
     // Create a WebGL program
     this.program = this.gl.createProgram();
@@ -87,7 +91,7 @@ export default class Renderer {
     // When everything is loaded: set default light / camera, and draw the scene
     this.light({y: -1});
     this.camera({fov: 30});
-    this.draw();
+    this.#draw();
   };
 
   // Set a state to an object
@@ -104,11 +108,11 @@ export default class Renderer {
     if(this.state.t && this.state.t.width && !this.textures[this.state.t.id]){
       this.texture = this.gl.createTexture();
       this.gl.pixelStorei(37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, true);
-      this.gl.bindTexture(3553 /* TEXTURE_2D */, this.texture);
+      this.gl.bindTexture(3553 /* TEXTURE_2D */, texture);
       this.gl.pixelStorei(37440 /* UNPACK_FLIP_Y_WEBGL */, 1);
       this.gl.texImage2D(3553 /* TEXTURE_2D */, 0, 6408 /* RGBA */, 6408 /* RGBA */, 5121 /* UNSIGNED_BYTE */, this.state.t);
       this.gl.generateMipmap(3553 /* TEXTURE_2D */);
-      this.textures[this.state.t.id] = this.texture;
+      this.textures[this.state.t.id] = texture;
     }
     
     // Save object's type,
@@ -116,7 +120,7 @@ export default class Renderer {
     // and reset f (the animation timer)
     this.state = {type, ...(this.current[this.state.n] = this.next[this.state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888', mode:4, mix: 0}), ...this.state, f:0};
     
-    if(this.model) {
+    if(this.models) {
       // Build the model's vertices buffer if it doesn't exist yet
       if(this.models[this.state.type]?.vertices && !this.models?.[this.state.type].verticesBuffer){
         this.gl.bindBuffer(34962 /* ARRAY_BUFFER */, this.models[this.state.type].verticesBuffer = this.gl.createBuffer());
@@ -128,11 +132,11 @@ export default class Renderer {
         this.gl.bindBuffer(34962 /* ARRAY_BUFFER */, this.models[this.state.type].uvBuffer = this.gl.createBuffer());
         this.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(this.models[this.state.type].uv), 35044 /*STATIC_DRAW*/); 
       }
-      
+
       // Build the model's index buffer (if any) and smooth normals if they don't exist yet
       if(this.models[this.state.type]?.indices && !this.models[this.state.type].indicesBuffer){
         this.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, this.models[this.state.type].indicesBuffer = this.gl.createBuffer());
-        this.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(this.models[state.type].indices), 35044 /* STATIC_DRAW */);
+        this.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(this.models[this.state.type].indices), 35044 /* STATIC_DRAW */);
         
         // Compute smooth normals (optional)
         if(!this.models[this.state.type].smoothNormals && this.smooth) this.smooth(this.state);
@@ -172,9 +176,12 @@ export default class Renderer {
   };
   
   // Draw the scene
-  draw(now = 0, dt, v, i, transparent = []) {
+  #draw(now = 0, dt, v, i, transparent = []) {
+
+    this.transparent =  transparent
 
     this.lastFrame ||= 0
+
     // Loop and measure time delta between frames
     this.dt = now - this.lastFrame;
     
@@ -228,7 +235,7 @@ export default class Renderer {
     }
     
     // Order transparent objects from back to front
-    transparent.sort((a, b) => {
+    this.transparent.sort((a, b) => {
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
       return this.dist(b) - this.dist(a);
@@ -245,18 +252,14 @@ export default class Renderer {
     // Disable alpha blending for next frame
     this.gl.disable(3042 /* BLEND */);
 
-    window.requestAnimationFrame(() => this.draw());
+    requestAnimationFrame(() => this.#draw());
   };
-
-  addModel(state, type, buffer) {
-    this.model[type] = buffer
-    this.setState(state, type)
-  }
   
   // Render an object
   render(object, dt, buffer) {
-
+    
     this.object = object
+    this.buffer = buffer
     // If the object has a texture
     if(this.object.t) {
 
@@ -268,7 +271,7 @@ export default class Renderer {
     }
 
     // If the object has an animation, increment its timer...
-    if(this.object.f < this.object.a) this.object.f += this.dt;
+    if(this.object.f < this.object.a) this.object.f += dt;
     
     // ...but don't let it go over the animation duration.
     if(this.object.f > this.object.a) this.object.f = this.object.a;
@@ -299,7 +302,6 @@ export default class Renderer {
     
     // Don't render invisible items (camera, light, groups)
     if(!['camera','light','group'].includes(this.object.type)){
-      
       // Set up the position buffer
       this.gl.bindBuffer(34962 /* ARRAY_BUFFER */, this.models[this.object.type].verticesBuffer);
       this.gl.vertexAttribPointer(this.buffer = this.gl.getAttribLocation(this.program, 'pos'), 3, 5126 /* FLOAT */, false, 0, 0)
@@ -381,9 +383,7 @@ export default class Renderer {
       }
     }
   }
-  // Helpers
-  // -------
-  
+
   // Interpolate a property between two values
   lerp(item, property){
     return this.next[item]?.a
@@ -417,9 +417,9 @@ export default class Renderer {
   }
   
   // Add a new 3D model
-  add(name, objects){
+  add(name, objects, settings){
     this.models[name] = objects;
-    this[name] = settings => this.setState(settings, name);
+    this.setState(settings, name);
   }
   
   // Built-in objects

@@ -22,5 +22,5 @@ export const Sphere = ((i, ai, j, aj, p1, p2, vertices = [], indices = [], uv = 
         }
       }
     }
-    return { vertices, uv, indices}
+    return { vertices, uv, indices }
 })();

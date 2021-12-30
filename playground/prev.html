@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <canvas id="webgl"></canvas>
+    <img src='../demos/brick.png' id=brick hidden>
+    <script src="../w.js"></script>
+    <script>
+        console.log(W)
+        W.reset(document.getElementById('webgl'))
+        W.camera({z:5});
+        W.light({z:-1});
+        W.group({n:"G",ry:0});
+        W.plane({g:"G",x:-1,y:1});
+        W.billboard({g:"G",x:1,y:1});
+        W.cube({g:"G",x:-1.5,y:-1});
+        W.pyramid({g:"G",x:0,y:-1});
+        W.sphere({g:"G",x:1.5,y:-1,s:1});
+    </script>
+</body>
+</html>
