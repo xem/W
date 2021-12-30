@@ -138,7 +138,7 @@ export default class Renderer {
         this.gl.bufferData(34963 /* ELEMENT_ARRAY_BUFFER */, new Uint16Array(this.models[this.state.type].indices), 35044 /* STATIC_DRAW */);
         
         // Compute smooth normals (optional)
-        if(!this.models[this.state.type].smoothNormals && this.smooth) this.smooth(this.state);
+        if(!this.models[this.state.type].smoothNormals && this.#smooth) this.#smooth(this.state);
         
         // Make a buffer from the smooth normals (if any)
         if(this.models[this.state.type].smoothNormals){
@@ -441,4 +441,71 @@ export default class Renderer {
   light(t, delay) {
     delay ? setTimeout(()=>{ this.#setState(t, t.n = 'light') }, delay) : this.#setState(t, t.n = 'light')
   }
+  // Smooth normals computation plug-in (optional)
+// =============================================
+  #smooth(state, dict = {}, vertices = []){
+  
+  // Prepare smooth normals arrays
+  this.models[state.type].smoothNormals = [];
+  
+  // Fill vertices array, smooth normals array (with zeroes), dictionnary
+  for(var i = 0; i < this.models[state.type].vertices.length; i+=3){
+    vertices.push([this.models[state.type].vertices[i], this.models[state.type].vertices[i+1], this.models[state.type].vertices[i+2]]);
+  }
+  
+  // Indexed model
+  if(this.models[state.type].indices){
+    
+    // Compute normals of each triangle and accumulate them for each vertex
+    for(var i = 0; i < this.models[state.type].indices.length; i+=3){
+      this.A = vertices[this.Ai = this.models[state.type].indices[i]];
+      this.B = vertices[this.Bi = this.models[state.type].indices[i+1]];
+      this.C = vertices[this.Ci = this.models[state.type].indices[i+2]];
+      this.AB = [this.B[0] - this.A[0], this.B[1] - this.A[1], this.B[2] - this.A[2]];
+      this.BC = [this.C[0] - this.B[0], this.C[1] - this.B[1], this.C[2] - this.B[2]];
+      this.normal = [this.AB[1] * this.BC[2] - this.AB[2] * this.BC[1], this.AB[2] * this.BC[0] - this.AB[0] * this.BC[2], this.AB[0] * this.BC[1] - this.AB[1] * this.BC[0]];
+      dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]] ||= [0,0,0];
+      dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]] ||= [0,0,0];
+      dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]] ||= [0,0,0];
+      dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]] = dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]].map((a,i) => a + this.normal[i]);
+      dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]] = dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]].map((a,i) => a + this.normal[i]);
+      dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]] = dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]].map((a,i) => a + this.normal[i]);
+    }
+    
+    for(var i = 0; i < this.models[state.type].indices.length; i+=3){
+      this.A = vertices[this.Ai = this.models[state.type].indices[i]];
+      this.B = vertices[this.Bi = this.models[state.type].indices[i+1]];
+      this.C = vertices[this.Ci = this.models[state.type].indices[i+2]];
+      this.models[state.type].smoothNormals[this.Ai] = dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]];
+      this.models[state.type].smoothNormals[this.Bi] = dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]];
+      this.models[state.type].smoothNormals[this.Ci] = dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]];
+    }
+  }
+  
+  // Unindexed model
+  else {
+    
+    // Compute normals of each triangle and accumulate them for each vertex
+    for(var i = 0; i < vertices.length; i+=3){
+      this.A = vertices[i];
+      this.B = vertices[i+1];
+      this.C = vertices[i+2];
+      this.AB = [this.B[0] - this.this.A[0], this.B[1] - this.A[1], this.B[2] - this.A[2]];
+      this.BC = [this.C[0] - this.B[0], this.C[1] - this.B[1], this.C[2] - this.B[2]];
+      this.normal = [this.AB[1] * this.BC[2] - this.AB[2] * this.BC[1], this.AB[2] * this.BC[0] - this.AB[0] * this.BC[2], this.AB[0] * this.BC[1] - this.AB[1] * this.BC[0]];
+      dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]] = dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]].map((a,i) => a + this.normal[i]);
+      dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]] = dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]].map((a,i) => a + this.normal[i]);
+      dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]] = dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]].map((a,i) => a + this.normal[i]);
+    }
+    
+    for(var i = 0; i < vertices.length; i+=3){
+      this.A = vertices[i];
+      this.B = vertices[i+1];
+      this.C = vertices[i+2];
+      this.models[state.type].smoothNormals[this.Ai] = dict[this.A[0]+"_"+this.A[1]+"_"+this.A[2]];
+      this.models[state.type].smoothNormals[this.Bi] = dict[this.B[0]+"_"+this.B[1]+"_"+this.B[2]];
+      this.models[state.type].smoothNormals[this.Ci] = dict[this.C[0]+"_"+this.C[1]+"_"+this.C[2]];
+    }
+  }
+}
 };

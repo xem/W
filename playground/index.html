@@ -28,11 +28,12 @@
         w.light({x: 0, y: 0, z: 0});
         w.clearColor('#808080')
         w.camera({x: 0, y: 0, z: 5, rx: 0, ry: 0, rz: 0, fov: 30})
+        w.ambient(1)
         //w.add('cube', W.Cube, {b: 'fff'})
         //w.add('plane', W.Plane, {b: 'fff'})
         //w.add('pyramid', W.Pyramid, {b: 'fff'})
         //w.add('sphere', W.Sphere, {b: 'fff'})
-        w.add("mario", marioData, {size:2,t:mario,rx:90,rz:180,s:1});
+        w.add("mario", marioData, {size:2,t:mario,rx:90,rz:180, x: 1, y: -.5});
         console.log(w);
     </script>
 </body>
