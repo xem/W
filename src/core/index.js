@@ -31,12 +31,12 @@ export default class Renderer {
     // Enable texture 0
     this.gl.activeTexture(33984 /* TEXTURE0 */);
 
-    this.start()
+    this.#start()
   }
 
   // Start the framework
   // param: a <canvas> element
-  start(){
+  #start(){
 
     // Create a WebGL program
     this.program = this.gl.createProgram();
@@ -81,7 +81,7 @@ export default class Renderer {
     this.gl.clearColor(1, 1, 1, 1);
     
     // Shortcut to set the clear color
-    this.clearColor = c => this.gl.clearColor(...this.col(c));
+    this.clearColor = c => this.gl.clearColor(...this.#col(c));
     this.clearColor("ffff");
     
     // Enable fragments depth sorting
@@ -95,7 +95,7 @@ export default class Renderer {
   };
 
   // Set a state to an object
-  setState(state, type, texture, i, normal = [], A, B, C, Ai, Bi, Ci, AB, BC) {
+  #setState(state, type, texture, i, normal = [], A, B, C, Ai, Bi, Ci, AB, BC) {
 
     // Custom name or default name ('o' + auto-increment)
     this.state = state
@@ -192,7 +192,7 @@ export default class Renderer {
     
     // Create a matrix called v containing the current camera transformation
     this.v = v
-    this.v = this.animation('camera');
+    this.v = this.#animation('camera');
     
     // Send it to the shaders as the Eye matrix
     this.gl.uniformMatrix4fv(
@@ -217,15 +217,15 @@ export default class Renderer {
     // Transition the light's direction and send it to the shaders
     this.gl.uniform3f(
       this.gl.getUniformLocation(this.program, 'light'),
-      this.lerp('light','x'), this.lerp('light','y'), this.lerp('light','z')
+      this.#lerp('light','x'), this.#lerp('light','y'), this.#lerp('light','z')
     );
     
     // Render all the objects in the scene
     for(i in this.next){
       
       // Render the shapes with no texture and no transparency (RGB1 color)
-      if(!this.next[i].t && this.col(this.next[i].b)[3] == 1){
-        this.render(this.next[i], this.dt);
+      if(!this.next[i].t && this.#col(this.next[i].b)[3] == 1){
+        this.#render(this.next[i], this.dt);
       }
       
       // Add the objects with transparency (RGBA or texture) in an array
@@ -238,7 +238,7 @@ export default class Renderer {
     this.transparent.sort((a, b) => {
       // Return a value > 0 if b is closer to the camera than a
       // Return a value < 0 if a is closer to the camera than b
-      return this.dist(b) - this.dist(a);
+      return this.#dist(b) - this.#dist(a);
     });
 
     // Enable alpha plending
@@ -246,7 +246,7 @@ export default class Renderer {
     
     // Render the objects
     for(i in this.transparent){
-      this.render(this.transparent[i], this.dt);
+      this.#render(this.transparent[i], this.dt);
     }
     
     // Disable alpha blending for next frame
@@ -256,7 +256,7 @@ export default class Renderer {
   };
   
   // Render an object
-  render(object, dt, buffer) {
+  #render(object, dt, buffer) {
     
     this.object = object
     this.buffer = buffer
@@ -277,7 +277,7 @@ export default class Renderer {
     if(this.object.f > this.object.a) this.object.f = this.object.a;
 
     // Compose the model matrix from lerped transformations
-    this.next[this.object.n].m = this.animation(this.object.n);
+    this.next[this.object.n].m = this.#animation(this.object.n);
 
     // If the object is in a group:
     if(this.next[this.object.g]){
@@ -368,7 +368,7 @@ export default class Renderer {
         // Set the object's color
         this.gl.vertexAttrib4fv(
           this.gl.getAttribLocation(this.program, 'col'),
-          this.col(this.object.b)
+          this.#col(this.object.b)
         );
 
         // Draw
@@ -385,24 +385,24 @@ export default class Renderer {
   }
 
   // Interpolate a property between two values
-  lerp(item, property){
+  #lerp(item, property){
     return this.next[item]?.a
     ? this.current[item][property] + (this.next[item][property] -  this.current[item][property]) * (this.next[item].f / this.next[item].a)
     : this.next[item][property]
   }
   
   // Transition an item
-  animation(item, m = new DOMMatrix) {
+  #animation(item, m = new DOMMatrix) {
     return this.next[item]
     ? m
-      .translateSelf(this.lerp(item, 'x'), this.lerp(item, 'y'), this.lerp(item, 'z'))
-      .rotateSelf(this.lerp(item, 'rx'),this.lerp(item, 'ry'),this.lerp(item, 'rz'))
-      .scaleSelf(this.lerp(item, 'w'),this.lerp(item, 'h'),this.lerp(item, 'd'))
+      .translateSelf(this.#lerp(item, 'x'), this.#lerp(item, 'y'), this.#lerp(item, 'z'))
+      .rotateSelf(this.#lerp(item, 'rx'),this.#lerp(item, 'ry'),this.#lerp(item, 'rz'))
+      .scaleSelf(this.#lerp(item, 'w'),this.#lerp(item, 'h'),this.#lerp(item, 'd'))
     : m
   }
     
   // Compute the distance squared between two objects (useful for sorting transparent items)
-  dist(a, b = this.next.camera){
+  #dist(a, b = this.next.camera){
     return a?.m && b?.m ? (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2 : 0
   } 
   
@@ -410,7 +410,7 @@ export default class Renderer {
   ambient(a){return this.ambientLight = a}
   
   // Convert an rgb/rgba hex string into a vec4
-  col(c){
+  #col(c){
     c = c.replace("#","");
     if(c.length < 5) return [...[...c].map(a => ('0x' + a) / 15), 1]; // rgb / rgba
     else return [...c.match(/../g).map(a => ('0x' + a) / 255), 1]; // rrggbb / rrggbbaa
@@ -419,16 +419,16 @@ export default class Renderer {
   // Add a new 3D model
   add(name, objects, settings){
     this.models[name] = objects;
-    this.setState(settings, name);
+    this.#setState(settings, name);
   }
   
   // Built-in objects
   // ----------------
   
-  group(t) {return this.setState(t, 'group')} 
+  group(t) {return this.#setState(t, 'group')} 
   
   move(t, delay) {
-    setTimeout(()=>{ this.setState(t) }, delay || 1)
+    setTimeout(()=>{ this.#setState(t) }, delay || 1)
   }
   
   delete(t, delay) {
@@ -436,10 +436,10 @@ export default class Renderer {
   }
   
   camera(t, delay){
-    setTimeout(()=>{ this.setState(t, t.n = 'camera') }, delay || 1)
+    setTimeout(()=>{ this.#setState(t, t.n = 'camera') }, delay || 1)
   }
     
   light(t, delay) {
-    delay ? setTimeout(()=>{ this.setState(t, t.n = 'light') }, delay) : this.setState(t, t.n = 'light')
+    delay ? setTimeout(()=>{ this.#setState(t, t.n = 'light') }, delay) : this.#setState(t, t.n = 'light')
   }
 };
