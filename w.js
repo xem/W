@@ -132,7 +132,6 @@ W = {
 
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
-    
     // Size sets w, h and d at once (optional)
     if(state.size) state.w = state.h = state.d = state.size;
     

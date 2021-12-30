@@ -35,7 +35,6 @@ export default class Renderer {
   }
 
   // Start the framework
-  // param: a <canvas> element
   #start(){
 
     // Create a WebGL program
@@ -103,16 +102,16 @@ export default class Renderer {
     
     // Size sets w, h and d at once (optional)
     if(this.state.size) this.state.w = this.state.h = this.state.d = this.state.size;
-    
+
     // If a new texture is provided, build it and save it in W.textures
     if(this.state.t && this.state.t.width && !this.textures[this.state.t.id]){
       this.texture = this.gl.createTexture();
       this.gl.pixelStorei(37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, true);
-      this.gl.bindTexture(3553 /* TEXTURE_2D */, texture);
+      this.gl.bindTexture(3553 /* TEXTURE_2D */, this.texture);
       this.gl.pixelStorei(37440 /* UNPACK_FLIP_Y_WEBGL */, 1);
       this.gl.texImage2D(3553 /* TEXTURE_2D */, 0, 6408 /* RGBA */, 6408 /* RGBA */, 5121 /* UNSIGNED_BYTE */, this.state.t);
       this.gl.generateMipmap(3553 /* TEXTURE_2D */);
-      this.textures[this.state.t.id] = texture;
+      this.textures[this.state.t.id] = this.texture;
     }
     
     // Save object's type,
