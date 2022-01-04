@@ -168,9 +168,9 @@ Custom models can be drawn with the same settings as the built-in ones (group, s
 <br><b>4) Transformations and animation</b>
 
 
-<br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({w, h, d, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
-<br>If a delay is provided, the transformation will be done after that delay in milliseconds. (0 by default)
-<br>If an "a" parameter is provided, the transformation will be animated. The animation will last for "a" milliseconds. (0 by default)
+<br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({size, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
+<br>If a <pre class="inline language-js"><code class="language-js">delay</code></pre> is provided, the transformation will be done after that delay in milliseconds. (0 by default)
+<br>If an <pre class="inline language-js"><code class="language-js">a</code></pre> parameter is provided, the transformation will be animated. The animation will last for <pre class="inline language-js"><code class="language-js">a</code></pre> milliseconds. (0 by default)
 <br>
 <br>The camera can be moved and animated using <pre class="inline language-js"><code class="language-js">W.camera({x, y, z, rx, ry, rz, a}, delay)</code></pre>.
 <br>The directional light can be moved and animated with <pre class="inline language-js"><code class="language-js">W.light({x, y, z, a}, delay)</code></pre>.

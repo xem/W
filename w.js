@@ -9,8 +9,7 @@ W = {
   // (See the end of the file for built-in models: plane, billboard, cube, pyramid...)
   models: {},
   
-  // List of renderers
-  // (see the end of the file for built-in renderers: triangles, lines...)
+  // List of custom renderers
   renderers: {},
 
   // Reset the framework
@@ -37,7 +36,7 @@ W = {
     W.program = W.gl.createProgram();
     
     // Hide polygons back-faces (optional)
-    //W.gl.enable(2884 /* CULL_FACE */);
+    W.gl.enable(2884 /* CULL_FACE */);
     
     // Create a Vertex shader
     // (this GLSL program is called for every vertex of the scene)

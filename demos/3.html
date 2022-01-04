@@ -60,7 +60,7 @@ onload = () => {
 W.add("mario", {vertices: [...], uv: [...], indices: [...]});
 W.camera({z:4});
 W.light({x:.5,y:0,z:-.5});
-W.mario({n:"M",size:3,t:mario${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked ? (",t:mario") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});`;
+W.mario({n:"M",size:3${cbb.checked ? (",b:'"+c.value+"'") : ""}${cbt.checked ? (",t:mario") : ""}${cbb.checked && cbt.checked ? ",mix:"+mix.value : ""}${ns.checked ? ",ns:1" : ""}${sm.checked ? (",s:1") : ""}});`;
 
 
     code.innerHTML = html;
