@@ -30,15 +30,16 @@
 <li>Groups of objects
 <li>Flat or smooth shading
 <li>Custom transformations
-<li>Custom rendering
+<!--li>Custom rendering-->
 <li>Controllable camera
 <li>Controllable light
 <li>Indexed or unindexed models
 <li>Automatic or custom normals
+<li>Less than 3kb!
 </ul>
 </center>
 
-<h3>Download</h3> <span>(v.1.01)</span>
+<h3>Download</h3> <span>(v.1.02)</span>
 <br>
 <div id=dl>
 <a href="w.js" download>Commented, full<br>(24kb)</a>
@@ -148,8 +149,9 @@ Groups can be created using <pre class="inline language-js"><code class="languag
 <br>You'll need:
 <ul>
 <li>An array of vertices coordinates: [x, y, z, x, y, z, ...],
-<li>An array of uv texture coordinates: [u, v, u, v, ...] (if the model is textured),
-<li>And an array of indices (only if the model uses indexed buffers). W.js supports both indexed and unindexed models!
+<li>Optionally: an array of uv texture coordinates: [u, v, u, v, ...] (if the model is textured),
+<li>Optionally: an array of indices (if the model uses indexed buffers). W.js supports both indexed and unindexed models!
+<li>Optionally: an array of normals (if you don't want to use the built-in flat/smooth normals)
 </ul>
 Add the new model using <pre class="inline language-js"><code class="language-js">W.add("custom_shape", {vertices, uv, indices})</code></pre> and draw it using <pre class="inline language-js"><code class="language-js">W.custom_shape(settings)</code></pre>.
 <br>
@@ -168,7 +170,7 @@ Custom models can be drawn with the same settings as the built-in ones (group, s
 <br><b>4) Transformations and animation</b>
 
 
-<br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({size, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
+<br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({n, size, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
 <br>If a <pre class="inline language-js"><code class="language-js">delay</code></pre> is provided, the transformation will be done after that delay in milliseconds. (0 by default)
 <br>If an <pre class="inline language-js"><code class="language-js">a</code></pre> parameter is provided, the transformation will be animated. The animation will last for <pre class="inline language-js"><code class="language-js">a</code></pre> milliseconds. (0 by default)
 <br>
@@ -186,17 +188,29 @@ Custom models can be drawn with the same settings as the built-in ones (group, s
 <br>
 <br><b>5) Advanced techniques</b>
 
+<ul>
+<li>You can set a custom projection matrix with <pre class="inline language-js"><code class="language-js">W.camera({M:[...]})</code></pre>. (ex: orthographic camera)
+<li>You can set a custom transform matrix to any object with <pre class="inline language-js"><code class="language-js">W.move({n, M:[...]})</code></pre>. (ex: asix-based rotations)
+<li>You can add per-vertex coloring by adding a <b>rgb</b> array in <pre class="inline language-js"><code class="language-js">W.add()</code></pre> (along with the vertices, uvs and indices)
+<li>You can use animated textures (from a GIF, video or canvas) by calling <pre class="inline language-js"><code class="language-js">W.animatedTextures=true</code></pre> (false by default).
+</ul>
+
 <br>
-<br>Coming soon!
-
-
+<br>
+<br><b>Bonus:</b>
+<ul>
+<li>Peach castle example by <a href="demos/castle.html">Xem</a>
+<li>Free rotation cube example by <a href="demos/freerotation.html">Xem and RandyTayler</a>
+<li>Haxe externs by <a href="https://github.com/gogoprog/haxe-w">Gogoprog</a> + a <a href="https://github.com/gogoprog/ship2k22">32kb shmup game</a>. 
+<li>Modern JS version by <a href="https://github.com/Valerioageno/W">Valerioageno</a>
+</ul>
 
 
 </div>
 <br>
 <br>
 <br>
-<h4 style=font-size:20px>2021-2022 - Made by xem & stas</h4>
+<h4 style=font-size:18px>2021-2022 - Made by xem, stas & kchplr</h4>
 <br>
 <br>
 <br>
