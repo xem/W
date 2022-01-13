@@ -10,7 +10,7 @@ W = {
   models: {},
   
   // List of custom renderers
-  renderers: {},
+  //renderers: {},
 
   // Reset the framework
   // param: a <canvas> element
@@ -45,20 +45,20 @@ W = {
       t = W.gl.createShader(35633 /* VERTEX_SHADER */),
       
       `#version 300 es
-      precision highp float;                  // Set default float precision
-      in vec4 pos, col, uv, normal;           // Vertex attributes: position, color, texture coordinates, normal (if any)
-      uniform mat4 pv, eye, m, im;            // Uniform transformation matrices: projection * view, eye, model, inverse model
-      uniform vec4 bb;                        // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
-      out vec4 v_pos, v_col, v_uv, v_normal;  // Varyings sent to the fragment shader: position, color, texture coordinates, normal (if any)
-      void main() {
-        gl_Position = pv * (                  // Set vertex position: p * v * v_pos
-          v_pos = bb.z > 0.                   // Set v_pos varying:
-          ? m[3] + eye * (pos * bb)           // Billboards always face the camera:  p * v * distance + eye * (position * [w, h, 1.0, 0.0])
-          : m * pos                           // Other objects rotate normally:      p * v * m * position
-        );
-        v_col = col;                          // Set varyings 
+      precision highp float;                        // Set default float precision
+      in vec4 pos, col, uv, normal;                 // Vertex attributes: position, color, texture coordinates, normal (if any)
+      uniform mat4 pv, eye, m, im;                  // Uniform transformation matrices: projection * view, eye, model, inverse model
+      uniform vec4 bb;                              // If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
+      out vec4 v_pos, v_col, v_uv, v_normal;        // Varyings sent to the fragment shader: position, color, texture coordinates, normal (if any)
+      void main() {                                 
+        gl_Position = pv * (                        // Set vertex position: p * v * v_pos
+          v_pos = bb.z > 0.                         // Set v_pos varying:
+          ? m[3] + eye * (pos * bb)                 // Billboards always face the camera:  p * v * distance + eye * (position * [w, h, 1.0, 0.0])
+          : m * pos                                 // Other objects rotate normally:      p * v * m * position
+        );                                          
+        v_col = col;                                // Set varyings 
         v_uv = uv;
-        v_normal = transpose(inverse(m)) * normal;  // recompute normals
+        v_normal = transpose(inverse(m)) * normal;  // recompute normals to match model thansformation
       }`
     );
     
@@ -81,20 +81,19 @@ W = {
       uniform sampler2D sampler;              // Uniform: 2D texture
       out vec4 c;                             // Output: final fragment color
 
-      // The code below displays either colored or textured fragments
-      // To simplify, we decided to enable texturing if the Alpha value of the color is '0.0', and to use a color otherwise
+      // The code below displays colored / textured / shaded fragments
       void main() {
-        // base color (rgba or texture)
-        c = mix(texture(sampler, v_uv.xy), v_col, o[3]);
-
-        if(o[1] > 0.){
-          // output = vec4(base color's RGB * (directional light + ambient light)), base color's Alpha) 
-          if(o[0] > 0.){
-            c = vec4(c.rgb * (max(dot(light, -normalize(vec3(v_normal.xyz))), 0.0) + o[2]), c.a);
-          }
-          else {
-            c = vec4(c.rgb * (max(dot(light, -normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)))), 0.0) + o[2]), c.a);
-          }
+        c = mix(texture(sampler, v_uv.xy), v_col, o[3]);  // base color (mix of texture and rgba)
+        if(o[1] > 0.){                                    // if lighting/shading is enabled:
+          c = vec4(                                       // output = vec4(base color RGB * (directional shading + ambient light)), base color Alpha
+            c.rgb * (dot(light, -normalize(               // Directional shading: compute dot product of light direction and normal
+              o[0] > 0.                                   // if smooth shading is enabled:
+              ? vec3(v_normal.xyz)                        // use smooth normals passed as varying
+              : cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))   // else, compute flat normal by making a cross-product with the current fragment and its x/y neighbours
+            ))
+            + o[2]),                                      // add ambient light passed as uniform
+            c.a                                           // use base color's alpha
+          );
         }
       }`
     );
@@ -146,6 +145,17 @@ W = {
       W.textures[state.t.id] = texture;
     }
     
+    // Recompute the projection matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
+    if(state.fov){
+      W.projection =     
+        new DOMMatrix([
+          (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
+          0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
+          0, 0, -1001 / 999, -1,
+          0, 0, -2000 / 999, 0
+        ]);
+    }
+    
     // Save object's type,
     // merge previous state (or default state) with the new state passed in parameter,
     // and reset f (the animation timer)
@@ -157,14 +167,12 @@ W = {
       W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].vertices), 35044 /*STATIC_DRAW*/);
 
       // Compute smooth normals if they don't exist yet (optional)
-      console.log(state, W.models[state.type]);
-      if(!W.models[state.type].smoothNormals && W.smooth) W.smooth(state);
+      if(!W.models[state.type].normals && W.smooth) W.smooth(state);
       
-      // Make a buffer from the smooth normals (if any)
-      if(W.models[state.type].smoothNormals){
-        // Smooth normals buffer
-        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].smoothNormalsBuffer = W.gl.createBuffer());
-        W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].smoothNormals.flat()), 35044 /*STATIC_DRAW*/); 
+      // Make a buffer from the smooth/custom normals (if any)
+      if(W.models[state.type].normals){
+        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[state.type].normalsBuffer = W.gl.createBuffer());
+        W.gl.bufferData(34962 /* ARRAY_BUFFER */, new Float32Array(W.models[state.type].normals.flat()), 35044 /*STATIC_DRAW*/); 
       }      
     }
     
@@ -192,17 +200,6 @@ W = {
     
     // Save new state
     W.next[state.n] = state;
-    
-    // (Re)compute the perspective matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
-    if(state.fov){
-      W.perspective =     
-        new DOMMatrix([
-          (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
-          0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
-          0, 0, -1001 / 999, -1,
-          0, 0, -2000 / 999, 0
-        ]);
-    }
   },
   
   // Draw the scene
@@ -230,7 +227,7 @@ W = {
     v.invertSelf();
 
     // Premultiply it with the Perspective matrix to obtain a Projection-View matrix
-    v.preMultiplySelf(W.perspective);
+    v.preMultiplySelf(W.projection);
     
     // send it to the shaders as the pv matrix
     W.gl.uniformMatrix4fv(
@@ -306,7 +303,7 @@ W = {
       // premultiply the model matrix by the group's model matrix.
       W.next[object.n].m.preMultiplySelf(W.next[object.g].M || W.next[object.g].m);
     }
-    
+
     // send the model matrix to the vertex shader
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'm'),
@@ -337,8 +334,8 @@ W = {
       }
       
       // Set the normals buffer
-      if(object.s && W.models[object.type].smoothNormalsBuffer){
-        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].smoothNormalsBuffer);
+      if((object.s || W.models[object.type].customNormals) && W.models[object.type].normalsBuffer){
+        W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].normalsBuffer);
         W.gl.vertexAttribPointer(buffer = W.gl.getAttribLocation(W.program, 'normal'), 3, 5126 /* FLOAT */, false, 0, 0);
         W.gl.enableVertexAttribArray(buffer);
       }
@@ -383,10 +380,10 @@ W = {
       }
       
       // Use a renderer (custom / default)
-      if(object.r){
-        W.renderers[object.r](object);
-      }
-      else {
+      //if(object.r){
+      //  W.renderers[object.r](object);
+      //}
+      //else {
         // Set the object's color
         W.gl.vertexAttrib4fv(
           W.gl.getAttribLocation(W.program, 'col'),
@@ -402,7 +399,7 @@ W = {
         else {
           W.gl.drawArrays(+object.mode || W.gl[object.mode], 0, W.models[object.type].vertices.length / 3);
         }
-      }
+      //}
     }
   },
   
@@ -436,6 +433,9 @@ W = {
   // Add a new 3D model
   add: (name, objects) => {
     W.models[name] = objects;
+    if(objects.normals){
+      W.models[name].customNormals = 1;
+    }
     W[name] = settings => W.setState(settings, name);
   },
   
@@ -459,7 +459,7 @@ W = {
 W.smooth = (state, dict = {}, vertices = [], iterate, iterateSwitch, i, j, A, B, C, Ai, Bi, Ci, normal) => {
   
   // Prepare smooth normals array
-  W.models[state.type].smoothNormals = [];
+  W.models[state.type].normals = [];
   
   // Fill vertices array: [[x,y,z],[x,y,z]...]
   for(i = 0; i < W.models[state.type].vertices.length; i+=3){
@@ -484,9 +484,9 @@ W.smooth = (state, dict = {}, vertices = [], iterate, iterateSwitch, i, j, A, B,
     dict[A[0]+"_"+A[1]+"_"+A[2]] ||= [0,0,0];
     dict[B[0]+"_"+B[1]+"_"+B[2]] ||= [0,0,0];
     dict[C[0]+"_"+C[1]+"_"+C[2]] ||= [0,0,0];
-    W.models[state.type].smoothNormals[Ai] = dict[A[0]+"_"+A[1]+"_"+A[2]] = dict[A[0]+"_"+A[1]+"_"+A[2]].map((a,i) => a + normal[i]);
-    W.models[state.type].smoothNormals[Bi] = dict[B[0]+"_"+B[1]+"_"+B[2]] = dict[B[0]+"_"+B[1]+"_"+B[2]].map((a,i) => a + normal[i]);
-    W.models[state.type].smoothNormals[Ci] = dict[C[0]+"_"+C[1]+"_"+C[2]] = dict[C[0]+"_"+C[1]+"_"+C[2]].map((a,i) => a + normal[i]);
+    W.models[state.type].normals[Ai] = dict[A[0]+"_"+A[1]+"_"+A[2]] = dict[A[0]+"_"+A[1]+"_"+A[2]].map((a,i) => a + normal[i]);
+    W.models[state.type].normals[Bi] = dict[B[0]+"_"+B[1]+"_"+B[2]] = dict[B[0]+"_"+B[1]+"_"+B[2]].map((a,i) => a + normal[i]);
+    W.models[state.type].normals[Ci] = dict[C[0]+"_"+C[1]+"_"+C[2]] = dict[C[0]+"_"+C[1]+"_"+C[2]].map((a,i) => a + normal[i]);
   }
 }
 
