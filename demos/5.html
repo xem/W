@@ -6,44 +6,43 @@
 <script src="jscolor.js"></script>
 <table width=850>
 <tr>
-<td>
-<canvas id=c5 width=340 height=300></canvas>
+<td width=320>
+<canvas id=c5 width=320 height=340></canvas>
 
 <td>
 
-<pre class=language-js><code id=code>W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:20});
+<pre class=language-js><code id=code>orthogonal = ({left, right, top, bottom, near, far }) => {
+  return new DOMMatrix([
+    2/(right - left), 0, 0, 0,
+    0, 2/(top - bottom), 0, 0,
+    0, 0, -2/(far - near), 0,
+    -(right + left)/(right - left), -(top + bottom)/(top - bottom),
+    -(far + near)/(far - near), 1
+  ]);
+}
 
 
-
+W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:22});
 </code></pre>
 <b>Projection</b>
 <p>
-<input type=radio name=p id=p1 checked> Perspective (default)
-<input type=radio name=p id=p2> Orthogonal (custom)
+<label><input type=radio name=p id=p1 checked> Perspective (default)</label>
+<label><input type=radio name=p id=p2> Orthogonal (custom)</label>
 
 
-<p style="position:absolute;top:270px">(You can find an example of orthogonal matrix function <a href="https://github.com/xem/webgl-guide/blob/gh-pages/lib/matrix.js#L20-L39">here</a>)
+<!--p style="position:absolute;top:270px">(You can find an example of orthogonal matrix function <a href="https://github.com/xem/webgl-guide/blob/gh-pages/lib/matrix.js#L20-L39">here</a>)-->
 
 
 </table>
 
 <script>
 
-orthogonal = options => {
-  var top = options.top;
-  var bottom = options.bottom;
-  var left = options.left;
-  var right = options.right;
-  var near = options.near || 0;
-  var far = options.far || 100;
-  var rw = 1 / (right - left);
-  var rh = 1 / (top - bottom);
-  var rd = 1 / (far - near);
+orthogonal = ({left, right, top, bottom, near, far }) => {
   return new DOMMatrix([
-    2 * rw, 0, 0, 0,
-    0, 2 * rh, 0, 0,
-    0, 0, -2 * rd, 0,
-    -(right + left) * rw, -(top + bottom) * rh, -(far + near) * rd, 1
+    2 / (right - left), 0, 0, 0,
+    0, 2 / (top - bottom), 0, 0,
+    0, 0, -2 / (far - near), 0,
+    -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1
   ]);
 }
 
@@ -51,7 +50,7 @@ orthogonal = options => {
 onload = () => {
   W.reset(c5);
   W.light({x:.5,y:0,z:-.5});
-  W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:20});
+  W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:22});
   
   W.cube({x:-2,y:-2,z:-6,b:"146"});
   W.pyramid({x:0,y:-2,z:-6,b:"146"});
@@ -68,24 +67,40 @@ onload = () => {
   onchange = oninput = () => {
         
     if(p1.checked){
-      code.innerHTML = `W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:20});
+      code.innerHTML = `orthogonal = ({left, right, top, bottom, near, far }) => {
+  return new DOMMatrix([
+    2/(right - left), 0, 0, 0,
+    0, 2/(top - bottom), 0, 0,
+    0, 0, -2/(far - near), 0,
+    -(right + left)/(right - left), -(top + bottom)/(top - bottom),
+    -(far + near)/(far - near), 1
+  ]);
+}
 
 
-
+W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:22});
 `;
       
-      W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:20});
+      W.camera({x:4.5,y:2,z:0,rx:-20,ry:30,fov:22});
       
       
     }
     
     else {
-      code.innerHTML = `W.projection = orthogonal({
-  left:-4,right:4,top:4,bottom:-4,near:1,far:1000
-});
+      code.innerHTML = `orthogonal = ({left, right, top, bottom, near, far }) => {
+  return new DOMMatrix([
+    2/(right - left), 0, 0, 0,
+    0, 2/(top - bottom), 0, 0,
+    0, 0, -2/(far - near), 0,
+    -(right + left)/(right - left), -(top + bottom)/(top - bottom),
+    -(far + near)/(far - near), 1
+  ]);
+}
+
+W.projection = orthogonal({left:-4,right:4,top:4,bottom:-4,near:1,far:99});
 W.camera({x:4.5,y:2,z:0,rx:-20,ry:30});`;
 
-    W.projection = orthogonal({left:-4,right:4,top:4,bottom:-4,near:1,far:1000});
+    W.projection = orthogonal({left:-4,right:4,top:4,bottom:-4,near:1,far:99});
     W.camera({x:4.5,y:2,z:0,rx:-20,ry:30});
 
 
@@ -100,7 +115,7 @@ W.camera({x:4.5,y:2,z:0,rx:-20,ry:30});`;
 
 <style>
 body { font-family: calibri; font-size: 12px; margin: 0; }
-pre { background: #eee; padding: 8px !important; display: block; width:415px; overflow-x: auto; margin: 0 0 20px 0 !important;  border: 2px solid #000; border-right-width: 4px; }
+pre { background: #eee; padding: 8px !important; display: block; width:465px; overflow-x: auto; margin: 0 0 20px 0 !important;  border: 2px solid #000; border-right-width: 4px; }
 td+td { padding: 0 0 0 20px; vertical-align: top; position: relative; line-height: 25px; }
 br { line-height: 20px }
 #c { width: 90px }
