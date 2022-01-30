@@ -240,11 +240,11 @@ W = {
     //W.gl.depthMask(W.gl.FALSE)
     
     // Render the objects (clear depth buffer between each to allow transparent objects to intersect each other)
-    W.gl.depthFunc(W.gl.ALWAYS)
+    //W.gl.depthFunc(W.gl.ALWAYS)
     for(i in transparent){
       W.render(transparent[i], dt);
     }
-    W.gl.depthFunc(W.gl.LESS)
+    //W.gl.depthFunc(W.gl.LESS)
     
     //W.gl.depthMask(W.gl.TRUE)
     
