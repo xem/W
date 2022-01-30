@@ -86,11 +86,11 @@ W = {
         c = mix(texture(sampler, v_uv.xy), v_col, o[3]);  // base color (mix of texture and rgba)
         if(o[1] > 0.){                                    // if lighting/shading is enabled:
           c = vec4(                                       // output = vec4(base color RGB * (directional shading + ambient light)), base color Alpha
-            c.rgb * (dot(light, -normalize(               // Directional shading: compute dot product of light direction and normal
+            c.rgb * (max(0., dot(light, -normalize(       // Directional shading: compute dot product of light direction and normal (0 if negative)
               o[0] > 0.                                   // if smooth shading is enabled:
               ? vec3(v_normal.xyz)                        // use smooth normals passed as varying
               : cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))   // else, compute flat normal by making a cross-product with the current fragment and its x/y neighbours
-            ))
+            )))
             + o[2]),                                      // add ambient light passed as uniform
             c.a                                           // use base color's alpha
           );
@@ -145,14 +145,14 @@ W = {
       W.textures[state.t.id] = texture;
     }
     
-    // Recompute the projection matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
+    // Recompute the projection matrix if fov is set (near: 0, far: 1000, ratio: canvas ratio)
     if(state.fov){
       W.projection =     
         new DOMMatrix([
           (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
           0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
-          0, 0, -1001 / 999, -1,
-          0, 0, -2000 / 999, 0
+          0, 0, -1, -1,
+          0, 0, -2, 0
         ]);
     }
     
@@ -236,21 +236,18 @@ W = {
 
     // Enable alpha blending
     W.gl.enable(3042 /* BLEND */);
+
+    // Disable depth buffer writes
+    W.gl.depthMask(0)
     
-    //W.gl.depthMask(W.gl.FALSE)
-    
-    // Render the objects (clear depth buffer between each to allow transparent objects to intersect each other)
-    //W.gl.depthFunc(W.gl.ALWAYS)
+    // Render all transparent objects
     for(i in transparent){
       W.render(transparent[i], dt);
     }
-    //W.gl.depthFunc(W.gl.LESS)
     
-    //W.gl.depthMask(W.gl.TRUE)
-    
-    // Disable alpha blending for next frame
+    // Revert to normal state for the next frame
+    W.gl.depthMask(1);
     W.gl.disable(3042 /* BLEND */);
-    
     
     // Create a matrix called v containing the current camera transformation
     v = W.animation('camera');
@@ -291,8 +288,6 @@ W = {
   
   // Render an object
   render: (object, dt, buffer) => {
-    
-    //console.log(object);
 
     // If the object has a texture
     if(object.t) {
