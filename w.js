@@ -86,11 +86,11 @@ W = {
         c = mix(texture(sampler, v_uv.xy), v_col, o[3]);  // base color (mix of texture and rgba)
         if(o[1] > 0.){                                    // if lighting/shading is enabled:
           c = vec4(                                       // output = vec4(base color RGB * (directional shading + ambient light)), base color Alpha
-            c.rgb * (dot(light, -normalize(               // Directional shading: compute dot product of light direction and normal
+            c.rgb * (max(0., dot(light, -normalize(       // Directional shading: compute dot product of light direction and normal (0 if negative)
               o[0] > 0.                                   // if smooth shading is enabled:
               ? vec3(v_normal.xyz)                        // use smooth normals passed as varying
               : cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))   // else, compute flat normal by making a cross-product with the current fragment and its x/y neighbours
-            ))
+            )))
             + o[2]),                                      // add ambient light passed as uniform
             c.a                                           // use base color's alpha
           );
@@ -145,14 +145,14 @@ W = {
       W.textures[state.t.id] = texture;
     }
     
-    // Recompute the projection matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
+    // Recompute the projection matrix if fov is set (near: 0, far: 1000, ratio: canvas ratio)
     if(state.fov){
       W.projection =     
         new DOMMatrix([
           (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
           0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
-          0, 0, -1001 / 999, -1,
-          0, 0, -2000 / 999, 0
+          0, 0, -1, -1,
+          0, 0, -2, 0
         ]);
     }
     
@@ -213,8 +213,51 @@ W = {
     // Clear canvas
     W.gl.clear(16640 /* W.gl.COLOR_BUFFER_BIT | W.gl.DEPTH_BUFFER_BIT */);
     
+    // Render all the objects in the scene
+    for(i in W.next){
+      
+      // Render the shapes with no texture and no transparency (RGB1 color)
+      if(!W.next[i].t && W.col(W.next[i].b)[3] == 1){
+        W.render(W.next[i], dt);
+      }
+      
+      // Add the objects with transparency (RGBA or texture) in an array
+      else {
+        transparent.push(W.next[i]);
+      }
+    }
+    
+    // Order transparent objects from back to front
+    transparent.sort((a, b) => {
+      // Return a value > 0 if b is closer to the camera than a
+      // Return a value < 0 if a is closer to the camera than b
+      return W.dist(b) - W.dist(a);
+    });
+
+    // Enable alpha blending
+    W.gl.enable(3042 /* BLEND */);
+
+    // Disable depth buffer writes
+    W.gl.depthMask(0)
+    
+    // Render all transparent objects
+    for(i in transparent){
+      W.render(transparent[i], dt);
+    }
+    
+    // Revert to normal state for the next frame
+    W.gl.depthMask(1);
+    W.gl.disable(3042 /* BLEND */);
+    
     // Create a matrix called v containing the current camera transformation
     v = W.animation('camera');
+    
+    // If the camera is in a group
+    if(W.next?.camera?.g){
+
+      // premultiply the camera matrix by the group's model matrix.
+      v.preMultiplySelf(W.next[W.next.camera.g].M || W.next[W.next.camera.g].m);
+    }
     
     // Send it to the shaders as the Eye matrix
     W.gl.uniformMatrix4fv(
@@ -241,38 +284,6 @@ W = {
       W.gl.getUniformLocation(W.program, 'light'),
       W.lerp('light','x'), W.lerp('light','y'), W.lerp('light','z')
     );
-    
-    // Render all the objects in the scene
-    for(i in W.next){
-      
-      // Render the shapes with no texture and no transparency (RGB1 color)
-      if(!W.next[i].t && W.col(W.next[i].b)[3] == 1){
-        W.render(W.next[i], dt);
-      }
-      
-      // Add the objects with transparency (RGBA or texture) in an array
-      else {
-        transparent.push(W.next[i]);
-      }
-    }
-    
-    // Order transparent objects from back to front
-    transparent.sort((a, b) => {
-      // Return a value > 0 if b is closer to the camera than a
-      // Return a value < 0 if a is closer to the camera than b
-      return W.dist(b) - W.dist(a);
-    });
-
-    // Enable alpha plending
-    W.gl.enable(3042 /* BLEND */);
-    
-    // Render the objects
-    for(i in transparent){
-      W.render(transparent[i], dt);
-    }
-    
-    // Disable alpha blending for next frame
-    W.gl.disable(3042 /* BLEND */);
   },
   
   // Render an object
