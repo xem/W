@@ -1,8 +1,8 @@
 ﻿<!doctype html>
 <canvas id=canvas width=850 height=500 style='border:1px solid'></canvas>
 <img src='tree.png' id=tree hidden>
-<img src='obj2js/mario.png' id=mario hidden>
-<img src='obj2js/yoshi.png' id=yoshi hidden>
+<img src='mario.png' id=mario hidden>
+<img src='yoshi.png' id=yoshi hidden>
 <script src='../w.js'></script>
 <script src='mario.js'></script>
 <script src='yoshi.js'></script>
@@ -41,7 +41,7 @@ onload = () => {
       W.cube({g:'g1',x,z,h,y:h/2,b:['0df','ed7','0a0','da4','cdd','cdd','cdd','cdd'][map[z][x]]});
       if(map[z][x] == 2 & !(i % 7)){
         console.log(x,z);
-        W.billboard({g:'g1',x:x,y:2.5,z,w:1.5,h:1.5,b:tree});
+        W.billboard({g:'g1',x:x,y:2.5,z,w:1.5,h:1.5,t:tree});
       }
       i++;
     }
@@ -53,14 +53,13 @@ onload = () => {
     W.pyramid({g:'g1',x:[30,30,30.5,8,52,58,3][i]/4+1,z:[0,0,0,12,12,-6,-6][i]/4+2,y:[25,37,47,25,25,25,25][i]/4+2,w:[13,5,3,2,2,3,3][i],d:[8,4,3,2,2,3,3][i],h:2,b:'b31'});
   }
   
-  W.mario({g:'g1',x:8,z:10,w:2,h:2,d:2,y:3,rx:-90,ry:180,b:mario});
-  W.yoshi({g:'g1',x:5,z:4,w:2,h:2,d:2,y:8,rx:0,ry:180,b:yoshi});
+  W.mario({g:'g1',x:8,z:10,w:2,h:2,d:2,y:3,rx:-90,ry:180,t:mario});
+  W.yoshi({g:'g1',x:5,z:4,w:2,h:2,d:2,y:8,rx:0,ry:180,t:yoshi});
   
   t = 0;
   setInterval(()=>{
     t+=.1;
-    W.move({n:'g1',ry:Math.cos(t/5)*25});
-    W.setPerspective(.5 + Math.sin(t/5)/10);
+    W.move({n:'g1',ry:Math.cos(t/5)*25, fov: (.5 + Math.sin(t/5)/10)*50});
   },16);
 }
 

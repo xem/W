@@ -145,14 +145,14 @@ W = {
       W.textures[state.t.id] = texture;
     }
     
-    // Recompute the projection matrix if fov is set (near: 0, far: 1000, ratio: canvas ratio)
+    // Recompute the projection matrix if fov is set (near: 1, far: 1000, ratio: canvas ratio)
     if(state.fov){
       W.projection =     
         new DOMMatrix([
           (1 / Math.tan(state.fov * Math.PI / 180)) / (W.canvas.width / W.canvas.height), 0, 0, 0, 
           0, (1 / Math.tan(state.fov * Math.PI / 180)), 0, 0, 
-          0, 0, -1, -1,
-          0, 0, -2, 0
+          0, 0, -1001 / 999, -1,
+          0, 0, -2002 / 999, 0
         ]);
     }
     
@@ -237,16 +237,18 @@ W = {
     // Enable alpha blending
     W.gl.enable(3042 /* BLEND */);
 
-    // Disable depth buffer writes
-    W.gl.depthMask(0)
-    
     // Render all transparent objects
-    for(i in transparent){
-      W.render(transparent[i], dt);
+    for(i of transparent){
+
+      // Disable depth buffer write if it's a plane or a billboard to allow transparent objects to intersect planes more easily
+      if(["plane","billboard"].includes(i.type)) W.gl.depthMask(0);
+    
+      W.render(i, dt);
+      
+      W.gl.depthMask(1);
     }
     
-    // Revert to normal state for the next frame
-    W.gl.depthMask(1);
+    // Disable alpha blending for the next frame
     W.gl.disable(3042 /* BLEND */);
     
     // Create a matrix called v containing the current camera transformation
