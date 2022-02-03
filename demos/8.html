@@ -1,282 +1,62 @@
-﻿<!doctype html>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Tokyo+Zoo&display=swap" rel="stylesheet">
-<a href=//github.com/xem/W><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
+<!doctype html>
+<img src='mario.png' id=mario hidden>
+<img src='tree.png' id=tree hidden>
+<script src='../w.js'></script>
+<script src='mario.js'></script>
+<script src="jscolor.js"></script>
+<table width=850>
+<tr>
+<td width=320>
+<canvas id=c8 width=320 height=300></canvas>
+<td>
+<pre class=language-js><code id=code>W.move({n:"ball",g:"M",x:.9,y:.2,z:.35});</code></pre>
+<button id=b1>Pick the ball</button>
+<br><br>
+<pre class=language-js><code id=code>W.move({n:"ball",g:null,x:0,y:-.3,z:0});</code></pre>
+<button id=b2>Put down the ball</button>
+</table>
 
-<center>
-<h1>W</h1>
-<h2>A micro WebGL2 framework</h2>
+<script>
 
-<h3>Features</h3>
-<br>
+onload = () => {
+  
+  W.reset(c8);
+  W.ambient(.7);
+  W.clearColor("8Af");
+  W.plane({g:"camera",size:150,b:"3d2",z:-100,y:-75,ns:1});
+  W.mario({n:"M",size:1,z:0,rx:-90,y:-.5,ry:0,t:mario,s:1});
+  W.sphere({n:"ball",size:.4,y:-.3,s:1});
+  W.camera({z:2.8,fov:22});
+  RY = 0;
+  setInterval(()=>{
+    W.move({n:"M", ry: RY+= .2});
+  });
+  
+  b1.onclick = () => {
+    W.move({n:"ball",g:"M",x:.9,y:.2,z:.35});
+  }
+  
+  b2.onclick = () => {
+    W.move({n:"ball",g:null,x:0,y:-.3,z:0});
+  }
 
-<ul class=top>
-<li>Built-in 3D models 
-<span title="plane, billboard, cube, pyramid, sphere">
-  <svg width=100 height=20 xmlns='http://www.w3.org/2000/svg'>
-  <rect x=1 y=1 width=18 height=18 fill="#555" stroke="#fff"/>
-  <rect x=22 y=1 width=17 height=12 fill="#555" stroke="#fff"/>
-  <rect x=30 y=11 width=2 height=7 fill="#555" stroke="#555"/>
-  <path d="" fill="#555" stroke="#fff"/>
-  <path d="M42 6L46 2L59 2L59 15L56 19L42 19Z" fill="#555" stroke="#fff"/>
-  <path d="M62 15L70 19L79 15L70 2Z" fill="#555" stroke="#fff"/>
-  <circle cx=90 cy=10 r=9 fill="#555" stroke="#fff"/>
-</svg>
-</span>
-<li>Custom 3D models (with <a href="obj2js">OBJ loader</a>)
-<li>Easy coloring, texturing, transparency
-<li>Framerate-independant animation
-<li>Groups of objects
-<li>Flat or smooth shading
-<li>Custom transformations
-<!--li>Custom rendering-->
-<li>Controllable camera
-<li>Controllable light
-<li>Indexed or unindexed models
-<li>Automatic or custom normals
-<li>Less than 3kb!
-</ul>
-</center>
+}
 
-<h3>Download</h3> <span>(v.1.02)</span>
-<br>
-<div id=dl>
-<a href="w.js" download>Commented, full<br>(23kb)</a>
-<a href="w.min.full.js" download>Minified, full<br>(8.1kb, 2.6kb zipped)</a>
-<a href="w.min.lite.js" download>Minified, lite<br>(5.8kb, 2.0kb zipped)<br><sub>No built-in models or smooth shading</sub></a>
-<p>or load it in HTML:
-<pre class=language-html><code>&lt;script src=//xem.github.io/W/w.min.full.js>&lt;/script></code></pre>
-</div>
-
-<h3>API</h3>
-<br>
-<pre id=api class=language-js><code>// Start the framework
-W.reset(canvasElement);
-
-// Set clear color ("#fff" by default)
-W.clearColor("#rgb");
-
-// Set camera
-// Settings: position (x, y, z), angle (rx, ry, rz), fov
-W.camera({x, y, z, rx, ry, rz, fov});
-
-// Set light direction
-W.light({x, y, z});
-
-// Set ambient light's force (between 0 and 1)
-W.ambient(f);
-
-// Create a group of objects: name, position, rotation
-W.group({n, x, y, z, rx, ry, rz});
-
-// Draw a built-in 3D object
-// Settings: group, name, size, position, rotation, background, texture, smooth...
-let settings = {g, n, size, x, y, z, rx, ry, rz, b, t, mix, s, ns, mode};
-W.plane(settings);
-W.billboard(settings);
-W.cube(settings);
-W.pyramid(settings);
-W.sphere(settings);
-
-// Add and draw a custom 3D model (see the OBJ file loader below)
-W.add("custom_model", { vertices, uv, indices });
-W.custom_model(settings);
-
-// Move/resize a group or object: name, position, rotation, animation, delay (in ms)
-W.move({n, size, x, y, z, rx, ry, rz, a}, delay);
-
-// You can also use M to set a custom transformation matrix
-W.move({n, M}, delay);
-
-// Move camera / light: settings, animation, delay
-W.camera({x, y, z, rx, ry, rz, a}, delay);
-W.light({x, y, z, a}, delay);
-
-// Delete an element: name, delay
-W.delete(n, delay);
-</code></pre>
-
-<h3>Examples / Tutorial</h3>
-<br>
-<div id=tuto>
-<br><b>1) Setup</b>
-<br>First, create a HTML5 canvas <pre class="language-html inline"><code>&lt;canvas id=canvasElement></pre></code> and call <pre class="language-js inline"><code>W.reset(canvasElement)</pre></code>.
-<br>By default, the camera is placed at [0,0,0], looking at the -Z axis, with a 30 degrees FoV.
-<br>The scene contains an ambient light and a directional light pointing to the bottom: [0, -1, 0].
-<br>You can set the camera's position, rotation and FoV using <pre class="language-js inline"><code>W.camera({x, y, z, rx, ry, rz, fov})</pre></code>.
-<br>You can set the directional light using <pre class="language-js inline"><code>W.light({x, y, z})</pre></code> and the ambient light leved using <pre class="language-js inline"><code>W.ambient(n)</pre></code>.
-<br>You can change the background color using <pre class="language-js inline"><code>W.clearColor(c)</pre></code> (where c is a hex RGB/RGBA string).
-<br>No need to start a render loop, the canvas is redrawn after each screen refresh.
-
-
-<br>
-<br>
-
-<iframe src="demos/1.html" width=850 height=490 frameBorder="0" loading="lazy"></iframe>
-
-
-<br><b>2) Draw built-in 3D models</b>
-
-<br>The full version of the framework includes 5 built-in shapes: <pre class="inline language-js"><code class="language-js">W.plane</code></pre>, <pre class="inline language-js"><code class="language-js">W.billboard</code></pre>, <pre class="inline language-js"><code class="language-js">W.cube</code></pre>, <pre class="inline language-js"><code class="language-js">W.pyramid</code></pre> and <pre class="inline language-js"><code class="language-js">W.sphere</code></pre>.
-<br>(Billboards are planes that always face the camera, and can be used to show sprites or particles for example.)
-<br>The shapes settings can contain the following values: <pre class="inline language-js"><code class="language-js">{g, n, size, w, h, d, x, y, z, rx, ry, rz, b, t, mix, s, mode}</code></pre>
-<ul style="columns:1">
-<li><b>n</b>: name (required if you want to transform the object later)
-<li><b>g</b>: parent group (if a group is set, the model will be transformed relatively to this group)
-<li><b>w, h, d</b> or <b>size</b> (size sets w, h and d to the same value. Otherwise, w, h and d can be set individually. Default: 1)
-<li><b>x, y, z</b>: position (default: 0, 0, 0)
-<li><b>rx, ry, rz</b>: rotation (default: 0, 0, 0)
-<li><b>b</b>: background color (a "#rgb" or "#rgba" hex value. The "#" is optional. Default: "888")
-<li><b>t</b>: background texture (an IMG, CANVAS or VIDEO element present in the DOM)
-<li><b>mix</b>: if both b and t are set, a mix value between 0 and 1 can be used to mix the color and texture (0: fully textured, 1: fully colored)
-<li><b>s</b>: enable smooth shading (requires the full version of the framework. Default: false)
-<li><b>mode</b>: drawing mode ("LINE_LOOP", "TRIANGLES", etc. Default: "TRIANGLES")
-<li><b>M</b>: custom transformation matrix (Array(16), replaces x, y, z, rx, ry, rz)
-<li><b>ns</b>: by default, the shape will be shaded according to the directional light, but it can be disabled with this "no shading" option
-</ul>
-Groups can be created using <pre class="inline language-js"><code class="language-js">W.group({n, x, y, z, rx, ry, rz})</code></pre> (or <pre class="inline language-js"><code class="language-js">W.group({n, M})</code></pre>) and can be nested.
-<br>
-<br>
-
-<iframe src="demos/2.html" width=850 height=440 frameBorder="0" loading="lazy"></iframe>
-<a class=link href="https://codepen.io/xem/pen/XWezLBE?editors=1010">Edit on Codepen</a>
-
-<br>
-<br><b>3) Draw custom 3D models</b>
-
-<br>Besides the built-in shapes, W can also import and display custom 3D models.
-<br>You'll need:
-<ul>
-<li>An array of vertices coordinates: [x, y, z, x, y, z, ...],
-<li>Optionally: an array of uv texture coordinates: [u, v, u, v, ...] (if the model is textured),
-<li>Optionally: an array of indices (if the model uses indexed buffers). W.js supports both indexed and unindexed models!
-<li>Optionally: an array of normals (if you don't want to use the built-in flat/smooth normals)
-</ul>
-Add the new model using <pre class="inline language-js"><code class="language-js">W.add("custom_shape", {vertices, uv, indices})</code></pre> and draw it using <pre class="inline language-js"><code class="language-js">W.custom_shape(settings)</code></pre>.
-<br>
-Custom models can be drawn with the same settings as the built-in ones (group, size, position, rotation, background, shading...).
-<br>Flat shading is applied by default, smooth shading is only available in the full version of the framework.
-<br>OBJ files can be converted into W custom models using the following online tool: <b><a href="./obj2js/">OBJ2JS</a></b>!
-<br>
-<br>
-
-<iframe src="demos/3.html" width=850 height=440 frameBorder="0" loading="lazy"></iframe>
-<a class=link href="https://codepen.io/xem/pen/ExwbBrp?editors=1010">Edit on Codepen</a>
-
-
-<br>
-<br>
-<br><b>4) Transformations and animation</b>
-
-
-<br>The groups and 3D shapes can be moved and transformed using <pre class="inline language-js"><code class="language-js">W.move({n, size, x, y, z, rx, ry, rz, b, t, a}, delay)</code></pre>.
-<br>If a <pre class="inline language-js"><code class="language-js">delay</code></pre> is provided, the transformation will be done after that delay in milliseconds. (0 by default)
-<br>If an <pre class="inline language-js"><code class="language-js">a</code></pre> parameter is provided, the transformation will be animated. The animation will last for <pre class="inline language-js"><code class="language-js">a</code></pre> milliseconds. (0 by default)
-<br>
-<br>The camera can be moved and animated using <pre class="inline language-js"><code class="language-js">W.camera({x, y, z, rx, ry, rz, a}, delay)</code></pre>.
-<br>The directional light can be moved and animated with <pre class="inline language-js"><code class="language-js">W.light({x, y, z, a}, delay)</code></pre>.
-
-
-<br>
-<br>
-<iframe src="demos/4.html" width=850 height=340 frameBorder="0" loading="lazy"></iframe>
-<a class=link href="https://codepen.io/xem/pen/qBPVeZG?editors=1010">Edit on Codepen</a>
-
-
-<br>
-<br>
-<br><b>5) Advanced techniques</b>
-
-<ul>
-<li>You can set a custom projection matrix with <pre class="inline language-js"><code class="language-js">W.projection=new DOMMatrix([...])</code></pre>.
-<br>The example below shows how to use an orthographic projection.
-</ul>
-
-<iframe src="demos/5.html" width=850 height=380 frameBorder="0" loading="lazy"></iframe>
-
-<ul>
-<li>You can set a custom transform matrix to any object with <pre class="inline language-js"><code class="language-js">W.move({n, M:[...]})</code></pre>. 
-<br>The example below shows how to perform asix-based rotations.
-</ul>
-
-<iframe src="demos/6.html" width=850 height=450 frameBorder="0" loading="lazy"></iframe>
-
-<ul>
-<li>All the scene's objects can be used as a group and have other objects attached to it. The camera can also be put in a group.
-<li>The camera itself can be used as a group (to create a HUD or a skybox), or put inside a group (to make a 1st or 3rd person view).
-<br>The example below shows how to attach the camera to a moving character and attach a plane (the ground) to the camera.
-</ul>
-
-<iframe src="demos/7.html" width=850 height=450 frameBorder="0" loading="lazy"></iframe>
-
-<ul>
-<li>Items can be attached or detached from a group anytime using <pre class="inline language-js"><code class="language-js">W.move({g /* group / null */ })</code></pre>.
-</ul>
-
-<iframe src="demos/8.html" width=850 height=340 frameBorder="0" loading="lazy"></iframe>
-<!--
-<li>You can add per-vertex coloring by adding a <b>rgb</b> array in <pre class="inline language-js"><code class="language-js">W.add()</code></pre> (along with the vertices, uvs and indices)
-
-<iframe src="demos/8.html" width=850 height=380 frameBorder="0" loading="lazy"></iframe>
-
-<li>You can use animated textures (from a GIF, video or canvas) by calling <pre class="inline language-js"><code class="language-js">W.animatedTextures=true</code></pre> (false by default).
-
-<iframe src="demos/9.html" width=850 height=380 frameBorder="0" loading="lazy"></iframe>-->
-<li>???
-<li>???
-<li>???
-<li>???
-
-</ul>
-
-<h2>TO BE CONTINUED</h2>
-
-<br>
-<br>
-<br><b>Bonus:</b>
-<ul>
-<li>Peach castle example by <a href="demos/castle.html">Xem</a>
-<li>Free rotation cube example by <a href="demos/freerotation.html">Xem and RandyTayler</a>
-<li>Haxe externs by <a href="https://github.com/gogoprog/haxe-w">Gogoprog</a> + a <a href="https://github.com/gogoprog/ship2k22">32kb shmup game</a>. 
-<li>Modern JS version by <a href="https://github.com/Valerioageno/W">Valerioageno</a>
-</ul>
-
-
-</div>
-<br>
-<br>
-<br>
-<h4 style=font-size:18px>2021-2022 - Made by xem, stas & kchplr</h4>
-<br>
-<br>
-<br>
-</center>
-
-
-
+</script>
 
 <style>
-* { box-sizing: border-box }
-body { font-size: 14px; font-family: calibri, arial; text-align: center; }
-h1 { font-family: 'Zen Tokyo Zoo', cursive; font-weight: normal; font-size: 100px; line-height: 40px; margin: 80px 0 30px; }
-h2 { margin: 5px }
-h3 { text-align: center; text-decoration: underline; margin: 40px 0; display: inline-block; }
-#dl { text-align: center; width: 660px; margin: auto; font-size: 13px; }
-#dl a { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 205px; height: 105px; display: inline-block; vertical-align: top; text-decoration: none; color: #000; padding: 25px 0 0; margin: 5px; background: #f8f8f8; font-size: 16px; }
-#dl pre { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 650px; padding: 5px; margin: 15px auto 5px; text-align: center; }
-pre#api { border: 2px solid #000; border-right-width: 4px; border-bottom-width: 4px; width: 650px; padding: 10px; margin: 15px auto 5px; font-size: 14px; }
-ul.top { width: 650px; columns: 2; text-align: left; margin: 30px auto; padding: 0 0 0 80px; vertical-align: top; font-size: 16px;}
-ul.top li { font-size: 16px;}
-sub { display: block; font-size: 12px; margin: 2px 0 0; }
-svg { transform-origin: left bottom; transform: scale(.6); cursor: help; line-height: 5px;}
-a { text-decoration: none; color: #45f }
-#tuto { width: 800px; margin: 0 auto; text-align: left; line-height: 25px; }
-.inline, .inline code { display: inline !important; padding: 2px !important; background: #eee!important; font-size: 12px !important; font-weight: bold !important;}
-#tuto code { font-size: 12px }
-code * { letter-spacing: -.4px }
-a.link { display: block; width: 150px; background: #def; border-radius: 5px; border: 2px solid #248; text-align: center; color: #000; margin: 0 auto }
+body { font-family: calibri; font-size: 12px; margin: 0; }
+pre { background: #eee; padding: 8px !important; display: block; width:475px; overflow-x: auto; margin: 0 0 20px 0 !important;  border: 2px solid #000; border-right-width: 4px; }
+td+td { padding: 0 0 0 10px; vertical-align: top; position: relative; line-height: 25px; }
+br { line-height: 20px }
+#c { width: 90px }
+code * { letter-spacing: -.5px; }
+p { margin: 6px 0 }
+b { margin: 0px 0 6px; display: inline-block; }
+canvas { border: 2px solid #000; border-right-width: 4px; }
+* { user-select: none }
 </style>
+
 
 <style>
 /* PrismJS 1.25.0
