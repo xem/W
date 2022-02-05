@@ -31,7 +31,7 @@ W.clearColor("8af");
 for(i = 0; i < 10; i++)
   for(j = 0; j < 10; j++)
     W.billboard({size:3,x:(i-5)*5,z:(j-5)*5,t:tree,ns:1});
-W.mario({n:"M",size:1,x:X,y:-1.5,z:Z,t:"mario",s:1});
+W.mario({n:"M",size:1,x:X,y:-.9,z:Z,t:"mario",s:1});
 W.camera({g:"M",y:.5,z:-2.5});
 W.plane({g:"camera",size:100,b:"3d2",z:-100,y:-50,ns:1});
 setInterval(()=>{
@@ -58,11 +58,11 @@ onload = () => {
       W.billboard({size:3,x:(i-5)*5,z:(j-5)*5,t:tree,ns:1});
     }
   }
-  W.mario({n:"M",size:1,x:-1.5,y:-1.5,z:18,rx:-90,ry:0,t:mario,s:1});
+  W.mario({n:"M",size:1,y:-.9,z:18,rx:-90,ry:0,t:mario,s:1});
   W.camera({g:"M",z:.5,y:-2.5,rx:90});
   W.clearColor("8Af");
   W.plane({g:"camera",size:150,b:"3d2",z:-100,y:-75,ns:1});
-  X = -1.5;
+  X = 0;
   Z = 18;
   RY = 0;
   
@@ -79,7 +79,7 @@ onload = () => {
     W.move({n:"M", z: Z += (-keys.u + keys.d) * Math.cos(RY*Math.PI/180) / 40, x: X += (-keys.u + keys.d) * Math.sin(RY*Math.PI/180) / 40});
     
     if(keys.r || keys.l){
-      RY += (-keys.r + keys.l)/5;
+      RY += (-keys.r + keys.l)/4;
       W.move({n:"M", ry: RY});
     }
   });
