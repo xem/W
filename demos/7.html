@@ -74,15 +74,18 @@ onload = () => {
     keys[e.target.id] = 0;
   }
   
-  setInterval(()=>{
+  animate = ()=>{
+    requestAnimationFrame(animate);
     if(keys.u || keys.d)
-    W.move({n:"M", z: Z += (-keys.u + keys.d) * Math.cos(RY*Math.PI/180) / 40, x: X += (-keys.u + keys.d) * Math.sin(RY*Math.PI/180) / 40});
+    W.move({n:"M", z: Z += (-keys.u + keys.d) * Math.cos(RY*Math.PI/180) / 20, x: X += (-keys.u + keys.d) * Math.sin(RY*Math.PI/180) / 20});
     
     if(keys.r || keys.l){
-      RY += (-keys.r + keys.l)/4;
+      RY += (-keys.r + keys.l)/2;
       W.move({n:"M", ry: RY});
     }
-  });
+  }
+  
+  animate();
 
 }
 
