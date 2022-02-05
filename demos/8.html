@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <img src='mario.png' id=mario hidden>
 <img src='tree.png' id=tree hidden>
 <script src='../w.js'></script>
@@ -31,9 +31,11 @@ onload = () => {
   W.sphere({n:"ball",size:.4,y:-.3,s:1});
   W.camera({z:2.8,fov:22});
   RY = 0;
-  setInterval(()=>{
-    W.move({n:"g", ry: RY+= .2});
-  });
+  animate = ()=>{
+    requestAnimationFrame(animate);
+    W.move({n:"g", ry: RY+= 1});
+  };
+  animate();
   
   b1.onclick = () => {
     W.move({n:"ball",g:"M",x:.4,y:.0,z:-.12});
