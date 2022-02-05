@@ -9,10 +9,12 @@
 <td width=320>
 <canvas id=c8 width=320 height=300></canvas>
 <td>
-<pre class=language-js><code id=code>W.move({n:"ball",g:"M",x:.9,y:.2,z:.35});</code></pre>
+<pre class=language-js><code id=code>// x, y, z: relative coordinates inside the group
+W.move({n:"ball",g:"M",x:.9,y:.2,z:.35});</code></pre>
 <button id=b1>Pick the ball</button>
 <br><br>
-<pre class=language-js><code id=code>W.move({n:"ball",g:null,x:0,y:-.3,z:0});</code></pre>
+<pre class=language-js><code id=code>// x, y, z: World coordinates
+W.move({n:"ball",g:null,x:0,y:-.3,z:0});</code></pre>
 <button id=b2>Put down the ball</button>
 </table>
 
@@ -24,16 +26,17 @@ onload = () => {
   W.ambient(.7);
   W.clearColor("8Af");
   W.plane({g:"camera",size:150,b:"3d2",z:-100,y:-75,ns:1});
-  W.mario({n:"M",size:1,z:0,rx:-90,y:-.5,ry:0,t:mario,s:1});
+  W.group({n:"g"});
+  W.mario({n:"M",g:"g",size:1,x:.5,z:0,rx:-90,ry:0,t:mario,s:1});
   W.sphere({n:"ball",size:.4,y:-.3,s:1});
   W.camera({z:2.8,fov:22});
   RY = 0;
   setInterval(()=>{
-    W.move({n:"M", ry: RY+= .2});
+    W.move({n:"g", ry: RY+= .2});
   });
   
   b1.onclick = () => {
-    W.move({n:"ball",g:"M",x:.9,y:.2,z:.35});
+    W.move({n:"ball",g:"M",x:.4,y:.0,z:-.12});
   }
   
   b2.onclick = () => {
