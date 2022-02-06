@@ -119,10 +119,12 @@ W = {
     // (the fragments of close objects will automatically overlap the fragments of further objects)
     W.gl.enable(2929 /* DEPTH_TEST */);
     
-    // When everything is loaded: set default light / camera, and draw the scene
+    // When everything is loaded: set default light / camera
     W.light({y: -1});
     W.camera({fov: 30});
-    W.draw();
+    
+    // Draw the scene. Ignore the first frame because the default camera will probably be overwritten by the program
+    setTimeout(W.draw, 16);
   },
 
   // Set a state to an object
@@ -210,6 +212,40 @@ W = {
     W.lastFrame = now;
     requestAnimationFrame(W.draw);
     
+    if(W.next.camera.g){
+      W.render(W.next[W.next.camera.g], dt, 1);
+    }
+    
+    // Create a matrix called v containing the current camera transformation
+    v = W.animation('camera');
+    
+    // If the camera is in a group
+    if(W.next?.camera?.g){
+
+      // premultiply the camera matrix by the group's model matrix.
+      v.preMultiplySelf(W.next[W.next.camera.g].M || W.next[W.next.camera.g].m);
+    }
+    
+    // Send it to the shaders as the Eye matrix
+    W.gl.uniformMatrix4fv(
+      W.gl.getUniformLocation(W.program, 'eye'),
+      false,
+      v.toFloat32Array()
+    );
+    
+    // Invert it to obtain the View matrix
+    v.invertSelf();
+
+    // Premultiply it with the Perspective matrix to obtain a Projection-View matrix
+    v.preMultiplySelf(W.projection);
+    
+    // send it to the shaders as the pv matrix
+    W.gl.uniformMatrix4fv(
+      W.gl.getUniformLocation(W.program, 'pv'),
+      false,
+      v.toFloat32Array()
+    );
+
     // Clear canvas
     W.gl.clear(16640 /* W.gl.COLOR_BUFFER_BIT | W.gl.DEPTH_BUFFER_BIT */);
     
@@ -251,36 +287,6 @@ W = {
     // Disable alpha blending for the next frame
     W.gl.disable(3042 /* BLEND */);
     
-    // Create a matrix called v containing the current camera transformation
-    v = W.animation('camera');
-    
-    // If the camera is in a group
-    if(W.next?.camera?.g){
-
-      // premultiply the camera matrix by the group's model matrix.
-      v.preMultiplySelf(W.next[W.next.camera.g].M || W.next[W.next.camera.g].m);
-    }
-    
-    // Send it to the shaders as the Eye matrix
-    W.gl.uniformMatrix4fv(
-      W.gl.getUniformLocation(W.program, 'eye'),
-      false,
-      v.toFloat32Array()
-    );
-    
-    // Invert it to obtain the View matrix
-    v.invertSelf();
-
-    // Premultiply it with the Perspective matrix to obtain a Projection-View matrix
-    v.preMultiplySelf(W.projection);
-    
-    // send it to the shaders as the pv matrix
-    W.gl.uniformMatrix4fv(
-      W.gl.getUniformLocation(W.program, 'pv'),
-      false,
-      v.toFloat32Array()
-    );
-    
     // Transition the light's direction and send it to the shaders
     W.gl.uniform3f(
       W.gl.getUniformLocation(W.program, 'light'),
@@ -289,7 +295,7 @@ W = {
   },
   
   // Render an object
-  render: (object, dt, buffer) => {
+  render: (object, dt, just_compute = ['camera','light','group'].includes(object.type), buffer) => {
 
     // If the object has a texture
     if(object.t) {
@@ -331,8 +337,8 @@ W = {
       (new DOMMatrix(W.next[object.n].M || W.next[object.n].m)).invertSelf().toFloat32Array()
     );
     
-    // Don't render invisible items (camera, light, groups)
-    if(!['camera','light','group'].includes(object.type)){
+    // Don't render invisible items (camera, light, groups, camera's parent)
+    if(!just_compute){
       
       // Set up the position buffer
       W.gl.bindBuffer(34962 /* ARRAY_BUFFER */, W.models[object.type].verticesBuffer);
@@ -391,28 +397,22 @@ W = {
       if(W.models[object.type].indicesBuffer){
         W.gl.bindBuffer(34963 /* ELEMENT_ARRAY_BUFFER */, W.models[object.type].indicesBuffer);
       }
-      
-      // Use a renderer (custom / default)
-      //if(object.r){
-      //  W.renderers[object.r](object);
-      //}
-      //else {
-        // Set the object's color
-        W.gl.vertexAttrib4fv(
-          W.gl.getAttribLocation(W.program, 'col'),
-          W.col(object.b)
-        );
+        
+      // Set the object's color
+      W.gl.vertexAttrib4fv(
+        W.gl.getAttribLocation(W.program, 'col'),
+        W.col(object.b)
+      );
 
-        // Draw
-        // Both indexed and unindexed models are supported.
-        // You can keep the "drawElements" only if all your models are indexed.
-        if(W.models[object.type].indicesBuffer){
-          W.gl.drawElements(+object.mode || W.gl[object.mode], W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
-        }
-        else {
-          W.gl.drawArrays(+object.mode || W.gl[object.mode], 0, W.models[object.type].vertices.length / 3);
-        }
-      //}
+      // Draw
+      // Both indexed and unindexed models are supported.
+      // You can keep the "drawElements" only if all your models are indexed.
+      if(W.models[object.type].indicesBuffer){
+        W.gl.drawElements(+object.mode || W.gl[object.mode], W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
+      }
+      else {
+        W.gl.drawArrays(+object.mode || W.gl[object.mode], 0, W.models[object.type].vertices.length / 3);
+      }
     }
   },
   

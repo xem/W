@@ -58,8 +58,9 @@ onload = () => {
       W.billboard({size:3,x:(i-5)*5,z:(j-5)*5,t:tree,ns:1});
     }
   }
-  W.mario({n:"M",size:1,y:-.9,z:18,rx:-90,ry:0,t:mario,s:1});
-  W.camera({g:"M",z:.5,y:-2.5,rx:90});
+  W.group({n:"G",y:-.9,z:18});
+  W.mario({g:"G",n:"M",size:1,y:0,z:.4,rx:-90,ry:0,t:mario,s:1});
+  W.camera({g:"G",z:2.5,y:.5,rx:0});
   W.clearColor("8Af");
   W.plane({g:"camera",size:150,b:"3d2",z:-100,y:-75,ns:1});
   X = 0;
@@ -77,11 +78,11 @@ onload = () => {
   animate = ()=>{
     requestAnimationFrame(animate);
     if(keys.u || keys.d)
-    W.move({n:"M", z: Z += (-keys.u + keys.d) * Math.cos(RY*Math.PI/180) / 20, x: X += (-keys.u + keys.d) * Math.sin(RY*Math.PI/180) / 20});
+    W.move({n:"G", z: Z += (-keys.u + keys.d) * Math.cos(RY*Math.PI/180) / 20, x: X += (-keys.u + keys.d) * Math.sin(RY*Math.PI/180) / 20});
     
     if(keys.r || keys.l){
       RY += (-keys.r + keys.l)/2;
-      W.move({n:"M", ry: RY});
+      W.move({n:"G", ry: RY});
     }
   }
   
