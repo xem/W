@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <canvas id="webgl"></canvas>
+    <img src='../demos/mario.png' id=mario hidden>
+    <script src="../w.js"></script>
+    <script src="../demos/mario.js"></script>
+    <script>
+        console.log(W)
+        W.reset(document.getElementById('webgl'))
+        W.light({x:.5,y:0,z:-.5});
+        W.camera({z:4});
+        W.camera({z:4});
+        W.light({x:.5,y:0,z:-.5});
+        W.mario({n:"M",size:3,t:mario,rx:90,rz:180,s:1});
+    </script>
+</body>
+</html>
