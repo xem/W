@@ -1,0 +1,20 @@
+{
+  "name": "w",
+  "version": "1.0.1",
+  "description": "A micro WebGL2 framework",
+  "main": "w.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/xem/W"
+  },
+  "keywords": [
+    "WebGL2",
+    "WebGL",
+    "3D"
+  ],
+  "author": "Xem",
+  "license": "SEE LICENSE IN README.md"
+}
