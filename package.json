@@ -4,7 +4,7 @@
   "description": "A micro WebGL2 framework",
   "main": "w.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node build.mjs"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,9 @@
     "3D"
   ],
   "author": "Xem",
-  "license": "SEE LICENSE IN README.md"
+  "license": "SEE LICENSE IN README.md",
+  "devDependencies": {
+    "ect-bin": "^1.4.1",
+    "terser": "^5.46.0"
+  }
 }
