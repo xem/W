@@ -162,7 +162,7 @@ W = {
     // Save object's type,
     // merge previous state (or default state) with the new state passed in parameter,
     // and reset f (the animation timer)
-    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888', mode:4, mix: 0}), ...state, f:0};
+    state = {type, ...(W.current[state.n] = W.next[state.n] || {w:1, h:1, d:1, x:0, y:0, z:0, rx:0, ry:0, rz:0, b:'888', mode:4 /* TRIANGLES */, mix: 0}), ...state, f:0};
     
     // Build the model's vertices buffer if it doesn't exist yet
     if(W.models[state.type]?.vertices && !W.models?.[state.type].verticesBuffer){
@@ -369,13 +369,13 @@ W = {
         object.s,
         
         // Enable shading if in TRIANGLE* mode and object.ns disabled
-        ((object.mode > 3) || (W.gl[object.mode] > 3)) && !object.ns ? 1 : 0,
+        object.mode > 3 && !object.ns,
         
         // Ambient light
         W.ambientLight || 0.2,
         
         // Texture/color mix (if a texture is present. 0: fully textured, 1: fully colored)
-        object.mix
+        object.mix,
       );
       
       // If the object is a billboard: send a specific uniform to the shaders:
@@ -408,11 +408,11 @@ W = {
       // Draw
       // Both indexed and unindexed models are supported.
       // You can keep the "drawElements" only if all your models are indexed.
-      if(W.models[object.type].indicesBuffer){
-        W.gl.drawElements(+object.mode || W.gl[object.mode], W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
+      if (W.models[object.type].indicesBuffer) {
+        W.gl.drawElements(object.mode, W.models[object.type].indices.length, 5123 /* UNSIGNED_SHORT */, 0);
       }
       else {
-        W.gl.drawArrays(+object.mode || W.gl[object.mode], 0, W.models[object.type].vertices.length / 3);
+        W.gl.drawArrays(object.mode, 0, W.models[object.type].vertices.length / 3);
       }
     }
   },
