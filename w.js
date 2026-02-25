@@ -314,7 +314,8 @@ W = {
     if(object.f > object.a) object.f = object.a;
 
     // Compose the model matrix from lerped transformations
-    W.next[object.n].m = W.animation(object.n);
+    // Or use the custom matrix provided with the `M` property
+    W.next[object.n].m = W.next[object.n].M || W.animation(object.n);
 
     // If the object is in a group:
     if(W.next[object.g]){
@@ -327,14 +328,14 @@ W = {
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'm'),
       false,
-      (W.next[object.n].M || W.next[object.n].m).toFloat32Array()
+      W.next[object.n].m.toFloat32Array()
     );
     
     // send the inverse of the model matrix to the vertex shader
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'im'),
       false,
-      (new DOMMatrix(W.next[object.n].M || W.next[object.n].m)).invertSelf().toFloat32Array()
+      DOMMatrix.fromMatrix(W.next[object.n].m).invertSelf().toFloat32Array()
     );
     
     // Don't render invisible items (camera, light, groups, camera's parent)
