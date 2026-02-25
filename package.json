@@ -2,7 +2,7 @@
   "name": "w",
   "version": "1.0.1",
   "description": "A micro WebGL2 framework",
-  "main": "w.js",
+  "main": "./src/w.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
