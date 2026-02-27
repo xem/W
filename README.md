@@ -7,8 +7,6 @@ license: public domain
 
 Install via NPM with `npm install https://github.com/xem/W/#semver:1.0.2`
 
-Build scripts are available on: https://github.com/xem/W/tree/sukus21 (thanks to @sukus21)
-
 ## Release policy
 
 This project follows [semantic versioning](https://semver.org).
