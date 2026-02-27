@@ -18,7 +18,6 @@ Unicode precision: <input type=number value=127 id=unicode onchange="convert()" 
 <center>Original: direct copy of the OBJ values. Floats / Unicode: vertices centered on the origin + lossy compression + model size = 1
 
 <script>
-gl = a.getContext("webgl2");
 converting = 0;
 convert = () => {
   if(converting) return;
@@ -188,4 +187,4 @@ input, button { font-size: 11px; }
 canvas { border: 1px solid; max-width: 98vw; }
 #indexed:not(:checked) ~ #s { cursor: not-allowed }
 </style>
-<script src="../w.js"></script>
+<script src="../src/w.js"></script>
