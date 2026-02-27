@@ -7,6 +7,18 @@ license: public domain
 
 Install via NPM with `npm install https://github.com/xem/W/#semver:1.0.2`
 
+## Building
+
+To build the project, first make sure to install the projects dependencies:
+```sh
+npm install
+```
+
+Then run the build script like shown below, and artifacts will appear in the `dist` folder:
+```sh
+npm run build
+```
+
 ## Release policy
 
 This project follows [semantic versioning](https://semver.org).
