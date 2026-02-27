@@ -1,6 +1,6 @@
 // This file is here exclusively to preserve old links pointing to it.
 // For any future code changes, please edit "./src/w.js" instead.
-// For any future use, please use "xem.github.com/W/src/W.js", or one of the dist versions.
+// For any future use, please use "xem.github.io/W/src/W.js", or one of the dist versions.
 
 // WebGL framework
 // ===============
