@@ -15,7 +15,7 @@ W = {
 
   // Reset the framework
   // param: a <canvas> element
-  reset: canvas => {
+  reset: (canvas, shader) => {
     
     // Globals
     W.canvas = canvas;    // canvas element
@@ -43,7 +43,7 @@ W = {
     // (this GLSL program is called for every vertex of the scene)
     W.gl.shaderSource(
       
-      t = W.gl.createShader(35633 /* VERTEX_SHADER */),
+      shader = W.gl.createShader(35633 /* VERTEX_SHADER */),
       
       `#version 300 es
       precision highp float;                        // Set default float precision
@@ -64,15 +64,15 @@ W = {
     );
     
     // Compile the Vertex shader and attach it to the program
-    W.gl.compileShader(t);
-    W.gl.attachShader(W.program, t);
-    if(W.plugin.debug) console.log('vertex shader:', W.gl.getShaderInfoLog(t) || 'OK');
+    W.gl.compileShader(shader);
+    W.gl.attachShader(W.program, shader);
+    if(W.plugin.debug) console.log('vertex shader:', W.gl.getShaderInfoLog(shader) || 'OK');
     
     // Create a Fragment shader
     // (This GLSL program is called for every fragment (pixel) of the scene)
     W.gl.shaderSource(
 
-      t = W.gl.createShader(35632 /* FRAGMENT_SHADER */),
+      shader = W.gl.createShader(35632 /* FRAGMENT_SHADER */),
       
       `#version 300 es
       precision highp float;                  // Set default float precision
@@ -100,9 +100,9 @@ W = {
     );
     
     // Compile the Fragment shader and attach it to the program
-    W.gl.compileShader(t);
-    W.gl.attachShader(W.program, t);
-    if(W.plugin.debug) console.log('fragment shader:', W.gl.getShaderInfoLog(t) || 'OK');
+    W.gl.compileShader(shader);
+    W.gl.attachShader(W.program, shader);
+    if(W.plugin.debug) console.log('fragment shader:', W.gl.getShaderInfoLog(shader) || 'OK');
     
     // Compile the program
     W.gl.linkProgram(W.program);
@@ -129,7 +129,7 @@ W = {
   },
 
   // Set a state to an object
-  setState: (state, type, texture, i, normal = [], A, B, C, Ai, Bi, Ci, AB, BC) => {
+  setState: (state, type, texture) => {
 
     // Custom name or default name ('o' + auto-increment)
     state.n ||= 'o' + W.objs++;
@@ -490,7 +490,7 @@ if (!W.built) {
 // =============================================
 
 if (W.plugin.smooth) {
-  W.smooth = (state, dict = {}, vertices = [], iterate, iterateSwitch, i, j, A, B, C, Ai, Bi, Ci, normal) => {
+  W.smooth = (state, dict = {}, vertices = [], iterate, iterateSwitch, i, j, A, B, C, Ai, Bi, Ci, AB, BC, normal) => {
     
     // Prepare smooth normals array
     W.models[state.type].normals = [];
