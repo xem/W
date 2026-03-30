@@ -114,7 +114,6 @@ W = {
     
     // Shortcut to set the clear color
     W.clearColor = c => W.gl.clearColor(...W.col(c));
-    W.clearColor("fff");
     
     // Enable fragments depth sorting
     // (the fragments of close objects will automatically overlap the fragments of further objects)
@@ -179,32 +178,18 @@ W = {
   },
   
   // Draw the scene
-  draw: (now, dt, v, i, transparent = []) => {
+  draw: (now, dt, i, v = W.animation("camera"), transparent = []) => {
     
     // Loop and measure time delta between frames
     dt = now - W.lastFrame;
     W.lastFrame = now;
     requestAnimationFrame(W.draw);
     
-    if(W.next.camera.g){
-      W.render(W.next[W.next.camera.g], dt, 1);
-    }
-    
-    // Create a matrix called v containing the current camera transformation
-    v = W.animation('camera');
-    
-    // If the camera is in a group
-    if(W.next?.camera?.g){
-
-      // premultiply the camera matrix by the group's model matrix.
-      v.preMultiplySelf(W.next[W.next.camera.g].M || W.next[W.next.camera.g].m);
-    }
-    
-    // Send it to the shaders as the Eye matrix
+    // Build camera transformation matrix, and send it to the shaders as the Eye matrix
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'eye'),
       false,
-      v.toFloat32Array()
+      v.toFloat32Array(),
     );
     
     // Invert it to obtain the View matrix
@@ -217,14 +202,16 @@ W = {
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'pv'),
       false,
-      v.toFloat32Array()
+      v.toFloat32Array(),
     );
 
     // Clear canvas
     W.gl.clear(16640 /* W.gl.COLOR_BUFFER_BIT | W.gl.DEPTH_BUFFER_BIT */);
     
     // Render all the objects in the scene
-    for(i in W.next){
+    for (i in W.next) {
+      // Update objects model matrix
+      W.next[i].m = W.animation(i);
       
       // Render the shapes with no texture and no transparency (RGB1 color)
       if(!W.next[i].t && W.col(W.next[i].b)[3] == 1){
@@ -287,28 +274,18 @@ W = {
     // ...but don't let it go over the animation duration.
     if(object.f > object.a) object.f = object.a;
 
-    // Compose the model matrix from lerped transformations
-    W.next[object.n].m = W.animation(object.n);
-
-    // If the object is in a group:
-    if(W.next[object.g]){
-
-      // premultiply the model matrix by the group's model matrix.
-      W.next[object.n].m.preMultiplySelf(W.next[object.g].M || W.next[object.g].m);
-    }
-
     // send the model matrix to the vertex shader
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'm'),
       false,
-      (W.next[object.n].M || W.next[object.n].m).toFloat32Array()
+      object.m.toFloat32Array(),
     );
     
     // send the inverse of the model matrix to the vertex shader
     W.gl.uniformMatrix4fv(
       W.gl.getUniformLocation(W.program, 'im'),
       false,
-      (new DOMMatrix(W.next[object.n].M || W.next[object.n].m)).invertSelf().toFloat32Array()
+      object.m.inverse().toFloat32Array(),
     );
 
     // Show warning if model doesn't exist (debug only)
@@ -435,16 +412,17 @@ W = {
     : W.next[item][property],
   
   // Transition an item
-  animation: (item, m = new DOMMatrix) =>
+  animation: (item, m = new DOMMatrix(W.next[item]?.M)) =>
     W.next[item]
     ? m
       .translateSelf(W.lerp(item, 'x'), W.lerp(item, 'y'), W.lerp(item, 'z'))
-      .rotateSelf(W.lerp(item, 'rx'),W.lerp(item, 'ry'),W.lerp(item, 'rz'))
-      .scaleSelf(W.lerp(item, 'w'),W.lerp(item, 'h'),W.lerp(item, 'd'))
+      .rotateSelf(W.lerp(item, 'rx'), W.lerp(item, 'ry'), W.lerp(item, 'rz'))
+      .scaleSelf(W.lerp(item, 'w'), W.lerp(item, 'h'), W.lerp(item, 'd'))
+      .preMultiplySelf(W.animation(W.next[item].g))
     : m,
     
   // Compute the distance squared between two objects (useful for sorting transparent items)
-  dist: (a, b = W.next.camera) => a?.m && b?.m ? (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2 : 0,
+  dist: (a, b = W.next.camera) => (b.m.m41 - a.m.m41)**2 + (b.m.m42 - a.m.m42)**2 + (b.m.m43 - a.m.m43)**2,
   
   // Set the ambient light level (0 to 1)
   ambient: a => W.ambientLight = a,
